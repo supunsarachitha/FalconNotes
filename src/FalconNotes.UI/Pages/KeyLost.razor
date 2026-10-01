@@ -1,0 +1,16 @@
+@* Key lost (docs/07). Phase 0 stub: the text only. Phase 3 ports AuthLayout and adds Restore and Start with no notes. *@
+
+<main class="mx-auto w-full max-w-md px-4 py-10">
+    <h1 class="text-xl font-semibold text-stone-900 dark:text-stone-100">Your notes cannot be opened</h1>
+    <p class="mt-3 text-stone-600 dark:text-stone-300">
+        Falcon Notes keeps your notes encrypted with a key stored by @PlatformName. That key is no longer available on
+        this device, so the notes saved here cannot be read. This can happen after reinstalling the app or resetting the
+        device's secure storage.
+    </p>
+    <p class="mt-4 text-sm text-stone-500">Nothing has been deleted. The unreadable data is kept aside in case the key comes back.</p>
+</main>
+
+@code {
+    private static string PlatformName =>
+        OperatingSystem.IsAndroid() ? "Android" : OperatingSystem.IsWindows() ? "Windows" : "macOS";
+}

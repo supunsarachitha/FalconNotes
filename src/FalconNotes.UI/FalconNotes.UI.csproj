@@ -16,6 +16,13 @@
     <ProjectReference Include="..\FalconNotes.Core\FalconNotes.Core.csproj" />
   </ItemGroup>
 
+  <!-- The Phase 0 spikes (Dev/, wwwroot/dev/) exist only in Debug builds. -->
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <Compile Remove="Dev/**" />
+    <Content Remove="Dev/**;wwwroot/dev/**" />
+    <None Remove="Dev/**;wwwroot/dev/**" />
+  </ItemGroup>
+
   <Import Project="..\..\build\Tailwind.targets" />
 
 </Project>

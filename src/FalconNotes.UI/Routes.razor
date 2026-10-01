@@ -1,7 +1,25 @@
-@* The app's router. Same addresses as the web app (docs/02, Routes). *@
-<Router AppAssembly="typeof(Routes).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+@* The app's router. Same addresses as the web app (docs/02, Routes). Key lost replaces every route (docs/03). *@
+@using FalconNotes.Core.Startup
+@using FalconNotes.UI.State
+@inject AppBootstrapper Bootstrapper
+
+@if (_outcome == StartupOutcome.KeyLost)
+{
+    <KeyLost />
+}
+else if (_outcome == StartupOutcome.Ready)
+{
+    <Router AppAssembly="typeof(Routes).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+    </Router>
+}
+
+@code {
+    private StartupOutcome? _outcome;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync() => _outcome = await Bootstrapper.StartAsync();
+}

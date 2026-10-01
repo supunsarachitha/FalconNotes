@@ -1,15 +1,10 @@
 namespace FalconNotes.App;
 
 /// <summary>The MAUI application: one window holding <see cref="MainPage"/>.</summary>
-public partial class App : Application
+/// <param name="services">Creates the main page with its dependencies.</param>
+public partial class App(IServiceProvider services) : Application
 {
-    /// <summary>Creates the application.</summary>
-    public App()
-    {
-        InitializeComponent();
-    }
-
     /// <inheritdoc />
     protected override Window CreateWindow(IActivationState? activationState) =>
-        new(new MainPage()) { Title = "Falcon Notes" };
+        new(services.GetRequiredService<MainPage>()) { Title = "Falcon Notes" };
 }
