@@ -126,6 +126,7 @@ public class NoteServiceTests
     {
         using var app = await TestApp.StartAsync();
         var work = await app.Notes.CreateAsync("#work");
+        app.Clock.Advance(TimeSpan.FromSeconds(1));
         var meetings = await app.Notes.CreateAsync("#work/meetings");
         await app.Notes.CreateAsync("#workshop");
         await app.Notes.CreateAsync("#home");
@@ -140,6 +141,7 @@ public class NoteServiceTests
     {
         using var app = await TestApp.StartAsync();
         var text = await app.Notes.CreateAsync("Pick up MAPLE syrup");
+        app.Clock.Advance(TimeSpan.FromSeconds(1));
         var file = await app.AddFileAsync("Maple-trip.jpg");
         var withFile = await app.Notes.CreateAsync("photos", attachmentIds: [file.Id]);
         await app.Notes.CreateAsync("nothing here");
