@@ -27,10 +27,87 @@ internal static class NoteRepository
     public static List<NoteRow> ListRows(SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count)
     {
         using var command = connection.CreateCommand();
+        var where = Where(command, query, cursor, kindsByIndex: true, out var orderColumn);
+        command.CommandText = $"""
+            SELECT {Columns} FROM Notes n
+            WHERE {where}
+            ORDER BY {orderColumn} DESC, n.Id DESC
+            LIMIT $count
+            """;
+        command.With("$count", count);
+        return ReadRows(command);
+    }
+
+    /// <summary>
+    /// Reads a list's rows with their text in order, one at a time, until <paramref name="accept"/> has taken
+    /// <paramref name="count"/> of them or the list ends. Used by search: one pass in index order (no sorting), reading
+    /// each body once, so a search that matches nothing reads every note just once.
+    /// </summary>
+    /// <returns>The accepted rows with their text, and whether the list ended before the page filled.</returns>
+    public static (List<(NoteRow Row, string Content)> Rows, bool Ended) Scan(
+        SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count,
+        Func<NoteRow, string, bool> accept, CancellationToken cancellationToken)
+    {
+        using var command = connection.CreateCommand();
+        // Kinds are not matched through an index here, so SQLite walks the time index in order instead of sorting.
+        var where = Where(command, query, cursor, kindsByIndex: false, out var orderColumn);
+        command.CommandText = $"""
+            SELECT {Columns}, b.Content FROM Notes n
+            JOIN NoteBodies b ON b.NoteId = n.Id
+            WHERE {where}
+            ORDER BY {orderColumn} DESC, n.Id DESC
+            """;
+        var accepted = new List<(NoteRow, string)>();
+        using var reader = command.ExecuteReader();
+        var read = 0;
+        while (reader.Read())
+        {
+            if (++read % 256 == 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            var row = ReadRow(reader);
+            var content = reader.GetString(9);
+            if (accept(row, content))
+            {
+                accepted.Add((row, content));
+                if (accepted.Count == count)
+                {
+                    return (accepted, false);
+                }
+            }
+        }
+
+        return (accepted, true);
+    }
+
+    /// <summary>The file names of every attached file, by note: search matches them too.</summary>
+    public static Dictionary<Guid, List<string>> AttachmentNames(SqliteConnection connection)
+    {
+        using var command = Sql.Command(connection, "SELECT NoteId, FileName FROM Attachments WHERE NoteId IS NOT NULL");
+        var names = new Dictionary<Guid, List<string>>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var id = reader.GetId(0);
+            if (!names.TryGetValue(id, out var list))
+            {
+                names[id] = list = [];
+            }
+
+            list.Add(reader.GetString(1));
+        }
+
+        return names;
+    }
+
+    private static string Where(SqliteCommand command, NoteQuery query, NoteCursor? cursor, bool kindsByIndex, out string orderColumn)
+    {
         var where = new List<string>();
         if (query.Kinds.Distinct().Count() < NoteKinds.All.Count)
         {
-            where.Add($"n.Kind IN ({command.InList("$kind", query.Kinds.Distinct().Select(k => (object)(int)k))})");
+            where.Add($"{(kindsByIndex ? "" : "+")}n.Kind IN ({command.InList("$kind", query.Kinds.Distinct().Select(k => (object)(int)k))})");
         }
 
         switch (query.State)
@@ -78,21 +155,14 @@ internal static class NoteRepository
             command.With("$label", Sql.Id(label));
         }
 
-        var orderColumn = query.State == NoteState.Trash ? "n.TrashedAt" : "n.CreatedAt";
+        orderColumn = query.State == NoteState.Trash ? "n.TrashedAt" : "n.CreatedAt";
         if (cursor is { } position)
         {
             where.Add($"({orderColumn} < $cursorTime OR ({orderColumn} = $cursorTime AND n.Id < $cursorId))");
             command.With("$cursorTime", Sql.Time(position.Time)).With("$cursorId", Sql.Id(position.Id));
         }
 
-        command.CommandText = $"""
-            SELECT {Columns} FROM Notes n
-            WHERE {string.Join(" AND ", where)}
-            ORDER BY {orderColumn} DESC, n.Id DESC
-            LIMIT $count
-            """;
-        command.With("$count", count);
-        return ReadRows(command);
+        return string.Join(" AND ", where);
     }
 
     /// <summary>Reads one note's row.</summary>
@@ -329,20 +399,23 @@ internal static class NoteRepository
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
-            rows.Add(new NoteRow(
-                reader.GetId(0),
-                (NoteKind)reader.GetInt32(1),
-                reader.GetDateOrNull(2),
-                reader.GetInt64(3) != 0,
-                reader.GetTimeOrNull(4),
-                reader.GetTimeOrNull(5),
-                reader.GetTime(6),
-                reader.GetTime(7),
-                reader.GetInt64(8)));
+            rows.Add(ReadRow(reader));
         }
 
         return rows;
     }
+
+    private static NoteRow ReadRow(SqliteDataReader reader) =>
+        new(
+            reader.GetId(0),
+            (NoteKind)reader.GetInt32(1),
+            reader.GetDateOrNull(2),
+            reader.GetInt64(3) != 0,
+            reader.GetTimeOrNull(4),
+            reader.GetTimeOrNull(5),
+            reader.GetTime(6),
+            reader.GetTime(7),
+            reader.GetInt64(8));
 
     /// <summary>The UTF-8 length of a note's text, for storage use.</summary>
     public static long ContentBytes(string content) => Encoding.UTF8.GetByteCount(content);

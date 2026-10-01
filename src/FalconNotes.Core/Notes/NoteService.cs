@@ -27,16 +27,13 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
     /// <summary>How long a note stays in the trash before it is deleted for good.</summary>
     public static readonly TimeSpan TrashRetention = TimeSpan.FromDays(30);
 
-    /// <summary>Notes a search reads at a time.</summary>
-    private const int SearchBatchSize = 200;
-
     private Database Db => storage.Database;
 
     private DateTime Now => time.GetUtcNow().UtcDateTime;
 
     /// <summary>
-    /// One page of a list, newest first. With <see cref="NoteQuery.Search"/>, notes are read in batches of 200 until
-    /// a page of matches is full; cancel when the query changes.
+    /// One page of a list, newest first. With <see cref="NoteQuery.Search"/>, notes are read in order, each once, until
+    /// a page of matches is full or the list ends; cancel when the query changes.
     /// </summary>
     /// <param name="query">Which notes.</param>
     /// <param name="cursor">Where the page starts; null for the first.</param>
@@ -55,36 +52,13 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
                 return new NotePage(page, rows.Count > pageSize ? CursorAfter(rows[pageSize - 1], query.State) : null);
             }
 
-            var matches = new List<NoteRow>();
-            var bodies = new Dictionary<Guid, string>();
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var batch = NoteRepository.ListRows(connection, query, cursor, SearchBatchSize);
-                var ids = batch.Select(r => r.Id).ToList();
-                var text = NoteRepository.Bodies(connection, ids);
-                var names = NoteRepository.AttachmentsOf(connection, ids);
-                foreach (var row in batch)
-                {
-                    cursor = CursorAfter(row, query.State);
-                    var content = text.GetValueOrDefault(row.Id, "");
-                    if (content.Contains(search, StringComparison.OrdinalIgnoreCase)
-                        || names.GetValueOrDefault(row.Id, []).Any(f => f.Attachment.FileName.Contains(search, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        matches.Add(row);
-                        bodies[row.Id] = content;
-                        if (matches.Count == pageSize)
-                        {
-                            return new NotePage(NoteRepository.Load(connection, matches, bodies), cursor);
-                        }
-                    }
-                }
-
-                if (batch.Count < SearchBatchSize)
-                {
-                    return new NotePage(NoteRepository.Load(connection, matches, bodies), null);
-                }
-            }
+            var names = NoteRepository.AttachmentNames(connection);
+            var (matches, ended) = NoteRepository.Scan(connection, query, cursor, pageSize, (row, content) =>
+                content.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || names.GetValueOrDefault(row.Id, []).Any(name => name.Contains(search, StringComparison.OrdinalIgnoreCase)),
+                cancellationToken);
+            var notes = NoteRepository.Load(connection, matches.Select(m => m.Row).ToList(), matches.ToDictionary(m => m.Row.Id, m => m.Content));
+            return new NotePage(notes, ended ? null : CursorAfter(matches[^1].Row, query.State));
         }, cancellationToken);
     }
 
@@ -379,9 +353,10 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
             using var command = connection.CreateCommand();
             command.CommandText = $"""
                 SELECT CreatedAt FROM Notes
-                WHERE ArchivedAt IS NULL AND TrashedAt IS NULL AND CreatedAt >= $start AND CreatedAt < $end
-                  AND Kind IN ({command.InList("$kind", kinds.Select(k => (object)(int)k))})
+                WHERE CreatedAt >= $start AND CreatedAt < $end AND ArchivedAt IS NULL AND TrashedAt IS NULL
+                  AND +Kind IN ({command.InList("$kind", kinds.Select(k => (object)(int)k))})
                 """;
+            // "+Kind" keeps SQLite on the time index: a month is a short range of it, not a filter over every note.
             command.With("$start", Sql.Time(start)).With("$end", Sql.Time(end));
             var days = new List<DateOnly>();
             using var reader = command.ExecuteReader();

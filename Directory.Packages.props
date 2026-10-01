@@ -22,6 +22,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.12" />
     <!-- Markdown rendering (BSD-2-Clause; no dependencies on .NET 10). -->
     <PackageVersion Include="Markdig" Version="1.4.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup Label="Tests">
