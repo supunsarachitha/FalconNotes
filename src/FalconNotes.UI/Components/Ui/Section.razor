@@ -1,0 +1,20 @@
+@* Port of Section in components/ui.tsx: a settings card with a heading, an optional description and its controls. *@
+<Card Class="p-5">
+    <h2 class="text-base font-semibold">@Title</h2>
+    @if (Description is not null)
+    {
+        <p class="mt-1 text-sm text-stone-600 dark:text-stone-300">@Description</p>
+    }
+    <div class="mt-4">@ChildContent</div>
+</Card>
+
+@code {
+    /// <summary>The heading.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>What the section is for.</summary>
+    [Parameter] public RenderFragment? Description { get; set; }
+
+    /// <summary>The controls.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

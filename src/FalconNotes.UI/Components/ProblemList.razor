@@ -1,0 +1,22 @@
+@* Port of ProblemList in components/RestorePanel.tsx: the first 50 problems, then "…and n more." *@
+<div role="alert" class="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+    <p>@Title</p>
+    <ul class="mt-1 max-h-40 list-disc overflow-y-auto pl-5">
+        @foreach (var item in Items.Take(50))
+        {
+            <li class="break-words">@item</li>
+        }
+        @if (Items.Count > 50)
+        {
+            <li>…and @(Items.Count - 50) more.</li>
+        }
+    </ul>
+</div>
+
+@code {
+    /// <summary>The heading.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>The problems.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<string> Items { get; set; } = [];
+}

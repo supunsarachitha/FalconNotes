@@ -1,16 +1,35 @@
-@* Key lost (docs/07). Phase 0 stub: the text only. Phase 3 ports AuthLayout and adds Restore and Start with no notes. *@
+@* Key lost (docs/07): the database exists but the device key is missing or wrong. Nothing is deleted: both ways out
+   move the unreadable data aside first (docs/03, Lost key). *@
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Startup
+@inject KeyLostRecovery Recovery
+@inject IAppInfo App
 
-<main class="mx-auto w-full max-w-md px-4 py-10">
-    <h1 class="text-xl font-semibold text-stone-900 dark:text-stone-100">Your notes cannot be opened</h1>
-    <p class="mt-3 text-stone-600 dark:text-stone-300">
-        Falcon Notes keeps your notes encrypted with a key stored by @PlatformName. That key is no longer available on
-        this device, so the notes saved here cannot be read. This can happen after reinstalling the app or resetting the
-        device's secure storage.
-    </p>
-    <p class="mt-4 text-sm text-stone-500">Nothing has been deleted. The unreadable data is kept aside in case the key comes back.</p>
-</main>
+<AuthLayout Heading="Your notes cannot be opened">
+    <Intro>
+        Falcon Notes keeps your notes encrypted with a key stored by @App.PlatformName. That key is no longer available on this
+        device, so the notes saved here cannot be read. This can happen after reinstalling the app or resetting the device's
+        secure storage.
+    </Intro>
+    <ChildContent>
+        <div class="flex flex-col gap-3">
+            <Button Class="w-full" Busy="_busy" OnClick="() => MoveAsideAsync(restore: true)">Restore from a backup…</Button>
+            <Button Variant="ButtonVariant.Secondary" Class="w-full" Disabled="_busy" OnClick="() => MoveAsideAsync(restore: false)">Start with no notes</Button>
+        </div>
+    </ChildContent>
+    <Footer>Nothing has been deleted. The unreadable data is kept aside in case the key comes back.</Footer>
+</AuthLayout>
 
 @code {
-    private static string PlatformName =>
-        OperatingSystem.IsAndroid() ? "Android" : OperatingSystem.IsWindows() ? "Windows" : "macOS";
+    private bool _busy;
+
+    /// <summary>Called after the data is moved aside, to start again; true to go on to restoring.</summary>
+    [Parameter] public EventCallback<bool> OnStartOver { get; set; }
+
+    private async Task MoveAsideAsync(bool restore)
+    {
+        _busy = true;
+        await Recovery.MoveAsideAsync();
+        await OnStartOver.InvokeAsync(restore);
+    }
 }

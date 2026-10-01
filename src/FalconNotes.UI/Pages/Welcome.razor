@@ -1,0 +1,90 @@
+@page "/welcome"
+@* Welcome (docs/07): shown on first start, when there is no profile. Start writing, or restore from a backup. *@
+@using FalconNotes.Core.Settings
+@using FalconNotes.UI.State
+@inject ProfileService Profiles
+@inject PreferencesService PreferencesStore
+@inject AppState State
+@inject NavigationManager Navigation
+
+@if (_restoring)
+{
+    <AuthLayout Heading="Restore from a backup">
+        <Intro>Choose a Falcon Notes or Maple Notes export (.zip), or Markdown, text and JSON files.</Intro>
+        <ChildContent>
+            <RestoreFlow StartPicking="true" ButtonClass="w-full" ChooseLabel="Choose files…" OnCancel="FinishAsync">
+                <Finished>
+                    <Button Class="w-full" OnClick="FinishAsync">Continue</Button>
+                </Finished>
+            </RestoreFlow>
+        </ChildContent>
+    </AuthLayout>
+}
+else
+{
+    <AuthLayout Heading="Welcome to Falcon Notes">
+        <Intro>Quick notes, todo lists and habits, kept on this device and encrypted.</Intro>
+        <ChildContent>
+            <form class="flex flex-col gap-4" @onsubmit="StartAsync" @onsubmit:preventDefault>
+                <TextField Label="What should we call you? (optional)" @bind-Value="_name" maxlength="64" autocomplete="nickname" />
+                <Button Type="submit" Busy="_busy" Class="w-full">Start writing</Button>
+            </form>
+            <div class="my-5 flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400" aria-hidden="true">
+                <span class="h-px flex-1 bg-stone-200 dark:bg-stone-800"></span>or<span class="h-px flex-1 bg-stone-200 dark:bg-stone-800"></span>
+            </div>
+            <Button Variant="ButtonVariant.Secondary" Class="w-full" Disabled="_busy" OnClick="RestoreAsync">Restore from a backup…</Button>
+        </ChildContent>
+        <Footer>Your notes never leave this device unless you export them.</Footer>
+    </AuthLayout>
+}
+
+@code {
+    private string _name = "";
+    private bool _busy;
+    private bool _restoring;
+
+    /// <summary>Opens the restore flow at once (from Key lost).</summary>
+    [SupplyParameterFromQuery(Name = "restore")] public int Restore { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        if (Restore == 1)
+        {
+            await CreateProfileAsync();
+            _restoring = true;
+        }
+    }
+
+    private async Task StartAsync()
+    {
+        _busy = true;
+        await CreateProfileAsync();
+        Navigation.NavigateTo("/", replace: true);
+    }
+
+    private async Task RestoreAsync()
+    {
+        _busy = true;
+        await CreateProfileAsync();
+        _busy = false;
+        _restoring = true;
+    }
+
+    /// <summary>The profile (the name typed, or "Me") with the default preferences.</summary>
+    private async Task CreateProfileAsync()
+    {
+        if (State.Profile is null)
+        {
+            await Profiles.CreateAsync(_name);
+            await PreferencesStore.SaveAsync(new FalconNotes.Core.Domain.Preferences());
+            await State.LoadAsync();
+        }
+    }
+
+    private Task FinishAsync()
+    {
+        Navigation.NavigateTo("/", replace: true);
+        return Task.CompletedTask;
+    }
+}

@@ -1,0 +1,14 @@
+@* A Lucide icon as inline SVG, as lucide-react renders it (docs/06, Icons). Decorative: aria-hidden. *@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="@StrokeWidth" stroke-linecap="round" stroke-linejoin="round" class="@Class" aria-hidden="true">@((MarkupString)IconPaths.Elements[Name])</svg>
+
+@code {
+    /// <summary>Which icon.</summary>
+    [Parameter, EditorRequired] public IconName Name { get; set; }
+
+    /// <summary>Size and colour classes, e.g. <c>size-5</c>.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>The stroke width: 2, or 3 for the habit check.</summary>
+    [Parameter] public double StrokeWidth { get; set; } = 2;
+}
