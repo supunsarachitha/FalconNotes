@@ -97,6 +97,40 @@ public sealed class Database
             }
         }, cancellationToken);
 
+    /// <summary>
+    /// Runs <paramref name="work"/> on a background thread with an open connection, and returns its result.
+    /// </summary>
+    /// <typeparam name="T">The result's type.</typeparam>
+    /// <param name="work">Reads or writes through the connection.</param>
+    /// <param name="cancellationToken">Cancels before the work starts.</param>
+    /// <returns>The work's result.</returns>
+    public async Task<T> ReadAsync<T>(Func<SqliteConnection, T> work, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        return await Task.Run(() => work(connection), cancellationToken);
+    }
+
+    /// <summary>
+    /// Runs <paramref name="work"/> on a background thread inside one transaction, committing when it returns and
+    /// rolling back when it throws.
+    /// </summary>
+    /// <typeparam name="T">The result's type.</typeparam>
+    /// <param name="work">Writes through the connection and transaction.</param>
+    /// <param name="cancellationToken">Cancels before the work starts.</param>
+    /// <returns>The work's result.</returns>
+    public async Task<T> InTransactionAsync<T>(
+        Func<SqliteConnection, SqliteTransaction, T> work, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await OpenAsync(cancellationToken);
+        return await Task.Run(() =>
+        {
+            using var transaction = connection.BeginTransaction();
+            var result = work(connection, transaction);
+            transaction.Commit();
+            return result;
+        }, cancellationToken);
+    }
+
     /// <summary>Builds the connection string. Contains the key: never log it.</summary>
     internal static string BuildConnectionString(string fullPath, ReadOnlySpan<byte> key, bool pooling) =>
         new SqliteConnectionStringBuilder

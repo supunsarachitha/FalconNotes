@@ -6,6 +6,9 @@
     <IsPackable>false</IsPackable>
     <!-- Test code is not part of the public API surface; XML docs are not required here. -->
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- xUnit1051 asks for the test's cancellation token on every call that takes one. Core's services are local and
+         fast, so passing it everywhere adds noise; tests that cancel on purpose pass their own token. -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

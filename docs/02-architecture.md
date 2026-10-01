@@ -69,7 +69,7 @@ src/
     Attachments/     AttachmentStore, AttachmentService, UploadPolicy, PhotoShrinker
     Notes/           NoteService, SearchService, CalendarService, TagService
     Labels/          LabelService
-    Preferences/     PreferencesService, ProfileService
+    Settings/        PreferencesService, ProfileService (not Preferences/: that name is the record's)
     Backup/Export/   NoteExporter, NoteFormatter, ExportNaming, ExportModels (ported from the server)
     Backup/Restore/  RestoreReader (port of parse.ts), RestoreRunner (port of importer.ts)
     Maintenance/     StartupTasks, TrashPurge, AttachmentCleanup, TempFiles, DatabaseBackups
