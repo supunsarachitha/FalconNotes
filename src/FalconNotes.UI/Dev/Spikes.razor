@@ -85,6 +85,7 @@
         await Step("S2", S2Async);
         await Step("S5", S5Async);
         await Step("S3", S3Async);
+        await Step("S7", S7Async);
         _busy = false;
         Log("ALL", "finished");
     }
@@ -200,6 +201,20 @@
         {
             Log("S3", $"{property.Name} = {property.Value}");
         }
+    }
+
+    private async Task S7Async()
+    {
+        var fixtures = Path.Combine(Directories.DataDirectory, "spike-src");
+        if (!File.Exists(Path.Combine(fixtures, "export-vectors.json")))
+        {
+            Log("S7", "no spike-src/export-vectors.json to test with");
+            return;
+        }
+
+        var watch = Stopwatch.StartNew();
+        await Task.Run(() => BackupConformance.RunAsync(fixtures, Path.Combine(Directories.CacheDirectory, "conformance"), line => InvokeAsync(() => Log("S7", line))));
+        Log("S7", $"took {watch.Elapsed.TotalSeconds:F1} s");
     }
 
     private async Task PickAsync() => await Step("S4", async () =>

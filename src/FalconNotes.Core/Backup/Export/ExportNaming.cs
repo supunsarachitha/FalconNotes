@@ -171,7 +171,7 @@ public static partial class ExportNaming
     /// </summary>
     /// <param name="path">An archive path or file name.</param>
     /// <returns>The extension, or an empty string.</returns>
-    internal static string Extension(string path)
+    public static string Extension(string path)
     {
         var dot = path.LastIndexOf('.');
         return dot < 0 || dot < path.LastIndexOf('/') || dot == path.Length - 1 ? string.Empty : path[dot..];

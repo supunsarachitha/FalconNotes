@@ -81,13 +81,17 @@ search with no match 140 ms, post, edit and pin under 0.2 ms each.
 
 ## Phase 2: backup compatibility
 
-- [ ] Copy the server exporter ([05](05-backup-compatibility.md#export)); write ZIPs to the cache folder.
-- [ ] Port `parse.ts` and `importer.ts` ([05](05-backup-compatibility.md#restore)).
-- [ ] The conformance tests ([11](11-testing.md#backup-conformance)).
+- [x] Copy the server exporter ([05](05-backup-compatibility.md#export)); write ZIPs to the cache folder.
+- [x] Port `parse.ts` and `importer.ts` ([05](05-backup-compatibility.md#restore)).
+- [x] The conformance tests ([11](11-testing.md#backup-conformance)).
 
 **Acceptance**: all 13 exports in `fixtures/export-vectors.json` match entry for entry, and restoring each one gives back
 the original notes. Both demo backups restore with 35 notes and 8 files. Export → restore → export gives the same
 archive. Run once on Android and once on Windows with the on-device test runner, not only on the Mac.
+
+Status (2026-10-01): all of it passes on the Mac (Core tests) and on the Android emulator (the Debug spike page's S7,
+which runs the same checks inside the app: 13 exports match, 13 restores clean, both demos 35 notes and 8 files, in
+5.2 s). Windows waits for the Windows head. A 10,000-note restore takes 0.4 s on the Mac (budget 5 s).
 
 ## Phase 3: shell and design system
 

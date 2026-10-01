@@ -30,3 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every rule of the web app (lists, search, filters, pin, archive, trash and its 30-day purge, daily notes, moves,
   labels, delete all, storage use); labels, preferences and the profile; attachments added to the encrypted store;
   Markdown rendering; hourly maintenance. Search over 50,000 notes takes about 0.14 s.
+- Backups in the Maple Notes web app's format: export to a ZIP of Markdown, plain text or JSON in any folder layout,
+  with files, saved where you choose (`falcon-notes-{date}.zip`); restore from this app's, the web app's or a server's
+  exports, or single Markdown, text and JSON files. Restoring the same backup twice changes nothing.
