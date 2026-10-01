@@ -1,15 +1,21 @@
+using FalconNotes.Core.Maintenance;
 using FalconNotes.Core.Startup;
 using FalconNotes.Core.Storage;
 
 namespace FalconNotes.UI.State;
 
 /// <summary>
-/// Runs the start-up sequence once, before the first screen (docs/02, Start-up sequence). Phase 0 covers the key and
-/// the database; Phase 3 adds migrations, maintenance, the profile and the routes to Welcome and Lock.
+/// Runs the start-up sequence once, before the first screen (docs/02, Start-up sequence): the key, the database and
+/// its migrations, then maintenance in the background, hourly. Phase 3 adds the profile and the routes to Welcome and
+/// Lock.
 /// </summary>
 /// <param name="startup">The key and database check.</param>
-public sealed class AppBootstrapper(DatabaseStartup startup)
+/// <param name="maintenance">The trash purge and clean-up.</param>
+/// <param name="time">The clock, for the hourly timer.</param>
+public sealed class AppBootstrapper(DatabaseStartup startup, StartupTasks maintenance, TimeProvider time)
 {
+    private readonly CancellationTokenSource _stopping = new();
+
     private Task<StartupOutcome>? _run;
 
     /// <summary>The open database, once the outcome is <see cref="StartupOutcome.Ready"/>.</summary>
@@ -23,6 +29,12 @@ public sealed class AppBootstrapper(DatabaseStartup startup)
     {
         var (outcome, database) = await startup.RunAsync();
         Database = database;
+        if (outcome == StartupOutcome.Ready)
+        {
+            // Not awaited: maintenance must never hold up the first screen.
+            _ = Task.Run(() => maintenance.RunPeriodicallyAsync(time, _stopping.Token));
+        }
+
         return outcome;
     }
 }

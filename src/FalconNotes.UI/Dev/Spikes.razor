@@ -14,7 +14,7 @@
 @inject IAppDirectories Directories
 @inject DeviceKeyStore Keys
 @inject AppBootstrapper Bootstrapper
-@inject SpikeMediaLibrary Media
+@inject FalconNotes.Core.Attachments.AttachmentService Media
 @inject IFilePicker Picker
 @inject IFileSaver Saver
 @inject IFileOpener Opener
@@ -186,12 +186,12 @@
         Guid imageId, videoId;
         await using (var f = File.OpenRead(image))
         {
-            imageId = await Task.Run(() => Media.AddAsync(f, "image/jpeg"));
+            imageId = (await Media.AddAsync(f, "big.jpg", "image/jpeg")).Id;
         }
 
         await using (var f = File.OpenRead(video))
         {
-            videoId = await Task.Run(() => Media.AddAsync(f, "video/mp4"));
+            videoId = (await Media.AddAsync(f, "big.mp4", "video/mp4")).Id;
         }
 
         Log("S3", $"encrypted {new FileInfo(image).Length + new FileInfo(video).Length:N0} bytes in {watch.ElapsedMilliseconds} ms");
@@ -210,7 +210,7 @@
         {
             var watch = Stopwatch.StartNew();
             await using var stream = await file.OpenReadAsync();
-            var id = await Task.Run(() => Media.AddAsync(stream, file.ContentType ?? "application/octet-stream"));
+            var id = (await Media.AddAsync(stream, file.FileName, file.ContentType)).Id;
             Log("S4", $"{file.FileName} ({file.ContentType}) encrypted as {id} in {watch.ElapsedMilliseconds} ms; seekable source {stream.CanSeek}");
         }
     });

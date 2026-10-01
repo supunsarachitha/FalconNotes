@@ -1,14 +1,18 @@
 using CommunityToolkit.Maui;
 using FalconNotes.App.Services;
+using FalconNotes.Core.Attachments;
 using FalconNotes.Core.Crypto;
+using FalconNotes.Core.Events;
+using FalconNotes.Core.Labels;
+using FalconNotes.Core.Maintenance;
+using FalconNotes.Core.Markdown;
+using FalconNotes.Core.Notes;
+using FalconNotes.Core.Settings;
+using FalconNotes.Core.Storage;
 using FalconNotes.Core.Platform;
 using FalconNotes.Core.Startup;
 using FalconNotes.UI.State;
 using Microsoft.Extensions.Logging;
-#if DEBUG
-using FalconNotes.Core.Attachments;
-using FalconNotes.UI.Dev;
-#endif
 
 namespace FalconNotes.App;
 
@@ -37,17 +41,29 @@ public static class MauiProgram
 #endif
         builder.Services.AddSingleton<IFileOpener, FileOpener>();
 
-        // Core and start-up.
+        // Core and start-up (docs/02, Runtime model): stateless services are singletons.
+        builder.Services.AddSingleton(TimeProvider.System);
+        builder.Services.AddSingleton<ChangeFeed>();
+        builder.Services.AddSingleton<StorageContext>();
         builder.Services.AddSingleton<DeviceKeyStore>();
+        builder.Services.AddSingleton<DatabaseBackups>();
         builder.Services.AddSingleton<DatabaseStartup>();
+        builder.Services.AddSingleton<AttachmentStore>();
+        builder.Services.AddSingleton<AttachmentService>();
+        builder.Services.AddSingleton<IMediaSource>(sp => sp.GetRequiredService<AttachmentService>());
+        builder.Services.AddSingleton<NoteService>();
+        builder.Services.AddSingleton<DailyNotes>();
+        builder.Services.AddSingleton<LabelService>();
+        builder.Services.AddSingleton<PreferencesService>();
+        builder.Services.AddSingleton<ProfileService>();
+        builder.Services.AddSingleton<MarkdownRenderer>();
+        builder.Services.AddSingleton<AttachmentCleanup>();
+        builder.Services.AddSingleton<StartupTasks>();
         builder.Services.AddSingleton<AppBootstrapper>();
+        builder.Services.AddSingleton<MediaHandler>();
         builder.Services.AddTransient<MainPage>();
 
 #if DEBUG
-        // Phase 0 spikes: the media library stands in for the attachment store until Phase 1.
-        builder.Services.AddSingleton<SpikeMediaLibrary>();
-        builder.Services.AddSingleton<IMediaSource>(sp => sp.GetRequiredService<SpikeMediaLibrary>());
-        builder.Services.AddSingleton<MediaHandler>();
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
 #endif
