@@ -20,6 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The shared export vectors and demo backups (docs/05), read by the backup conformance tests. -->
+    <None Include="..\..\fixtures\export-vectors.json" Link="Fixtures\export-vectors.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\fixtures\demo-backups\*.zip" Link="Fixtures\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

@@ -71,7 +71,9 @@ Also: an attachment whose stored file is missing appears in `problems` as
 problems.
 
 **Round trip**: restore each demo backup, export with the same options, and compare the entries with the original
-archive. The manifests may differ only in `exportedAt` and `account`.
+archive. The manifests may differ only in `exportedAt` and `account`, and file names in their 8-hex-digit ID prefix:
+exports name files `attachments/{last 8 hex of the file's ID}_{name}` but do not record the file IDs, so a restore
+gives files new IDs, as the web app's restore does (found in Phase 2).
 
 ## Performance budgets
 

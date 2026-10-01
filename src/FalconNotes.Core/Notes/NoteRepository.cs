@@ -165,6 +165,48 @@ internal static class NoteRepository
         return string.Join(" AND ", where);
     }
 
+    /// <summary>
+    /// Reads the notes an export covers, oldest first by (creation time, ID): never the trash, archived ones when asked,
+    /// created in [<paramref name="fromUtc"/>, <paramref name="beforeUtc"/>), after <paramref name="after"/>.
+    /// </summary>
+    public static List<NoteRow> ExportRows(
+        SqliteConnection connection, bool includeArchived, DateTime? fromUtc, DateTime? beforeUtc, (DateTime Time, Guid Id)? after, int count)
+    {
+        using var command = connection.CreateCommand();
+        var where = new List<string> { "n.TrashedAt IS NULL" };
+        if (!includeArchived)
+        {
+            where.Add("n.ArchivedAt IS NULL");
+        }
+
+        if (fromUtc is { } from)
+        {
+            where.Add("n.CreatedAt >= $from");
+            command.With("$from", Sql.Time(from));
+        }
+
+        if (beforeUtc is { } before)
+        {
+            where.Add("n.CreatedAt < $before");
+            command.With("$before", Sql.Time(before));
+        }
+
+        if (after is { } position)
+        {
+            where.Add("(n.CreatedAt > $afterTime OR (n.CreatedAt = $afterTime AND n.Id > $afterId))");
+            command.With("$afterTime", Sql.Time(position.Time)).With("$afterId", Sql.Id(position.Id));
+        }
+
+        command.CommandText = $"""
+            SELECT {Columns} FROM Notes n
+            WHERE {string.Join(" AND ", where)}
+            ORDER BY n.CreatedAt, n.Id
+            LIMIT $count
+            """;
+        command.With("$count", count);
+        return ReadRows(command);
+    }
+
     /// <summary>Reads one note's row.</summary>
     public static NoteRow? GetRow(SqliteConnection connection, Guid id, SqliteTransaction? transaction = null)
     {

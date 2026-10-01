@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using FalconNotes.Core.Backup.Restore;
 using FalconNotes.Core.Domain;
 using FalconNotes.Core.Notes;
 using Microsoft.Data.Sqlite;
@@ -71,6 +72,23 @@ public sealed class PerformanceBudgetTests(ITestOutputHelper output)
         await Measure("Post a note", 5, async () => posted = await app.Notes.CreateAsync("A new note #work"));
         await Measure("Edit a note", 5, () => app.Notes.UpdateAsync(posted!.Id, "Edited #home"));
         await Measure("Pin a note", 5, () => app.Notes.PatchAsync(posted!.Id, new NotePatch(IsPinned: true)));
+
+        // Restore of 10,000 notes without files, into an empty database: 5 s.
+        using (var empty = await TestApp.StartAsync())
+        {
+            var items = Enumerable.Range(0, 10_000).Select(i => new RestoreItem(
+                $"{i}.md", Guid.CreateVersion7(), $"Restored note {i} #topic{i % 50}", empty.Clock.Now.AddDays(-i), empty.Clock.Now.AddDays(-i),
+                false, i % 10 == 0, NoteKind.Note, null, [], [])).ToList();
+            var watch = Stopwatch.StartNew();
+            var restored = await new RestoreRunner(empty.Storage, empty.Attachments, empty.Feed, empty.Clock).RunAsync(items);
+            var seconds = watch.Elapsed.TotalSeconds;
+            Assert.Equal(10_000, restored.Restored);
+            report.Add($"{"Restore of 10,000 notes without files",-40} {seconds * 1000,8:F0} ms   (budget 5000 ms)");
+            if (seconds > 5)
+            {
+                failures.Add($"Restore of 10,000 notes: {seconds:F1} s > 5 s");
+            }
+        }
 
         if (Environment.GetEnvironmentVariable("FALCON_PERF_REPORT") is { Length: > 0 } path)
         {
