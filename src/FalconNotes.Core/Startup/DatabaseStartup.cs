@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using FalconNotes.Core.Crypto;
 using FalconNotes.Core.Platform;
 using FalconNotes.Core.Storage;
@@ -44,8 +45,9 @@ public sealed class DatabaseStartup(DeviceKeyStore keys, IAppDirectories directo
             key = await keys.CreateAsync();
         }
 
-        // Phase 1 derives the database key from the device key with HKDF (docs/03, Keys); until then it is used as is.
-        var database = new Database(DatabasePath, key);
+        using var keyMaterial = new KeyMaterial(key);
+        CryptographicOperations.ZeroMemory(key);
+        var database = new Database(DatabasePath, keyMaterial.DatabaseKey);
         try
         {
             await using var connection = await database.OpenAsync();
