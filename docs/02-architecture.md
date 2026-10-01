@@ -175,7 +175,12 @@ each platform: build URLs relative to the page (`/_media/...`). The handler:
    `application/octet-stream`. Always sends `X-Content-Type-Options: nosniff` and `Cache-Control: no-store`.
 3. Reads nothing else from the request, and never serves a path outside the attachment store.
 
-Mechanism, in order of preference. Choose it in the Phase 0 spike S3 and record the choice here:
+Mechanism, in order of preference. **Chosen: A** (spike S3, Android, 2026-10-01; WebView2 and WKWebView still to
+verify). On Android the handler builds the native `WebResourceResponse` itself, because the WebView applies `Range`
+by skipping into the whole file and takes the length from the stream's `available()`; `MediaInputStream` reports the
+bytes left, seeks on `skip()`, and stops at the range's end ([10](10-implementation-plan.md#spike-results)).
+
+The options considered:
 
 | Option | How | Notes |
 |---|---|---|
@@ -199,7 +204,8 @@ The page is trusted code, but note text is user content and must never become ma
 
 - `index.html` sets `Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none';
-  base-uri 'none'; form-action 'none'`. Add only what Blazor Hybrid itself needs on a platform, and record why.
+  base-uri 'self'; form-action 'none'`. Add only what Blazor Hybrid itself needs on a platform, and record why.
+  `base-uri` is `'self'`, not `'none'`, because Blazor needs `<base href="/">` (spike S5).
 - Markdown is rendered with raw HTML disabled, and link URLs pass the same safe-protocol check as react-markdown
   ([04](04-domain-rules.md#markdown-rendering)). Remote images in notes are blocked by the policy above.
 - Navigation away from the app's origin is cancelled (`UrlLoading`). Links to `http(s):` and `mailto:` open in the
@@ -230,12 +236,13 @@ Core defines the interfaces; the App implements them per platform; tests use fak
 |---|---|---|---|
 | `ISecretStore` (the device key) | `SecureStorage` (Keystore-backed) | `SecureStorage` (needs a **packaged** app) | `SecureStorage` (Keychain; needs the keychain entitlement) |
 | `IFilePicker` | `FilePicker.PickMultipleAsync` | same | same |
-| `IFileSaver` (export, Save a copy) | `CommunityToolkit.Maui.Storage.FileSaver` (system "save to") | same | same |
+| `IFileSaver` (export, Save a copy) | `AndroidFileSaver`: `ACTION_CREATE_DOCUMENT`, then a .NET `FileStream` on the document's descriptor (the toolkit's saver took 13 minutes for 1 GB; spike S4) | `CommunityToolkit.Maui.Storage.FileSaver` | same |
 | `IFileOpener` (Open with the default app) | `Launcher.OpenAsync(new OpenFileRequest)` from `cache/open/` | same | same |
 | `IClipboard` (Copy text) | `Clipboard.SetTextAsync` | same | same |
 | `IAppLock` (biometrics) | AndroidX `BiometricPrompt` | `UserConsentVerifier` (Windows Hello) | `LAContext` (Touch ID) |
 | `IThemeSource` (device theme and changes) | `Application.RequestedTheme` + `RequestedThemeChanged` | same | same |
 | `IAppInfo` (version) | `AppInfo.VersionString` | same | same |
+| `IAppDirectories` (data and cache folders) | `FileSystem.AppDataDirectory`, `FileSystem.CacheDirectory` | same | same |
 
 See [12-platforms.md](12-platforms.md) for the platform details.
 

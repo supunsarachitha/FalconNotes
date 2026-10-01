@@ -146,8 +146,8 @@ All times in milliseconds, medians. Raw output:
 ## Caveats and how to confirm on real hardware
 
 - The emulator had one core, but that core was an M1 Pro core. Real budget phones will be slower; the ×5 column
-  estimates that. Run the benchmark on the slowest phone you intend to support before Phase 1 ends
-  ([10-implementation-plan.md](10-implementation-plan.md)):
+  estimates that. Run the benchmark on the slowest phone you intend to support (spike S6; deferred on 2026-10-01
+  until a phone is available, to be done before Phase 7; [10-implementation-plan.md](10-implementation-plan.md)):
   ```sh
   cd benchmarks/storage/Droid && dotnet build -c Release
   adb install -r bin/Release/net10.0-android/android-arm64/dev.maplenotes.bench-Signed.apk

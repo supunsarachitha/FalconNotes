@@ -14,11 +14,12 @@ Phase 0 spikes here.
 | Secure storage | `SecureStorage` (Keystore-backed). Uninstall deletes the key; reinstalling starts fresh. |
 | Biometrics | AndroidX `BiometricPrompt` with `BIOMETRIC_STRONG or BIOMETRIC_WEAK`, falling back to the PIN; reports "fingerprint or face" |
 | Lock privacy | `Window.SetFlags(WindowManagerFlags.Secure)` while the app lock is on |
-| Edge to edge | Draw behind the system bars; the page pads with `env(safe-area-inset-*)`. Status bar colour and icon brightness follow the theme ([06](06-design-system.md#light-and-dark)). |
+| Edge to edge | Draw behind the system bars. Android WebView 133 reports `env(safe-area-inset-*)` as 0 (spike S5), so the app reads the window insets natively and passes them to the page as CSS variables, which the safe-area rules use. Status bar colour and icon brightness follow the theme ([06](06-design-system.md#light-and-dark)). |
 | Keyboard | `WindowSoftInputMode = AdjustResize`, so the composer and dialogs stay above the keyboard. Check the drawer and dialogs with the keyboard open. |
-| Back | Goes back in the app's history. On Home (or Welcome, Lock, Key lost) it leaves the app. Closes an open dialog, menu or the image viewer first. |
-| Files | `FilePicker.PickMultipleAsync` (Storage Access Framework); `FileSaver` uses `ACTION_CREATE_DOCUMENT`; Open uses a `FileProvider` URI for the cached copy, with read permission granted |
+| Back | Goes back in the app's history. On Home (or Welcome, Lock, Key lost) it leaves the app. Closes an open dialog, menu or the image viewer first. The `BlazorWebView` default already goes back through the WebView's history and leaves from the first page (spike S5). |
+| Files | `FilePicker.PickMultipleAsync` (Storage Access Framework); saving uses our `AndroidFileSaver` (`ACTION_CREATE_DOCUMENT`, then a .NET `FileStream` on the descriptor; spike S4); Open uses MAUI's `FileProvider` URI for the cached copy, with read permission granted |
 | Share (viewer) | `Share.RequestAsync(new ShareFileRequest)` with the cached decrypted copy |
+| Media | Attachments are served through `WebResourceRequested` with a hand-built `WebResourceResponse` ([02](02-architecture.md#serving-attachments-to-the-webview)); no `INTERNET` permission is needed. |
 | Release | Signed AAB for the Play Store, signed APK for direct installs. R8/trimming: `TrimMode=partial` (raw ADO.NET is trim-friendly; no EF Core). Test the release build, not just debug. |
 | Tablets | Landscape tablets at 1,024 dp or more get the sidebar layout automatically |
 
