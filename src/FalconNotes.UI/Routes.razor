@@ -19,7 +19,20 @@ else if (_outcome == StartupOutcome.Ready)
 
 @code {
     private StartupOutcome? _outcome;
+    private bool _startLogged;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync() => _outcome = await Bootstrapper.StartAsync();
+
+    /// <inheritdoc />
+    protected override void OnAfterRender(bool firstRender)
+    {
+        // The start-up budget (docs/11) is measured to the first screen; log it once, with no other detail.
+        if (_outcome is not null && !_startLogged)
+        {
+            _startLogged = true;
+            var elapsed = DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime;
+            Console.WriteLine($"Falcon Notes: first screen {elapsed.TotalMilliseconds:F0} ms after the process started");
+        }
+    }
 }

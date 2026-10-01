@@ -30,7 +30,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<ISecretStore, SecretStore>();
         builder.Services.AddSingleton<IAppDirectories, AppDirectories>();
         builder.Services.AddSingleton<Core.Platform.IFilePicker, Services.FilePicker>();
+        #if ANDROID
+        builder.Services.AddSingleton<Core.Platform.IFileSaver, AndroidFileSaver>();
+#else
         builder.Services.AddSingleton<Core.Platform.IFileSaver, Services.FileSaver>();
+#endif
         builder.Services.AddSingleton<IFileOpener, FileOpener>();
 
         // Core and start-up.

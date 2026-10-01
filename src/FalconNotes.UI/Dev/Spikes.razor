@@ -302,14 +302,12 @@
         public override long Length => length;
         public override long Position { get => _position; set => throw new NotSupportedException(); }
 
+        private static readonly byte[] Pattern = Enumerable.Range(0, 251 * 4096).Select(i => (byte)(i % 251)).ToArray();
+
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var n = (int)Math.Min(count, length - _position);
-            for (var i = 0; i < n; i++)
-            {
-                buffer[offset + i] = (byte)((_position + i) % 251);
-            }
-
+            var n = (int)Math.Min(Math.Min(count, length - _position), 251 * 4095);
+            Pattern.AsSpan((int)(_position % 251), n).CopyTo(buffer.AsSpan(offset, n));
             _position += n;
             return n;
         }

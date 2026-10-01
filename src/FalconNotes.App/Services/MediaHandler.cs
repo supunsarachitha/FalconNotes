@@ -30,9 +30,6 @@ public sealed class MediaHandler(IMediaSource source, ILogger<MediaHandler> logg
     /// <param name="e">The request.</param>
     public void Handle(WebViewWebResourceRequestedEventArgs e)
     {
-#if DEBUG
-        Console.WriteLine($"FALCONSPIKE|REQ|{e.Method} {e.Uri.AbsolutePath}");
-#endif
         if (!e.Uri.AbsolutePath.StartsWith(PathPrefix, StringComparison.Ordinal))
         {
             return;
@@ -42,7 +39,7 @@ public sealed class MediaHandler(IMediaSource source, ILogger<MediaHandler> logg
         if (!string.Equals(e.Method, "GET", StringComparison.OrdinalIgnoreCase)
             || !Guid.TryParseExact(e.Uri.AbsolutePath[PathPrefix.Length..], "D", out var id))
         {
-            e.SetResponse(404, "Not Found");
+            Respond(e, 404, "Not Found", new Dictionary<string, string> { ["X-Content-Type-Options"] = "nosniff" }, new MemoryStream(), 0);
             return;
         }
 
@@ -51,20 +48,14 @@ public sealed class MediaHandler(IMediaSource source, ILogger<MediaHandler> logg
         // The status and headers depend on the file, so the handler waits for the lookup (a database row and a file
         // header); the body itself streams. On Android this runs on the WebView's I/O thread, not the UI thread.
         var (status, reason, headers, body, limit) = response.GetAwaiter().GetResult();
-        logger.LogDebug("Media {Id}: range {Range} -> {Status} on thread {Thread}", id, rangeHeader, status, Environment.CurrentManagedThreadId);
-#if DEBUG
-        Console.WriteLine($"FALCONSPIKE|MEDIA|{id} range={rangeHeader ?? "none"} -> {status} thread={Environment.CurrentManagedThreadId} main={MainThread.IsMainThread}");
-#endif
-#if DEBUG
-        body = new DebugBodyStream(body, $"{id.ToString()[^4..]} {rangeHeader ?? "whole"}");
-#endif
+        logger.LogDebug("Media {Id}: range {Range} -> {Status}", id, rangeHeader, status);
         Respond(e, status, reason, headers, body, limit);
     }
 
     /// <summary>
     /// Sends the response. On Android it builds the native response itself (Phase 0 spike S3): MAUI's
     /// <c>SetResponse</c> repeats the <c>Content-Type</c> header ("video/mp4, video/mp4"), and its stream adapter
-    /// neither reports a length nor seeks, which breaks ranges (see <see cref="MediaInputStream"/>). A 64 KiB
+    /// neither reports a length nor seeks, which breaks ranges (see <c>MediaInputStream</c>). A 64 KiB
     /// <c>BufferedInputStream</c> also cuts the calls across the Java bridge 32-fold (the WebView reads 2 KB at a time).
     /// </summary>
     private static void Respond(

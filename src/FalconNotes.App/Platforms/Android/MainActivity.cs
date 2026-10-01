@@ -1,6 +1,8 @@
 using Android.App;
 using Android.Content.PM;
+using Android.Content;
 using Android.OS;
+using FalconNotes.App.Services;
 
 namespace FalconNotes.App;
 
@@ -17,5 +19,12 @@ public class MainActivity : MauiAppCompatActivity
         DevLaunch.StartPath = Intent?.GetStringExtra("route");
 #endif
         base.OnCreate(savedInstanceState);
+    }
+
+    /// <inheritdoc />
+    protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
+    {
+        base.OnActivityResult(requestCode, resultCode, data);
+        AndroidFileSaver.OnActivityResult(requestCode, resultCode, data);
     }
 }
