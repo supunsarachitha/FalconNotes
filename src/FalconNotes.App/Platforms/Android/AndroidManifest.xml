@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!--
+    No permissions: the app is offline (no INTERNET), and files go through the system pickers.
+    Auto Backup is off: the encrypted files are useless without the Keystore key (docs/03, Lost key).
+    Debug builds get INTERNET added by the .NET Android tooling for the debugger; release builds must not have it.
+  -->
+  <application android:allowBackup="false" android:fullBackupContent="false" android:icon="@mipmap/appicon"
+               android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
+</manifest>

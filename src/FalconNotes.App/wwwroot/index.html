@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- docs/02, WebView hardening. Add only what Blazor Hybrid needs on a platform, and record why. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none'" />
+  <title>Falcon Notes</title>
+  <base href="/" />
+  <link rel="stylesheet" href="_content/FalconNotes.UI/css/app.css" />
+  <link rel="icon" href="data:," />
+</head>
+<body>
+  <div id="app"></div>
+  <script src="_framework/blazor.webview.js" autostart="false"></script>
+</body>
+</html>

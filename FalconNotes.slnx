@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FalconNotes.App/FalconNotes.App.csproj" />
+    <Project Path="src/FalconNotes.Core/FalconNotes.Core.csproj" />
+    <Project Path="src/FalconNotes.UI/FalconNotes.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FalconNotes.Core.Tests/FalconNotes.Core.Tests.csproj" />
+    <Project Path="tests/FalconNotes.UI.Tests/FalconNotes.UI.Tests.csproj" />
+  </Folder>
+</Solution>
