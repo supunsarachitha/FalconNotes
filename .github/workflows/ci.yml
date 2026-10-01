@@ -1,0 +1,72 @@
+# Builds and tests Falcon Notes. Android first (docs/10, Phase 0): the Mac Catalyst and Windows app builds are added
+# when those platforms' spikes run. Nothing here signs or publishes anything.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Tailwind CLI cache
+        uses: actions/cache@v6
+        with:
+          path: tools
+          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('build/Tailwind.targets') }}
+      - name: Core tests
+        run: dotnet test tests/FalconNotes.Core.Tests
+      - name: UI tests
+        run: dotnet test tests/FalconNotes.UI.Tests
+
+  android:
+    name: Android app (Release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-java@v6
+        with:
+          distribution: microsoft
+          java-version: "21"
+      - name: Tailwind CLI cache
+        uses: actions/cache@v6
+        with:
+          path: tools
+          key: tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('build/Tailwind.targets') }}
+      - name: Install the MAUI Android workload
+        run: dotnet workload install maui-android
+      - name: Install the Android SDK packages the app needs
+        run: >
+          dotnet build src/FalconNotes.App -f net10.0-android -t:InstallAndroidDependencies
+          -p:AndroidSdkDirectory="$ANDROID_HOME" -p:AcceptAndroidSDKLicenses=true
+      - name: Build
+        run: dotnet build src/FalconNotes.App -c Release -f net10.0-android -p:AndroidSdkDirectory="$ANDROID_HOME"
+      - name: The app asks for no network permission
+        run: |
+          apk=$(ls src/FalconNotes.App/bin/Release/net10.0-android/*-Signed.apk)
+          aapt2=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)aapt2
+          "$aapt2" dump permissions "$apk" | tee permissions.txt
+          if grep -E "INTERNET|ACCESS_NETWORK_STATE" permissions.txt; then
+            echo "::error::The release APK requests a network permission."
+            exit 1
+          fi

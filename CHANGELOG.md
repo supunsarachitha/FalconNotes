@@ -17,3 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Button` and `Spinner`, ported from the web app with their classes, and their component tests.
 - The encrypted database: SQLite3 Multiple Ciphers with AEGIS-256 pinned, a raw 256-bit key, and the app's pragmas.
   A wrong key is reported as `DatabaseKeyException`.
+- Start-up check: the device key is created on first run and kept in Android's secure storage; a database whose key is
+  missing or wrong shows a Key lost screen and is never touched.
+- Attachment encryption ported from the Maple Notes server (the MNAE chunked AES-256-GCM format) and a media handler
+  that serves decrypted attachments to the page with HTTP ranges, so large videos play and seek.
+- The system file picker, a fast "save as" on Android, and opening files in the system's apps.
+- CI on GitHub Actions: Core and UI tests on Linux, Windows and macOS, and an Android release build that fails if the
+  app asks for a network permission.
