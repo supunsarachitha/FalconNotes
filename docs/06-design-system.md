@@ -7,7 +7,7 @@ component's markup with its Tailwind classes unchanged**, and build the CSS from
 
 ## Stylesheet
 
-`MapleNotes.UI/Styles/app.css` = `reference/maple-notes-1.8.0/src/maple-web/src/index.css`, copied whole. It defines:
+`FalconNotes.UI/Styles/app.css` = `reference/maple-notes-1.8.0/src/maple-web/src/index.css`, copied whole. It defines:
 
 - `@import "tailwindcss"` (Tailwind 4).
 - The `dark` variant: the `.dark` class on `<html>`, or the device's dark mode unless `.light` is set. The app always
@@ -26,12 +26,13 @@ Add new rules only at the end, under a comment naming the screen they serve.
 
 ### Brand and accents
 
-The interface uses `maple-*` classes everywhere. The accent changes what they mean (from `index.css`; the 600 shade is
-also `lib/appearance.ts` `ACCENT_COLORS`):
+The interface uses `maple-*` classes everywhere. They keep the reference's name so that ported markup stays unchanged;
+only the default accent's displayed name is Falcon (D12). The accent changes what they mean (from `index.css`; the 600
+shade is also `lib/appearance.ts` `ACCENT_COLORS`):
 
 | Accent | 50 | 100 | 400 | 500 | **600** | 700 |
 |---|---|---|---|---|---|---|
-| Maple (default) | `#fdf3f3` | `#fbe4e4` | `#e57373` | `#b0282d` | **`#8f1d21`** | `#731619` |
+| Falcon (default; the web app's Maple) | `#fdf3f3` | `#fbe4e4` | `#e57373` | `#b0282d` | **`#8f1d21`** | `#731619` |
 | Ocean | `#eff6ff` | `#dbeafe` | `#60a5fa` | `#2563eb` | **`#1d4ed8`** | `#1e40af` |
 | Forest | `#f0fdf4` | `#dcfce7` | `#4ade80` | `#15803d` | **`#166534`** | `#14532d` |
 | Teal | `#f0fdfa` | `#ccfbf1` | `#2dd4bf` | `#0f766e` | **`#115e59`** | `#134e4a` |
@@ -84,8 +85,8 @@ report the device setting reliably, so the app resolves it in C#:
 
 1. `IThemeSource` reports the device theme (`Application.Current.RequestedTheme`) and raises an event when it changes.
 2. `AppearanceService` computes the effective theme. `appearance.js` then sets **exactly one** of `.dark`/`.light` on
-   `<html>`, `style.colorScheme`, and `data-accent` (absent for Maple), and stores `{theme, accent}` in
-   `localStorage['maple-notes:appearance']`.
+   `<html>`, `style.colorScheme`, and `data-accent` (absent for Falcon), and stores `{theme, accent}` in
+   `localStorage['falcon-notes:appearance']`.
 3. `index.html` runs `appearance.js`'s `applySaved()` before Blazor starts, so the first paint uses the last appearance.
 4. Native chrome follows: Android status and navigation bar colours (CommunityToolkit `StatusBarBehavior`), the
    `MainPage` background, and the Windows and macOS title bar theme.
@@ -115,7 +116,7 @@ System fonts only (`--font-sans`, `--font-mono`). Sizes in use: page titles `tex
 
 | Width | Layout |
 |---|---|
-| < 1,024 px (`lg`) | Sticky top bar `h-14` (`bg-white/90 backdrop-blur`, below the safe area) with the menu button, leaf and name. The side menu opens as a drawer from the left, `w-[min(20rem,85vw)]`. |
+| < 1,024 px (`lg`) | Sticky top bar `h-14` (`bg-white/90 backdrop-blur`, below the safe area) with the menu button, mark and name. The side menu opens as a drawer from the left, `w-[min(20rem,85vw)]`. |
 | ≥ 1,024 px | Fixed sidebar `w-72`, full height, `border-r`, next to the content; the whole shell centred in `max-w-6xl` |
 | Content column | `px-4 pb-24 pt-4 lg:px-10 lg:pt-8`, `max-w-2xl` (Settings: `max-w-4xl`) |
 | Settings | Phone: the section list, then each section on its own page with "‹ Settings". ≥ 768 px (`md`): the list (13.5 rem) beside the open section. |
@@ -143,7 +144,7 @@ class strings:
 | `PreferenceSwitch` | `PreferenceSections.tsx` | Label, description, switch |
 | Segmented choices | Theme, menu size, export format, Tags order | Radio inputs hidden with `sr-only`, styled labels |
 | `LabelDot`, `LabelChips`, `LabelPicker` | `Labels.tsx` | |
-| `Logo` | `Logo.tsx` | The leaf as inline SVG with a unique gradient ID per instance (`fixtures/maple-leaf.svg`) |
+| `Logo` | `Logo.tsx`, `BrandMark.tsx` | The falcon mark as inline SVG (`fixtures/falcon-mark.svg`, [below](#app-icon-and-splash)), with unique IDs per instance if it uses gradients |
 
 ## Icons
 
@@ -161,10 +162,15 @@ New screens may also use `Fingerprint`, `KeyRound` and `Share`. Add any other ic
 
 ## App icon and splash
 
-- **App icon**: the leaf (`fixtures/maple-leaf.svg`) as the foreground on a `#fdf3f3` (maple-50) background, through
+- **The mark**: an original falcon, drawn for Falcon Notes as SVG. It must not come from an emoji font, an icon set or
+  clip art, and must not resemble another product's mark. It uses the default accent's shades (50 to 700) and stays
+  recognisable at 16 px. It goes in `fixtures/falcon-mark.svg` and the owner approves it before Phase 3 ends; until
+  then the app keeps MAUI's template icon. `fixtures/maple-leaf.svg` is the web app's mark, kept for reference: never
+  ship it.
+- **App icon**: the falcon mark as the foreground on a `#fdf3f3` (maple-50) background, through
   MAUI's `MauiIcon` (`ForegroundScale` about 0.65). Generate the Android adaptive icon, Windows and macOS sizes from it.
-- **Splash**: the leaf centred on `#f5f5f4`. Android 12+ uses the icon.
-- Never ship the server's branding feature: the name is always "Maple Notes".
+- **Splash**: the falcon mark centred on `#f5f5f4`. Android 12+ uses the icon.
+- Never ship the server's branding feature: the name is always "Falcon Notes".
 
 ## Motion and accessibility
 

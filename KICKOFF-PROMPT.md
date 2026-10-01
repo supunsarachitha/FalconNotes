@@ -1,14 +1,13 @@
 # Prompts for starting and continuing the work
 
-Paste these into Claude Code, opened at the root of the new repository after running
-`scripts/export-handoff.sh` (see the [README](README.md)).
+Paste these into Claude Code, opened at the root of this repository (set up as the [README](README.md) describes).
 
 ## 1. Kickoff: Phase 0
 
 ```text
-We are building Maple Notes for Android, Windows and macOS in this repository: an offline .NET 10 MAUI Blazor
-Hybrid port of the Maple Notes web app 1.8.0, with the same features and design, encrypted local storage and backups
-compatible with the web app. Nothing is built yet; the specification is complete.
+We are building Falcon Notes for Android, Windows and macOS in this repository: an offline .NET 10 MAUI Blazor Hybrid
+port of the Maple Notes web app 1.8.0 under its own name, with the same features and design, encrypted local storage and
+backups compatible with the web app. Nothing is built yet; the specification is complete.
 
 1. Read CLAUDE.md, then every document in docs/ in order (01 to 13). Skim reference/maple-notes-1.8.0/ enough to know
    where things are: the React app in src/maple-web/src, the server in src/MapleNotes.Server. Look at
@@ -31,7 +30,7 @@ compatible with the web app. Nothing is built yet; the specification is complete
 ## 2. Continue with the next phase
 
 ```text
-Continue the Maple Notes MAUI app. Re-read CLAUDE.md and docs/10-implementation-plan.md, check which phase is next
+Continue the Falcon Notes app. Re-read CLAUDE.md and docs/10-implementation-plan.md, check which phase is next
 from its checklists and spike results, and re-read the docs that phase touches (and the reference files the port
 map names for it).
 

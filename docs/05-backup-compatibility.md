@@ -77,7 +77,7 @@ made unique ignoring case (`ExportNaming.Unique`: `-2`, `-3`, … before the ext
 | Entry compression | Text: `CompressionLevel.Optimal`. Images (not SVG), video, audio, zip, gzip, 7z and PDF: `NoCompression`. Other files: `Fastest`. Not part of the contract, but keep it. |
 | Entry time | Note: its updated time in the zone. Attachment: its created time. Manifest: the export time. |
 | Damaged file | If an attachment cannot be opened, leave it out and add `"{path}: the stored file could not be read, so it was left out."` to `problems`. If it breaks part-way, keep the partial entry and add `"{path}: the stored file is damaged, so this copy is incomplete."` |
-| Download name | `maple-notes-{yyyy-MM-dd}.zip`, the export date in the zone |
+| Download name | `falcon-notes-{yyyy-MM-dd}.zip`, the export date in the zone. The web app's is `maple-notes-…`; the name is not part of the format. |
 
 ### Note formats
 
@@ -115,6 +115,8 @@ Exactly as `NoteFormatter`:
 }
 ```
 
+- `application` is always `"Maple Notes"`: it is the format's name, not this app's (D12). The web app's restore uses a
+  manifest only when it says exactly that (`parse.ts`), and every vector expects it.
 - `account` is the profile's display name. Restores ignore it; it only labels the file.
 - **`timeZone` must be an IANA name.** On Windows, `TimeZoneInfo.Local.Id` is a Windows name ("W. Europe Standard
   Time"): convert it with `TimeZoneInfo.TryConvertWindowsIdToIanaId`. On Android and macOS it is already IANA. Fall
@@ -147,10 +149,10 @@ modified time, when the platform gives one, stands in for missing dates; otherwi
 
 Exactly as `parse.ts`:
 
-- **An archive with a Maple Notes manifest** (`application == "Maple Notes"` and a `notes` array): exactly the notes it
-  lists, in its order, each with its `id`, `kind`, `createdAt`, `archived` and `dailyDate` from the manifest, taking
-  precedence where `toItem` says. A listed path that is missing: "{file}: {path} is listed but missing." An unreadable
-  manifest: "{file}: manifest.json could not be read; its notes are read without it."
+- **An archive with a Maple Notes manifest** (`application == "Maple Notes"` and a `notes` array, as this app writes
+  too): exactly the notes it lists, in its order, each with its `id`, `kind`, `createdAt`, `archived` and `dailyDate`
+  from the manifest, taking precedence where `toItem` says. A listed path that is missing: "{file}: {path} is listed but
+  missing." An unreadable manifest: "{file}: manifest.json could not be read; its notes are read without it."
 - **Any other archive**: every `.md`, `.markdown`, `.txt` and `.json` entry outside `attachments/` and `__MACOSX/`.
 - **A note file**: strip a UTF-8 BOM and normalise `\r\n` to `\n`. Then:
   - `.md` / `.markdown`: front matter starting `---\n` with a `created` field.
@@ -159,7 +161,7 @@ Exactly as `parse.ts`:
   
   Attachment names come from the Markdown "Attachments" section, if it has one line per path, or from the JSON. Without
   a recognised header, the whole text is the note, dated by the file's modified time. A `.json` file that is not a note
-  is an error: "This JSON file is not a Maple Notes note."
+  is an error: "This JSON file is not a Falcon Notes or Maple Notes note."
 - **Fields**: an `id` counts only when it is a UUID. Kinds are matched case-insensitively (anything else is `note`). A
   daily date counts only as `yyyy-MM-dd`. Dates parse as ISO 8601 with their offset.
 - **Attachments** resolve relative to the note's folder (`..` pops a folder). Their name is the recorded file name,

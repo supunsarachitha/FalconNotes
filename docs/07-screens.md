@@ -15,6 +15,8 @@ Server words change everywhere they appear in ported copy:
 | your account, the server, this server, administrators | this device / this app, or drop the phrase |
 | sign in, sign out | drop the phrase |
 | "Download ZIP" | "Export ZIP…" |
+| Maple Notes (meaning this app) | Falcon Notes. Keep "Maple Notes" where the text means the web app, its servers or its exports. |
+| 🍁 ("You're all caught up 🍁") | 🦅. There is no falcon emoji, and 🦅 (Unicode 9) shows on every supported platform. |
 
 Never mention passwords, encryption modes, recovery keys, sessions, administrators, storage limits or link previews.
 
@@ -25,7 +27,8 @@ Never mention passwords, encryption modes, recovery keys, sessions, administrato
 - **Sidebar footer**: avatar (first letter of the display name, upper case), the display name, and under it "On this
   device" (in place of `@username`). When the app lock is on, a **Lock** icon button (`Lock` icon, label "Lock
   now") locks at once. There is no Sign out.
-- **App name**: always "Maple Notes" with the leaf. There is no branding.
+- **App name**: always "Falcon Notes" with the falcon mark (D12), wherever the reference shows `appName` or
+  `BrandMark`. There is no branding.
 - The search box, menu items (with the Tags count), labels list and calendar are unchanged.
 
 ## Home and filters
@@ -82,7 +85,7 @@ storage.
 | `data` | Backup & data | "Export, restore, the trash and starting over." | Backup & restore, Trash, Delete all notes and files |
 | `security` | Privacy & security | "App lock, and how your notes are protected." | App lock, Data protection |
 
-The foot of the list shows "Maple Notes {version}". On a second line in smaller text: "Based on Maple Notes 1.8.0".
+The foot of the list shows "Falcon Notes {version}". On a second line in smaller text: "Based on Maple Notes 1.8.0".
 
 ### Settings → Profile
 
@@ -99,7 +102,7 @@ since there is no username to fall back on: "Enter a name." Toast: "Display name
 **Storage** (`Section`, description "Notes and files you keep, including archived ones and the trash."): `StorageRow`
 without the limit parts.
 
-**Erase all data** (`Section`, description "Delete everything Maple Notes keeps on this device and start again: notes,
+**Erase all data** (`Section`, description "Delete everything Falcon Notes keeps on this device and start again: notes,
 files, labels, settings and the app lock."): a danger button **Erase all data…**, then a dialog:
 
 > **Erase all data?**
@@ -125,9 +128,10 @@ first. Afterwards: the Welcome screen.
 - The button reads **Export ZIP…**. Progress text "Preparing your export…", then "Reading your notes… {n}". Then the
   system save dialog. Done: "Exported {n} notes and {m} files." (toast). Cancelled in the dialog: nothing.
 - "Dates use your time zone ({IANA zone})." is unchanged.
-- The restore intro: "Bring notes back from a Maple Notes export (`.zip`, any format) made by this app, the web app or a
-  Maple Notes server, or add `.md`, `.txt` and `.json` files. Notes keep their dates, pins, archive state and files.
-  Notes you already have are skipped, so restoring the same export twice is safe. Labels are not part of exports."
+- The restore intro: "Bring notes back from an export (`.zip`, any format) made by Falcon Notes, the Maple Notes web app
+  or a Maple Notes server, or add `.md`, `.txt` and `.json` files. Notes keep their dates, pins, archive state and
+  files. Notes you already have are skipped, so restoring the same export twice is safe. Labels are not part of
+  exports."
 - **Choose files…** opens the native picker.
 
 **Trash** (`TrashSection`) and **Delete all notes and files** (`DeleteContentSection`) are unchanged, except the second
@@ -146,7 +150,7 @@ With the app lock on, the PIN or biometrics are asked first. Toast: "Deleted {n}
 **App lock** (`Section`, description "Ask for a PIN, or your fingerprint, face, Windows Hello or Touch ID, before
 showing your notes. The lock keeps people out of the app; your notes are encrypted either way."):
 
-- `PreferenceSwitch` **Lock Maple Notes** ("Ask for your PIN when Maple Notes opens or comes back after a while.").
+- `PreferenceSwitch` **Lock Falcon Notes** ("Ask for your PIN when Falcon Notes opens or comes back after a while.").
   Turning it on opens **Set a PIN**: "Choose a PIN of 4 to 8 digits. If you forget it, the only way back in is to
   erase the app's data and restore a backup." Two numeric fields, "PIN" and "Repeat PIN"; errors "Use 4 to 8 digits."
   and "The PINs do not match." Turning it off asks for the PIN first.
@@ -154,9 +158,9 @@ showing your notes. The lock keeps people out of the app; your notes are encrypt
   instead."). Only shown while the lock is on and biometrics are available. Turning it on runs one biometric check
   first.
 - **Lock after**: a select with "Immediately", "After 1 minute", "After 5 minutes", "After 15 minutes", "After 1 hour".
-  Hint "How long Maple Notes may stay in the background before it locks."
+  Hint "How long Falcon Notes may stay in the background before it locks."
 - **Change PIN…** (secondary button): current PIN, then Set a PIN.
-- Android only, under the switch: "While the lock is on, Maple Notes hides its window from screenshots and the app
+- Android only, under the switch: "While the lock is on, Falcon Notes hides its window from screenshots and the app
   switcher."
 
 **Data protection** (`Section`):
@@ -164,15 +168,15 @@ showing your notes. The lock keeps people out of the app; your notes are encrypt
 > Your notes, labels and files are stored encrypted on this device (AEGIS-256 for the database, AES-256-GCM for files).
 > The key is kept in {Android Keystore | Windows' protected storage | the macOS Keychain}, never in the files
 > themselves, so a copy of the app's files cannot be read elsewhere.
-> Exports are not encrypted. Uninstalling Maple Notes deletes your notes from this device; export them first.
+> Exports are not encrypted. Uninstalling Falcon Notes deletes your notes from this device; export them first.
 >
 > Key fingerprint: `{8 hex}`
 
 ## Welcome
 
-New, shown on first start (no profile). Use `AuthLayout` (`components/AuthLayout.tsx`): leaf, heading, intro, card.
+New, shown on first start (no profile). Use `AuthLayout` (`components/AuthLayout.tsx`): mark, heading, intro, card.
 
-> **Welcome to Maple Notes**
+> **Welcome to Falcon Notes**
 > Quick notes, todo lists and habits, kept on this device and encrypted.
 >
 > | What should we call you? (optional) [            ] |
@@ -192,7 +196,7 @@ New, shown on first start (no profile). Use `AuthLayout` (`components/AuthLayout
 
 New, shown at start and after the lock delay when the app lock is on. `AuthLayout`:
 
-> **Maple Notes is locked**
+> **Falcon Notes is locked**
 > Enter your PIN to open your notes.
 >
 > | PIN [      ] |
@@ -207,7 +211,7 @@ New, shown at start and after the lock delay when the app lock is on. `AuthLayou
 - **Forgot your PIN?** opens a dialog:
 
   > **Forgot your PIN?**
-  > The PIN cannot be reset: that is what keeps others out. To use Maple Notes again, erase its data on this device
+  > The PIN cannot be reset: that is what keeps others out. To use Falcon Notes again, erase its data on this device
   > and restore your notes from a backup.
   >
   > Type ERASE to confirm: [ ]
@@ -220,7 +224,7 @@ New, shown when the database exists but the key is missing or wrong ([03](03-dat
 `AuthLayout`:
 
 > **Your notes cannot be opened**
-> Maple Notes keeps your notes encrypted with a key stored by {Android | Windows | macOS}. That key is no longer
+> Falcon Notes keeps your notes encrypted with a key stored by {Android | Windows | macOS}. That key is no longer
 > available on this device, so the notes saved here cannot be read. This can happen after reinstalling the app or
 > resetting the device's secure storage.
 >
@@ -235,7 +239,8 @@ New, shown when the database exists but the key is missing or wrong ([03](03-dat
 
 ## Help
 
-`pages/HelpPage.tsx` with the guide in [08-help-guide.md](08-help-guide.md). In-app links (`/settings/features`, `/trash`,
+`pages/HelpPage.tsx` with the guide in [08-help-guide.md](08-help-guide.md), without its
+`replaceAll("Maple Notes", appName)` ([08](08-help-guide.md)). In-app links (`/settings/features`, `/trash`,
 …) navigate inside the app. The page foot shows the version as in Settings.
 
 ## Desktop extras

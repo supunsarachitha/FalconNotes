@@ -43,9 +43,10 @@ later pages.
 **Enabled kinds** are always `Note`, plus `Todo` when *Todo lists* is on, plus `Quick` when *Quick notes* is on. Habits are
 never included: only the Habits page lists them (`web/lib/kinds.ts`).
 
-The infinite list loads the next page when its end comes within 600 px of the screen, or with a **Load more** button.
-It shows three pulsing placeholders while loading, and "Your notes could not be loaded." with **Try again** on error.
-After more than 5 notes, when nothing more is left, it shows "You're all caught up 🍁" (`web/components/NoteList.tsx`).
+The infinite list loads the next page when its end comes within 600 px of the screen, or with a **Load more** button. It
+shows three pulsing placeholders while loading, and "Your notes could not be loaded." with **Try again** on error. After
+more than 5 notes, when nothing more is left, it shows "You're all caught up 🦅" (`web/components/NoteList.tsx`, where it
+is 🍁; [07](07-screens.md#wording)).
 
 ### Search
 
@@ -266,10 +267,12 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `quickNotes` | true | `labels` | false |
 | `dailyNotes` | false | `trash` | true |
 | `calendar` | true | `theme` | `System` (System, Light, Dark) |
-| `habitTracker` | false | `accent` | `Maple` (Maple, Ocean, Forest, Teal, Plum, Amber, Slate) |
+| `habitTracker` | false | `accent` | `Falcon` (Falcon, Ocean, Forest, Teal, Plum, Amber, Slate) |
 | `menuTextSize` | `Medium` (Small, Medium, Large) | `weekStart` | `Auto` (Auto, Sunday, Monday, Saturday) |
 | `menuOrder` | `""` | | |
 
+- `Falcon` is the web app's `Maple` accent under this app's name, with the same colours (D12). Preferences are not
+  part of backups, so nothing needs mapping.
 - A change shows at once and is saved in the background. If saving fails, it is rolled back with "Your setting could
   not be saved. Please try again."
 - Turning a feature off hides its page or tool and deletes nothing. A page whose feature is off shows "{Feature} is

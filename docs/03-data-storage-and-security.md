@@ -4,30 +4,34 @@
 
 | What | Where | Encrypted |
 |---|---|---|
-| Database | `{FileSystem.AppDataDirectory}/maple.db` (+ `-wal`, `-shm`) | Yes: SQLite3MC, AEGIS-256, whole file |
+| Database | `{FileSystem.AppDataDirectory}/falcon.db` (+ `-wal`, `-shm`) | Yes: SQLite3MC, AEGIS-256, whole file |
 | Attachment files | `{AppDataDirectory}/attachments/{2 hex}/{2 hex}/{id N}-{8 hex}.bin` | Yes: MNAE chunked AES-256-GCM |
-| Database copies before migrations | `{AppDataDirectory}/backups/maple-{yyyyMMdd-HHmmss}-v{n}.db`, newest 3 kept | Yes (copies of the encrypted file) |
+| Database copies before migrations | `{AppDataDirectory}/backups/falcon-{yyyyMMdd-HHmmss}-v{n}.db`, newest 3 kept | Yes (copies of the encrypted file) |
 | Device key | OS secure storage (`ISecretStore`) | By the OS (Keystore, DPAPI, Keychain) |
 | App lock settings and PIN hash | `Settings['appLock']` in the database | Yes (inside the database) |
 | Decrypted copies for **Open** | `{FileSystem.CacheDirectory}/open/{random}/{file name}` | **No**: deleted at the next start, and at most 24 h old |
 | Export being written, restore archive being read | `{CacheDirectory}/export/`, `{CacheDirectory}/restore/` | **No** (exports are plain by design); deleted when done and at start |
-| Appearance for the first paint | WebView `localStorage` key `maple-notes:appearance` (`{theme, accent}`) | No (not sensitive) |
+| Appearance for the first paint | WebView `localStorage` key `falcon-notes:appearance` (`{theme, accent}`) | No (not sensitive) |
 
 Exports are not encrypted, exactly as in the web app; the Help and Backup screens say so.
 
 ## Keys
 
 ```text
-device key  32 random bytes, created on first run, stored in ISecretStore as "maple-notes.device-key.v1" (base64)
-  ├─ HKDF-SHA256(salt "MapleNotes.KeyDerivation", info "maple-notes/v1/database")    → database key (raw SQLite3MC key)
-  ├─ HKDF-SHA256(salt "MapleNotes.KeyDerivation", info "maple-notes/v1/attachments") → attachment key ("user data key" for AttachmentCipher)
-  └─ HKDF-SHA256(salt "MapleNotes.KeyDerivation", info "maple-notes/v1/fingerprint", 4 bytes) → fingerprint (8 hex characters, shown in Settings)
+device key  32 random bytes, created on first run, stored in ISecretStore as "falcon-notes.device-key.v1" (base64)
+  ├─ HKDF-SHA256(salt "FalconNotes.KeyDerivation", info "falcon-notes/v1/database")    → database key (raw SQLite3MC key)
+  ├─ HKDF-SHA256(salt "FalconNotes.KeyDerivation", info "falcon-notes/v1/attachments") → attachment key ("user data key" for AttachmentCipher)
+  └─ HKDF-SHA256(salt "FalconNotes.KeyDerivation", info "falcon-notes/v1/fingerprint", 4 bytes) → fingerprint (8 hex characters, shown in Settings)
 ```
 
+The salt and labels are this app's own (the server uses `MapleNotes.KeyDerivation` and `maple-notes/v1/…`); no other
+program ever derives these keys.
+
 Port `KeyMaterial`, `AttachmentCipher` and `DecryptingAttachmentStream` from
-`reference/maple-notes-1.8.0/src/MapleNotes.Server/Infrastructure/Crypto/`. The attachment format stays byte for byte the
-same, including the 42-byte `MNAE` header, 64 KiB chunks, the STREAM nonce and the associated data. The "owner ID"
-bound into each chunk is the installation ID: a random UUID stored in `Settings` on first run.
+`reference/maple-notes-1.8.0/src/MapleNotes.Server/Infrastructure/Crypto/`. The attachment format stays byte for byte
+the same, including the 42-byte `MNAE` header (it keeps its name: it is the format's magic, and the server's tests check
+it), 64 KiB chunks, the STREAM nonce and the associated data. The "owner ID" bound into each chunk is the installation
+ID: a random UUID stored in `Settings` on first run.
 
 Zero key bytes after use (`CryptographicOperations.ZeroMemory`) where the reference does.
 
@@ -168,7 +172,7 @@ An optional privacy screen. It keeps people who pick up an unlocked device out o
 anything: the device key does not depend on the PIN, so a forgotten PIN can never lose notes.
 
 - **Settings → Privacy & security → App lock** ([07](07-screens.md#settings--privacy--security)):
-  - **Lock Maple Notes**: turning it on asks for a new 4–8 digit PIN, twice.
+  - **Lock Falcon Notes**: turning it on asks for a new 4–8 digit PIN, twice.
   - **Unlock with {fingerprint or face | Windows Hello | Touch ID}**: shown only when `IAppLock.IsBiometricAvailable`.
   - **Lock after**: Immediately, 1 minute (default), 5 minutes, 15 minutes or 1 hour in the background.
   - **Change PIN**, and turning the lock off: both ask for the current PIN or biometrics first.
@@ -176,8 +180,8 @@ anything: the device key does not depend on the PIN, so a forgotten PIN can neve
   Five wrong PINs in a row lock the screen for 30 s; each further five doubles the wait, up to 15 minutes. The
   counter and `lockedUntilUtc` are stored, so restarting the app does not reset them.
 - **When locked**, only the Lock screen renders: no app shell, no note data, no media handler answers.
-- **While the app is in the background with the lock on**, cover the window with the brand colour and the leaf, so the
-  app switcher shows no notes. On Android, set `FLAG_SECURE` while the lock is on, which also blocks screenshots;
+- **While the app is in the background with the lock on**, cover the window with the brand colour and the falcon mark,
+  so the app switcher shows no notes. On Android, set `FLAG_SECURE` while the lock is on, which also blocks screenshots;
   say so under the switch.
 - **Forgot your PIN?** The lock cannot be bypassed, since that would defeat it. The way out is to erase the app's data
   and restore from a backup. The Lock screen explains this and offers **Erase and start over…**, after typing `ERASE`.

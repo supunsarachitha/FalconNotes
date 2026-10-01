@@ -4,17 +4,17 @@
 
 ```mermaid
 flowchart TB
-    subgraph app["MapleNotes.App (MAUI, per platform)"]
+    subgraph app["FalconNotes.App (MAUI, per platform)"]
         host["MainPage: BlazorWebView"]
         platform["Platform services<br/>secure storage, file save/pick/open,<br/>app lock, theme, clipboard"]
         media["Media handler<br/>/_media/{id} with Range"]
     end
-    subgraph ui["MapleNotes.UI (Razor class library)"]
+    subgraph ui["FalconNotes.UI (Razor class library)"]
         pages["Pages and components<br/>(ported from the React app)"]
         js["wwwroot/js: small interop modules<br/>(caret, selection, observers, dialogs)"]
         css["wwwroot/css/app.css<br/>(Tailwind 4, same tokens)"]
     end
-    subgraph core["MapleNotes.Core (net10.0, no UI)"]
+    subgraph core["FalconNotes.Core (net10.0, no UI)"]
         services["Services<br/>notes, labels, tags, preferences,<br/>habits, todo, search, calendar"]
         backup["Backup<br/>export (ported from the server), restore"]
         storage["Storage<br/>SQLite (SQLite3MC, AEGIS), repositories"]
@@ -38,16 +38,16 @@ Three projects, with dependencies pointing inwards only:
 
 | Project | Target | Holds | May reference |
 |---|---|---|---|
-| `MapleNotes.Core` | `net10.0` | Domain records, every rule, storage, crypto, export and restore, background maintenance, the interfaces for platform features | BCL, `Microsoft.Data.Sqlite.Core`, `SQLite3MC.PCLRaw.bundle`, `Markdig`, `SkiaSharp` |
-| `MapleNotes.UI` | `net10.0` Razor class library | Every page and component, layout, the JS interop modules, the stylesheet | Core, `Microsoft.AspNetCore.Components.Web` |
-| `MapleNotes.App` | `net10.0-android`, `net10.0-windows10.0.19041.0`, `net10.0-maccatalyst` | `MauiProgram`, the `BlazorWebView` host, platform implementations of Core's interfaces, the media handler, icons, splash screen, packaging | Core, UI, MAUI, `CommunityToolkit.Maui` |
+| `FalconNotes.Core` | `net10.0` | Domain records, every rule, storage, crypto, export and restore, background maintenance, the interfaces for platform features | BCL, `Microsoft.Data.Sqlite.Core`, `SQLite3MC.PCLRaw.bundle`, `Markdig`, `SkiaSharp` |
+| `FalconNotes.UI` | `net10.0` Razor class library | Every page and component, layout, the JS interop modules, the stylesheet | Core, `Microsoft.AspNetCore.Components.Web` |
+| `FalconNotes.App` | `net10.0-android`, `net10.0-windows10.0.19041.0`, `net10.0-maccatalyst` | `MauiProgram`, the `BlazorWebView` host, platform implementations of Core's interfaces, the media handler, icons, splash screen, packaging | Core, UI, MAUI, `CommunityToolkit.Maui` |
 
 Core and UI never reference MAUI. Their tests therefore run on any desktop with `dotnet test` (see [11-testing.md](11-testing.md)).
 
 ## Repository layout
 
 ```text
-MapleNotes.Maui.slnx
+FalconNotes.slnx
 Directory.Build.props          nullable, warnings as errors, LangVersion latest, deterministic, doc comments required
 Directory.Packages.props       central package management: every version pinned here
 global.json                    .NET 10 SDK
@@ -56,11 +56,11 @@ CHANGELOG.md                   Keep a Changelog
 THIRD-PARTY-NOTICES.md         every shipped component's licence
 LICENSE                        PolyForm Noncommercial 1.0.0
 docs/                          this specification
-fixtures/                      export-vectors.json, demo backups, the leaf artwork
+fixtures/                      export-vectors.json, demo backups, the falcon mark, the web app's leaf
 benchmarks/storage/            the storage benchmark (doc 13)
 reference/maple-notes-1.8.0/   the web app, read-only (never built, never shipped, never edited)
 src/
-  MapleNotes.Core/
+  FalconNotes.Core/
     Domain/          Note, NoteKind, Attachment, Label, LabelColor, Preferences, Profile, NoteState …
     Text/            TagParser, Titles, Todo, Habits, MarkdownEdit, TagSuggest, DateFormats, RelativeTime, Bytes, MenuOrder
     Markdown/        MarkdownRenderer (Markdig pipeline, tag links, task offsets, safe links)
@@ -75,7 +75,7 @@ src/
     Maintenance/     StartupTasks, TrashPurge, AttachmentCleanup, TempFiles, DatabaseBackups
     Platform/        IFileSaver, IFilePicker, IFileOpener, IClipboard, IAppLock, IThemeSource, IAppInfo
     Events/          ChangeFeed (NotesChanged, LabelsChanged, PreferencesChanged, ProfileChanged)
-  MapleNotes.UI/
+  FalconNotes.UI/
     Layout/          AppShell, Sidebar, Drawer, MainLayout
     Pages/           Home, Archive, Todo, Quick, Habits, Tags, Trash, Settings/*, Help, Welcome, Lock, KeyLost
     Components/      NoteCard, NoteList, Composer, FormatToolbar, TagSuggestions, Markdown, AttachmentGallery,
@@ -85,15 +85,15 @@ src/
     Styles/app.css   Tailwind input: reference index.css, plus new rules only
     wwwroot/js/      interop modules
     wwwroot/css/     generated app.css (build output, not committed)
-  MapleNotes.App/
+  FalconNotes.App/
     MauiProgram.cs, App.xaml(.cs), MainPage.xaml(.cs)
     wwwroot/index.html
     Platforms/Android|Windows|MacCatalyst/   platform services and manifests
     Services/        SecretStore, FileSaver, FilePicker, FileOpener, AppLock, ThemeSource, MediaHandler
-    Resources/       AppIcon (leaf), Splash, Fonts (none: system fonts)
+    Resources/       AppIcon (falcon mark), Splash, Fonts (none: system fonts)
 tests/
-  MapleNotes.Core.Tests/     xUnit v3
-  MapleNotes.UI.Tests/       xUnit v3 + bUnit
+  FalconNotes.Core.Tests/     xUnit v3
+  FalconNotes.UI.Tests/       xUnit v3 + bUnit
 ```
 
 ## Runtime model
@@ -124,7 +124,7 @@ tests/
       the **Key lost** screen ([07](07-screens.md#key-lost)) and touch nothing.
    2. Open the database. If the key does not open it (`SQLITE_NOTADB`), go to **Key lost** as well.
    3. If `PRAGMA user_version` is older than the app's schema, **copy the database file** to
-      `backups/maple-{utc:yyyyMMdd-HHmmss}-v{old}.db` first, keeping the newest 3, then run the migrations in one
+      `backups/falcon-{utc:yyyyMMdd-HHmmss}-v{old}.db` first, keeping the newest 3, then run the migrations in one
       transaction each.
    4. Run maintenance, without blocking the first screen: purge trash older than 30 days, remove abandoned uploads
       (older than 24 h, `NoteId` null) and orphan files (older than 1 h), and delete `cache/open/` (decrypted temporary
@@ -205,7 +205,7 @@ The page is trusted code, but note text is user content and must never become ma
 - Navigation away from the app's origin is cancelled (`UrlLoading`). Links to `http(s):` and `mailto:` open in the
   system browser or mail app through `Launcher`; any other scheme is ignored.
 - No `eval`, no inline scripts, no third-party JavaScript. JS interop modules are plain ES modules in
-  `MapleNotes.UI/wwwroot/js/`.
+  `FalconNotes.UI/wwwroot/js/`.
 
 ## JavaScript interop
 
@@ -262,7 +262,7 @@ MediatR 13+, AutoMapper 15+, ImageSharp, commercial SQLCipher builds).
 
 ## Styling pipeline
 
-- `MapleNotes.UI/Styles/app.css` starts as a copy of `reference/maple-notes-1.8.0/src/maple-web/src/index.css`: the
+- `FalconNotes.UI/Styles/app.css` starts as a copy of `reference/maple-notes-1.8.0/src/maple-web/src/index.css`: the
   same `@theme` tokens, accent overrides, `dark` variant, `.markdown` rules and `.note-card`. Add new rules at the end,
   in the same style.
 - An MSBuild target runs the Tailwind 4 standalone CLI before build:

@@ -1,8 +1,11 @@
 # 8. Help guide
 
 The in-app guide (`Help`), adapted from `reference/maple-notes-1.8.0/src/maple-web/src/help/guide.ts`. Ship it as
-`MapleNotes.UI/Help/Guide.cs`: a list of `(Id, Title, Body)` with Markdown bodies, in this order. Bodies are rendered with
-the note Markdown renderer. Tag examples are in `code`, because plain `#words` would become tag links.
+`FalconNotes.UI/Help/Guide.cs`: a list of `(Id, Title, Body)` with Markdown bodies, in this order. Bodies are rendered
+with the note Markdown renderer. Tag examples are in `code`, because plain `#words` would become tag links.
+
+The guide names the app "Falcon Notes" itself. Do not port `HelpPage.tsx`'s `replaceAll("Maple Notes", appName)`: the
+guide's mentions of the Maple Notes web app must stay as written.
 
 Sections marked **as in web** are copied from the reference without change. The others are given in full here.
 
@@ -110,14 +113,14 @@ Turning something off only hides it; nothing is deleted, and it all comes back w
 ## 15. Keeping your notes private (`privacy`)
 
 ````markdown
-Maple Notes keeps everything on this device and never sends your notes anywhere. Your notes, labels and files are
+Falcon Notes keeps everything on this device and never sends your notes anywhere. Your notes, labels and files are
 stored encrypted, with a key that your phone or computer keeps in its secure storage, separate from the files. A copy
 of the app's files is therefore unreadable anywhere else.
 
 Two things are up to you:
 
 - **Exports are not encrypted.** A ZIP you export can be opened by anyone who gets it, so keep it somewhere safe.
-- **Uninstalling Maple Notes deletes your notes** from this device, together with their key. Export them first.
+- **Uninstalling Falcon Notes deletes your notes** from this device, together with their key. Export them first.
 
 To keep people who pick up your device out of the app, turn on the [app lock](/settings/security).
 ````
@@ -125,10 +128,10 @@ To keep people who pick up your device out of the app, turn on the [app lock](/s
 ## 16. The app lock (`lock`)
 
 ````markdown
-Turn on **Lock Maple Notes** in [Settings → Privacy & security](/settings/security) and choose a PIN. Maple Notes then
-asks for it when it opens, and when it comes back after being in the background for longer than you chose under
-**Lock after**. Where your device has a fingerprint reader, face recognition, Windows Hello or Touch ID, you can unlock
-with that instead. To lock straight away, choose the lock button at the bottom of the menu.
+Turn on **Lock Falcon Notes** in [Settings → Privacy & security](/settings/security) and choose a PIN. Falcon Notes then
+asks for it when it opens, and when it comes back after being in the background for longer than you chose under **Lock
+after**. Where your device has a fingerprint reader, face recognition, Windows Hello or Touch ID, you can unlock with
+that instead. To lock straight away, choose the lock button at the bottom of the menu.
 
 Write your PIN down somewhere safe. It cannot be reset: if you forget it, the only way back in is to erase the app's
 data on this device and restore your notes from a backup.
@@ -137,7 +140,7 @@ data on this device and restore your notes from a backup.
 ## 17. Your name (`account`)
 
 ````markdown
-[Settings → Profile](/settings/account) shows the name Maple Notes uses for you, at the bottom of the menu and in your
+[Settings → Profile](/settings/account) shows the name Falcon Notes uses for you, at the bottom of the menu and in your
 exports. Choose **Change** to pick another.
 ````
 
@@ -162,7 +165,7 @@ might want your notes back.
 ## 19. Moving to another device (`devices`)
 
 ````markdown
-Maple Notes does not sync. To move your notes to a new phone or computer, **Export** them on the old one, copy the ZIP
+Falcon Notes does not sync. To move your notes to a new phone or computer, **Export** them on the old one, copy the ZIP
 across, and **Restore** it on the new one, in [Settings → Backup & data](/settings/data). Your settings and labels do
 not travel with it, so set them up again on the new device.
 ````

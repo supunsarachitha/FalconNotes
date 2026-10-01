@@ -54,7 +54,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `components/ui.tsx` | `UI/Components/Ui/{Button,IconButton,TextField,Switch,Spinner,Card,Section,EmptyState,ErrorMessage}.razor` |
 | `components/AppShell.tsx` | `UI/Layout/AppShell.razor`, `Sidebar.razor`, `Drawer.razor`, `SearchBox.razor`, `LabelLinks.razor` (Adapt: footer, [07](07-screens.md#app-shell)) |
 | `components/AuthLayout.tsx` | `UI/Layout/AuthLayout.razor` (for Welcome, Lock, Key lost) |
-| `components/BrandMark.tsx`, `Logo.tsx` | `UI/Components/Logo.razor` (no custom icon) |
+| `components/BrandMark.tsx`, `Logo.tsx` | `UI/Components/Logo.razor` (Adapt: the falcon mark, no custom icon) |
 | `components/Toaster.tsx` | `UI/State/Toasts.cs` + `UI/Components/Toaster.razor` |
 | `components/ConfirmDialog.tsx` | `UI/Components/ConfirmDialog.razor` (`<dialog>`) |
 | `components/NoteCard.tsx` | `UI/Components/NoteCard.razor` + `MenuItem.razor`, `DropdownMenu.razor` |
@@ -111,7 +111,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 
 | Source | Target | Notes |
 |---|---|---|
-| `web/lib/*.test.ts` for titles, todo, habits, dates/format, markdownEdit, tagSuggest, menu, shrinkPhoto | `tests/MapleNotes.Core.Tests/Text/*` | Every case |
-| `web/import/import.test.ts`, `web/export/export.test.ts` | `tests/MapleNotes.Core.Tests/Backup/*` | Rebuilt around `fixtures/export-vectors.json` ([11](11-testing.md#backup-conformance)) |
-| `web/components/*.test.tsx`, `web/pages/*.test.tsx` (except encryption, link previews, auth, end-to-end) | `tests/MapleNotes.UI.Tests/*` (bUnit) | The behaviours, not the React specifics |
-| `server/../tests/MapleNotes.Server.Tests/Notes/*`, `Labels/*`, `Export/*`, `Crypto/AttachmentCipherTests.cs`, `Infrastructure/AttachmentStoreTests.cs` | `tests/MapleNotes.Core.Tests/*` | The rules: lists, cursors, tags, trash, daily notes, kinds, labels, import, the cipher's tamper cases |
+| `web/lib/*.test.ts` for titles, todo, habits, dates/format, markdownEdit, tagSuggest, menu, shrinkPhoto | `tests/FalconNotes.Core.Tests/Text/*` | Every case |
+| `web/import/import.test.ts`, `web/export/export.test.ts` | `tests/FalconNotes.Core.Tests/Backup/*` | Rebuilt around `fixtures/export-vectors.json` ([11](11-testing.md#backup-conformance)) |
+| `web/components/*.test.tsx`, `web/pages/*.test.tsx` (except encryption, link previews, auth, end-to-end) | `tests/FalconNotes.UI.Tests/*` (bUnit) | The behaviours, not the React specifics |
+| `server/../tests/MapleNotes.Server.Tests/Notes/*`, `Labels/*`, `Export/*`, `Crypto/AttachmentCipherTests.cs`, `Infrastructure/AttachmentStoreTests.cs` | `tests/FalconNotes.Core.Tests/*` | The rules: lists, cursors, tags, trash, daily notes, kinds, labels, import, the cipher's tamper cases |

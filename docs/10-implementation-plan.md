@@ -24,7 +24,7 @@ Set up:
 
 - [ ] The solution and projects as in [02-architecture.md](02-architecture.md#repository-layout): `Directory.Build.props`
       (nullable, warnings as errors, documentation comments), `Directory.Packages.props` (central versions), `global.json`.
-- [ ] `MapleNotes.App` with a `BlazorWebView` showing a page from `MapleNotes.UI`, built and run on **Android**
+- [ ] `FalconNotes.App` with a `BlazorWebView` showing a page from `FalconNotes.UI`, built and run on **Android**
       (emulator), **Windows** and **macOS**.
 - [ ] The Tailwind build step ([02](02-architecture.md#styling-pipeline)), with `app.css` copied from the reference.
       One ported component (`Button`) renders identically to the web app.
@@ -74,6 +74,8 @@ archive. Run once on Android and once on Windows with the on-device test runner,
 
 ## Phase 3: shell and design system
 
+- [ ] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): drawn, approved by the owner, saved as
+      `fixtures/falcon-mark.svg`; the app icon and splash made from it.
 - [ ] UI primitives, `Icon`, `Logo`, `Toaster`, `ConfirmDialog`, `DropdownMenu` ([06](06-design-system.md#components)).
 - [ ] `AppShell` (sidebar ≥ 1,024 px, drawer below), routes, search box, menu with order and sizes, labels list slot,
       calendar slot.
@@ -81,7 +83,7 @@ archive. Run once on Android and once on Windows with the on-device test runner,
 - [ ] `AppBootstrapper`, **Welcome**, **Key lost** ([07](07-screens.md#welcome)).
 
 **Acceptance**: side-by-side screenshots of the empty shell match `reference/.../docs/screenshots/*` in light and dark,
-at 375 px and 1,280 px wide.
+at 375 px and 1,280 px wide, apart from the name and mark.
 
 ## Phase 4: notes
 

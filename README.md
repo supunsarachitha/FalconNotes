@@ -1,9 +1,9 @@
-# Maple Notes for Android, Windows and macOS
+# Falcon Notes
 
-An offline app for quick notes, todo lists and habits, with the same features and look as the
-[Maple Notes](https://github.com/supunsarachitha/MapleNotes) web app 1.8.0. It runs without a server: notes stay on the
-device, encrypted. Backups are the web app's export ZIPs, so notes move freely between this app, other devices and any
-Maple Notes server.
+An offline app for Android, Windows and macOS for quick notes, todo lists and habits, with the same features and look
+as the [Maple Notes](https://github.com/supunsarachitha/MapleNotes) web app 1.8.0, under its own name and mark. It runs
+without a server: notes stay on the device, encrypted. Backups are the web app's export ZIPs, so notes move freely
+between this app, other devices and any Maple Notes server.
 
 Built with .NET 10 MAUI Blazor Hybrid. **Status: specification. No code yet.**
 
@@ -30,24 +30,17 @@ Read in this order. AI agents: start with [CLAUDE.md](CLAUDE.md).
 Also here:
 
 - `fixtures/`: `export-vectors.json` (the shared export vectors: 13 reference exports of an awkward dataset), two demo
-  backups (35 notes, 8 files), and the maple leaf artwork.
+  backups (35 notes, 8 files), and the web app's maple leaf (for reference only; Falcon Notes has its own mark).
 - `benchmarks/storage/`: the storage benchmark source (desktop and Android) and its raw results.
 - `reference/maple-notes-1.8.0/`: the web app at the commit this plan was written against. It is the reference
   implementation: read-only, never built, never shipped.
 
 ## Where this came from
 
-This folder was written on the `maui-offline-plan` branch of the Maple Notes repository (`maui-handoff/`), against
-commit `a28db714a66a4021449abb98ad3bb1a5614ff1b0` (release 1.8.0). To set up the new repository from it:
+The specification was written as `maui-handoff/` on the `maui-offline-plan` branch of the Maple Notes repository (commit
+`ed4a3d0`), against commit `a28db714a66a4021449abb98ad3bb1a5614ff1b0` (release 1.8.0). This repository was set up from
+it with that folder's `scripts/export-handoff.sh`, which copied the specification and wrote the reference source into
+`reference/maple-notes-1.8.0/` with `git archive`. The app was then named Falcon Notes
+([D12](docs/01-scope-and-decisions.md#decisions)).
 
-```sh
-# in the Maple Notes repository, on the maui-offline-plan branch
-maui-handoff/scripts/export-handoff.sh /path/to/new-repo
-```
-
-The script copies `CLAUDE.md`, `README.md`, `docs/`, `fixtures/` and `benchmarks/` into the new repository. It writes
-the reference source into `reference/maple-notes-1.8.0/` from that exact commit (with `git archive`, so uncommitted
-changes are never included) and adds a starter `.gitignore` and `.editorconfig`. It refuses to overwrite existing
-files.
-
-Then open the new repository with Claude Code and paste the prompt from [KICKOFF-PROMPT.md](KICKOFF-PROMPT.md).
+The prompts for each phase are in [KICKOFF-PROMPT.md](KICKOFF-PROMPT.md).

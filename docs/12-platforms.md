@@ -8,7 +8,7 @@ Phase 0 spikes here.
 | Topic | Decision |
 |---|---|
 | Versions | Minimum API 26 (Android 8.0), target the latest. The WebView updates through the Play Store on API 24+, so the Chromium version is current. |
-| Package | `dev.maplenotes.app` (or the owner's choice: decide once; changing it later loses users' data) |
+| Package | `dev.falconnotes.app` (decided 2026-10-01, D12). Never change it: a new ID is a new app, and users would lose their data. |
 | Permissions | **None.** No `INTERNET` permission: the app is offline, and the WebView loads its local content without it. Remove the permission the MAUI template adds. The media option C (loopback HTTP) would need `INTERNET`, so prefer A or B on Android ([02](02-architecture.md#serving-attachments-to-the-webview)). File access goes through the system pickers, so no storage permission is needed. |
 | Backup | `android:allowBackup="false"` and `android:fullBackupContent="false"` (or `dataExtractionRules` excluding everything): the encrypted files are useless without the Keystore key ([03](03-data-storage-and-security.md#lost-key)) |
 | Secure storage | `SecureStorage` (Keystore-backed). Uninstall deletes the key; reinstalling starts fresh. |
@@ -55,6 +55,8 @@ Phase 0 spikes here.
 
 - **Data folder**: `FileSystem.AppDataDirectory` (Android `files/`, Windows `LocalState`, macOS the sandbox container's
   `Library`). **Cache**: `FileSystem.CacheDirectory`.
+- **App ID**: `ApplicationId` is `dev.falconnotes.app`; MAUI uses it for the Android package, the macOS bundle ID and
+  the Windows package name (check each in Phase 0). The display name is "Falcon Notes".
 - **Version**: `AppInfo.VersionString`, shown at the foot of Settings and Help.
 - **Platform names in copy**: Settings → Data protection and Key lost name the platform's key store:
   "Android Keystore", "Windows' protected storage", "the macOS Keychain".

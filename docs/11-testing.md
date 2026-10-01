@@ -7,9 +7,9 @@ cases, so **port them with the code**. A rule is not done until its tests from t
 
 | Project | Framework | Runs on | Covers |
 |---|---|---|---|
-| `tests/MapleNotes.Core.Tests` | xUnit v3 | CI on Linux, Windows, macOS; also on device (below) | Text rules, Markdown rendering, crypto, storage with real encrypted SQLite files, services, maintenance, export and restore conformance, performance budgets |
-| `tests/MapleNotes.UI.Tests` | xUnit v3 + bUnit | CI | Component behaviour: what is shown, what a click or key does, ARIA, toasts. JS interop is mocked with bUnit's `JSInterop` in strict mode, with each expected call set up. |
-| On-device run | A small MAUI test head (`tests/MapleNotes.DeviceTests`) that runs Core's storage, crypto and conformance tests and logs the results, or an on-device xUnit runner (check its licence first) | Android emulator and phone, Windows, macOS, before each release | Native SQLite3MC, secure storage, ICU and time zone data, file system |
+| `tests/FalconNotes.Core.Tests` | xUnit v3 | CI on Linux, Windows, macOS; also on device (below) | Text rules, Markdown rendering, crypto, storage with real encrypted SQLite files, services, maintenance, export and restore conformance, performance budgets |
+| `tests/FalconNotes.UI.Tests` | xUnit v3 + bUnit | CI | Component behaviour: what is shown, what a click or key does, ARIA, toasts. JS interop is mocked with bUnit's `JSInterop` in strict mode, with each expected call set up. |
+| On-device run | A small MAUI test head (`tests/FalconNotes.DeviceTests`) that runs Core's storage, crypto and conformance tests and logs the results, or an on-device xUnit runner (check its licence first) | Android emulator and phone, Windows, macOS, before each release | Native SQLite3MC, secure storage, ICU and time zone data, file system |
 
 Use temporary folders per test (`TempDirectory` in the reference's test support) and a fixed clock (`TimeProvider`).
 Fake every platform interface (`ISecretStore`, `IFileSaver`, …) in tests.
