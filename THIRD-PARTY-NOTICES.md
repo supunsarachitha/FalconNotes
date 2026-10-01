@@ -19,6 +19,7 @@ app: 135 MIT or "MIT AND Apache-2.0", 4 "MIT AND BSD-2-Clause AND Apache-2.0" (G
 | `CommunityToolkit.Maui`, `CommunityToolkit.Maui.Core` | 15.0.1 | MIT | <https://github.com/CommunityToolkit/Maui> |
 | `SQLite3MC.PCLRaw.bundle`, `.lib`, `.provider` (SQLite3 Multiple Ciphers) | 2.4.0 | MIT, with embedded code below | <https://github.com/utelle/SQLite3MultipleCiphers-NuGet> |
 | `SQLitePCLRaw.core` | 3.0.2 | Apache-2.0 | <https://github.com/ericsink/SQLitePCL.raw> |
+| `Markdig` | 1.4.0 | BSD-2-Clause | <https://github.com/xoofx/markdig> |
 | AndroidX, Material Components, Kotlin, Gson, Tink and related Android libraries (`Xamarin.AndroidX.*`, `Xamarin.Google.*`, `Xamarin.Kotlin*`, `GoogleGson`, `Xamarin.JSpecify`, `Xamarin.Jetbrains.Annotations`), brought in by .NET MAUI | various | .NET bindings MIT; Java libraries Apache-2.0 | <https://github.com/dotnet/android-libraries> |
 | Glide (`Xamarin.Android.Glide*`), brought in by .NET MAUI | 4.16.0.14 | .NET bindings MIT; Glide BSD-2-Clause, MIT and Apache-2.0 parts | <https://github.com/bumptech/glide> |
 | Tailwind CSS (generated stylesheet; the CLI runs at build time only) | 4.3.3 | MIT | <https://github.com/tailwindlabs/tailwindcss> |
@@ -101,6 +102,34 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+### Markdig
+
+```text
+Copyright (c) 2016-2026, Alexandre Mutel
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification
+, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
 ### Tailwind CSS
