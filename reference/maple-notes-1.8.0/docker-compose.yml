@@ -1,0 +1,49 @@
+# Maple Notes: docker compose setup.
+#
+#   1. cp .env.example .env
+#   2. Generate a master key (openssl rand -base64 32) and put it in .env as MAPLE_MASTER_KEY.
+#      Losing this key means losing all data: back it up separately from the data volume.
+#   3. docker compose up -d --build     then open http://localhost:8080
+#
+# All settings: see "Configuration" in README.md.
+
+services:
+  maple-notes:
+    build: .
+    image: maple-notes:latest
+    container_name: maple-notes
+    restart: unless-stopped
+    ports:
+      - "${MAPLE_PORT:-8080}:8080"
+    environment:
+      MAPLE_MASTER_KEY: ${MAPLE_MASTER_KEY:?Set MAPLE_MASTER_KEY in .env (generate one with openssl rand -base64 32)}
+      MAPLE_ALLOW_REGISTRATION: ${MAPLE_ALLOW_REGISTRATION:-false}
+      MAPLE_MAX_UPLOAD_MB: ${MAPLE_MAX_UPLOAD_MB:-25}
+      MAPLE_DEFAULT_ENCRYPTION: ${MAPLE_DEFAULT_ENCRYPTION:-true}
+      MAPLE_TRUSTED_PROXIES: ${MAPLE_TRUSTED_PROXIES:-}
+      MAPLE_LINK_PREVIEWS: ${MAPLE_LINK_PREVIEWS:-true}
+    volumes:
+      - maple-data:/app/data
+    # Hardening: read-only root filesystem, no Linux capabilities, no privilege escalation.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+    # Alternative: keep the master key in a Docker secret instead of an environment variable.
+    # Remove MAPLE_MASTER_KEY above, uncomment the lines below and the "secrets:" section at the end, and put the
+    # key in ./secrets/master.key (readable by UID 1654: chmod 0644, inside a directory only you can open).
+    #   environment:
+    #     MAPLE_MASTER_KEY_FILE: /run/secrets/maple_master_key
+    #   secrets:
+    #     - maple_master_key
+
+volumes:
+  maple-data:
+
+# secrets:
+#   maple_master_key:
+#     file: ./secrets/master.key

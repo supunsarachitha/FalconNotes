@@ -1,0 +1,227 @@
+MAPLEBENCH|env|Unix 26.6.2|cores=10|.NET 10.0.8
+MAPLEBENCH|sqlite|1000|bulk load (one transaction)|61.58|61.58|62 µs/note
+MAPLEBENCH|sqlite|1000|open + first feed page (cold)|2.48|2.48|
+MAPLEBENCH|sqlite|1000|database size|0.00|0.00|1.6 MB, readable header
+MAPLEBENCH|sqlite|1000|feed: first page|0.29|0.13|
+MAPLEBENCH|sqlite|1000|feed: page after scrolling 1,000 notes|0.27|0.15|
+MAPLEBENCH|sqlite|1000|pinned list|0.17|0.04|
+MAPLEBENCH|sqlite|1000|tag counts (side menu, Tags page)|0.89|0.63|
+MAPLEBENCH|sqlite|1000|label counts|0.37|0.23|
+MAPLEBENCH|sqlite|1000|calendar month counts|17.26|0.04|
+MAPLEBENCH|sqlite|1000|tag filter #work (nested): first page|1.19|0.86|
+MAPLEBENCH|sqlite|1000|label filter: first page|0.57|0.42|
+MAPLEBENCH|sqlite|1000|habits page (all habits)|0.13|0.06|
+MAPLEBENCH|sqlite|1000|search with no match (scans every note)|1.41|1.10|
+MAPLEBENCH|sqlite|1000|post a note (insert + tags, own transaction)|0.07|0.12|
+MAPLEBENCH|sqlite|1000|toggle pin|0.02|0.03|
+MAPLEBENCH|sqlite|1000|edit a note (update + re-tag)|0.05|0.07|
+MAPLEBENCH|sqlite-sqlcipher|1000|bulk load (one transaction)|78.83|78.83|79 µs/note
+MAPLEBENCH|sqlite-sqlcipher|1000|open + first feed page (cold)|1.84|1.84|
+MAPLEBENCH|sqlite-sqlcipher|1000|database size|0.00|0.00|1.6 MB, encrypted
+MAPLEBENCH|sqlite-sqlcipher|1000|feed: first page|0.85|0.14|
+MAPLEBENCH|sqlite-sqlcipher|1000|feed: page after scrolling 1,000 notes|0.75|0.13|
+MAPLEBENCH|sqlite-sqlcipher|1000|pinned list|0.23|0.04|
+MAPLEBENCH|sqlite-sqlcipher|1000|tag counts (side menu, Tags page)|1.83|0.64|
+MAPLEBENCH|sqlite-sqlcipher|1000|label counts|0.27|0.23|
+MAPLEBENCH|sqlite-sqlcipher|1000|calendar month counts|0.18|0.03|
+MAPLEBENCH|sqlite-sqlcipher|1000|tag filter #work (nested): first page|3.18|0.82|
+MAPLEBENCH|sqlite-sqlcipher|1000|label filter: first page|1.12|0.41|
+MAPLEBENCH|sqlite-sqlcipher|1000|habits page (all habits)|0.25|0.06|
+MAPLEBENCH|sqlite-sqlcipher|1000|search with no match (scans every note)|3.65|1.04|
+MAPLEBENCH|sqlite-sqlcipher|1000|post a note (insert + tags, own transaction)|0.38|0.63|
+MAPLEBENCH|sqlite-sqlcipher|1000|toggle pin|0.11|0.17|
+MAPLEBENCH|sqlite-sqlcipher|1000|edit a note (update + re-tag)|0.21|0.31|
+MAPLEBENCH|sqlite-chacha20|1000|bulk load (one transaction)|44.54|44.54|45 µs/note
+MAPLEBENCH|sqlite-chacha20|1000|open + first feed page (cold)|1.19|1.19|
+MAPLEBENCH|sqlite-chacha20|1000|database size|0.00|0.00|1.6 MB, encrypted
+MAPLEBENCH|sqlite-chacha20|1000|feed: first page|0.45|0.12|
+MAPLEBENCH|sqlite-chacha20|1000|feed: page after scrolling 1,000 notes|0.36|0.12|
+MAPLEBENCH|sqlite-chacha20|1000|pinned list|0.12|0.04|
+MAPLEBENCH|sqlite-chacha20|1000|tag counts (side menu, Tags page)|1.12|0.60|
+MAPLEBENCH|sqlite-chacha20|1000|label counts|0.26|0.24|
+MAPLEBENCH|sqlite-chacha20|1000|calendar month counts|0.15|0.05|
+MAPLEBENCH|sqlite-chacha20|1000|tag filter #work (nested): first page|2.07|0.86|
+MAPLEBENCH|sqlite-chacha20|1000|label filter: first page|0.73|0.41|
+MAPLEBENCH|sqlite-chacha20|1000|habits page (all habits)|0.17|0.06|
+MAPLEBENCH|sqlite-chacha20|1000|search with no match (scans every note)|2.18|1.10|
+MAPLEBENCH|sqlite-chacha20|1000|post a note (insert + tags, own transaction)|0.17|0.28|
+MAPLEBENCH|sqlite-chacha20|1000|toggle pin|0.06|0.08|
+MAPLEBENCH|sqlite-chacha20|1000|edit a note (update + re-tag)|0.10|0.16|
+MAPLEBENCH|sqlite-aegis|1000|bulk load (one transaction)|37.04|37.04|37 µs/note
+MAPLEBENCH|sqlite-aegis|1000|open + first feed page (cold)|1.04|1.04|
+MAPLEBENCH|sqlite-aegis|1000|database size|0.00|0.00|1.6 MB, encrypted
+MAPLEBENCH|sqlite-aegis|1000|feed: first page|0.25|0.16|
+MAPLEBENCH|sqlite-aegis|1000|feed: page after scrolling 1,000 notes|0.22|0.15|
+MAPLEBENCH|sqlite-aegis|1000|pinned list|0.08|0.04|
+MAPLEBENCH|sqlite-aegis|1000|tag counts (side menu, Tags page)|0.75|0.63|
+MAPLEBENCH|sqlite-aegis|1000|label counts|0.27|0.26|
+MAPLEBENCH|sqlite-aegis|1000|calendar month counts|0.09|0.04|
+MAPLEBENCH|sqlite-aegis|1000|tag filter #work (nested): first page|1.10|0.83|
+MAPLEBENCH|sqlite-aegis|1000|label filter: first page|0.50|0.41|
+MAPLEBENCH|sqlite-aegis|1000|habits page (all habits)|0.10|0.06|
+MAPLEBENCH|sqlite-aegis|1000|search with no match (scans every note)|1.30|1.09|
+MAPLEBENCH|sqlite-aegis|1000|post a note (insert + tags, own transaction)|0.09|0.14|
+MAPLEBENCH|sqlite-aegis|1000|toggle pin|0.03|0.04|
+MAPLEBENCH|sqlite-aegis|1000|edit a note (update + re-tag)|0.06|0.08|
+MAPLEBENCH|md-folder|1000|bulk load (one file per note)|158.54|158.54|159 µs/note
+MAPLEBENCH|md-folder|1000|open + first feed page (cold: index every file)|33.33|33.33|index holds 4 MB
+MAPLEBENCH|md-folder|1000|database size|0.00|0.00|0.8 MB in 1000 files
+MAPLEBENCH|md-folder|1000|feed: first page|0.17|0.00|
+MAPLEBENCH|md-folder|1000|feed: page after scrolling 1,000 notes|0.13|0.01|
+MAPLEBENCH|md-folder|1000|tag counts (side menu, Tags page)|1.12|0.18|
+MAPLEBENCH|md-folder|1000|search with no match (scans every note)|0.29|0.15|
+MAPLEBENCH|md-folder|1000|toggle pin (rewrite the file)|0.18|0.21|
+MAPLEBENCH|md-folder|1000|post a note (write a file)|0.17|0.21|
+MAPLEBENCH|sqlite|10000|bulk load (one transaction)|389.00|389.00|39 µs/note
+MAPLEBENCH|sqlite|10000|open + first feed page (cold)|1.10|1.10|
+MAPLEBENCH|sqlite|10000|database size|0.00|0.00|14.9 MB, readable header
+MAPLEBENCH|sqlite|10000|feed: first page|0.19|0.11|
+MAPLEBENCH|sqlite|10000|feed: page after scrolling 1,000 notes|0.17|0.12|
+MAPLEBENCH|sqlite|10000|pinned list|0.29|0.14|
+MAPLEBENCH|sqlite|10000|tag counts (side menu, Tags page)|7.69|6.62|
+MAPLEBENCH|sqlite|10000|label counts|2.77|2.36|
+MAPLEBENCH|sqlite|10000|calendar month counts|0.43|0.37|
+MAPLEBENCH|sqlite|10000|tag filter #work (nested): first page|8.84|8.71|
+MAPLEBENCH|sqlite|10000|label filter: first page|4.27|3.82|
+MAPLEBENCH|sqlite|10000|habits page (all habits)|0.14|0.09|
+MAPLEBENCH|sqlite|10000|search with no match (scans every note)|21.41|15.79|
+MAPLEBENCH|sqlite|10000|post a note (insert + tags, own transaction)|0.06|0.12|
+MAPLEBENCH|sqlite|10000|toggle pin|0.03|0.04|
+MAPLEBENCH|sqlite|10000|edit a note (update + re-tag)|0.05|0.07|
+MAPLEBENCH|sqlite-sqlcipher|10000|bulk load (one transaction)|619.48|619.48|62 µs/note
+MAPLEBENCH|sqlite-sqlcipher|10000|open + first feed page (cold)|3.61|3.61|
+MAPLEBENCH|sqlite-sqlcipher|10000|database size|0.00|0.00|15.2 MB, encrypted
+MAPLEBENCH|sqlite-sqlcipher|10000|feed: first page|0.93|0.09|
+MAPLEBENCH|sqlite-sqlcipher|10000|feed: page after scrolling 1,000 notes|0.61|0.12|
+MAPLEBENCH|sqlite-sqlcipher|10000|pinned list|3.54|0.09|
+MAPLEBENCH|sqlite-sqlcipher|10000|tag counts (side menu, Tags page)|19.81|19.71|
+MAPLEBENCH|sqlite-sqlcipher|10000|label counts|3.57|2.48|
+MAPLEBENCH|sqlite-sqlcipher|10000|calendar month counts|0.46|0.13|
+MAPLEBENCH|sqlite-sqlcipher|10000|tag filter #work (nested): first page|45.62|46.17|
+MAPLEBENCH|sqlite-sqlcipher|10000|label filter: first page|19.31|19.03|
+MAPLEBENCH|sqlite-sqlcipher|10000|habits page (all habits)|0.73|0.07|
+MAPLEBENCH|sqlite-sqlcipher|10000|search with no match (scans every note)|80.60|73.04|
+MAPLEBENCH|sqlite-sqlcipher|10000|post a note (insert + tags, own transaction)|0.39|0.69|
+MAPLEBENCH|sqlite-sqlcipher|10000|toggle pin|0.21|0.24|
+MAPLEBENCH|sqlite-sqlcipher|10000|edit a note (update + re-tag)|0.28|0.32|
+MAPLEBENCH|sqlite-chacha20|10000|bulk load (one transaction)|353.08|353.08|35 µs/note
+MAPLEBENCH|sqlite-chacha20|10000|open + first feed page (cold)|1.39|1.39|
+MAPLEBENCH|sqlite-chacha20|10000|database size|0.00|0.00|15.0 MB, encrypted
+MAPLEBENCH|sqlite-chacha20|10000|feed: first page|0.46|0.10|
+MAPLEBENCH|sqlite-chacha20|10000|feed: page after scrolling 1,000 notes|0.33|0.11|
+MAPLEBENCH|sqlite-chacha20|10000|pinned list|1.61|0.09|
+MAPLEBENCH|sqlite-chacha20|10000|tag counts (side menu, Tags page)|12.77|6.81|
+MAPLEBENCH|sqlite-chacha20|10000|label counts|2.83|2.57|
+MAPLEBENCH|sqlite-chacha20|10000|calendar month counts|0.31|0.13|
+MAPLEBENCH|sqlite-chacha20|10000|tag filter #work (nested): first page|22.92|24.11|
+MAPLEBENCH|sqlite-chacha20|10000|label filter: first page|10.69|10.07|
+MAPLEBENCH|sqlite-chacha20|10000|habits page (all habits)|0.41|0.07|
+MAPLEBENCH|sqlite-chacha20|10000|search with no match (scans every note)|36.63|34.93|
+MAPLEBENCH|sqlite-chacha20|10000|post a note (insert + tags, own transaction)|0.17|0.31|
+MAPLEBENCH|sqlite-chacha20|10000|toggle pin|0.09|0.10|
+MAPLEBENCH|sqlite-chacha20|10000|edit a note (update + re-tag)|0.13|0.16|
+MAPLEBENCH|sqlite-aegis|10000|bulk load (one transaction)|200.83|200.83|20 µs/note
+MAPLEBENCH|sqlite-aegis|10000|open + first feed page (cold)|0.94|0.94|
+MAPLEBENCH|sqlite-aegis|10000|database size|0.00|0.00|15.2 MB, encrypted
+MAPLEBENCH|sqlite-aegis|10000|feed: first page|0.18|0.10|
+MAPLEBENCH|sqlite-aegis|10000|feed: page after scrolling 1,000 notes|0.16|0.10|
+MAPLEBENCH|sqlite-aegis|10000|pinned list|0.36|0.09|
+MAPLEBENCH|sqlite-aegis|10000|tag counts (side menu, Tags page)|7.22|6.68|
+MAPLEBENCH|sqlite-aegis|10000|label counts|2.45|2.32|
+MAPLEBENCH|sqlite-aegis|10000|calendar month counts|0.19|0.13|
+MAPLEBENCH|sqlite-aegis|10000|tag filter #work (nested): first page|10.28|8.65|
+MAPLEBENCH|sqlite-aegis|10000|label filter: first page|3.80|3.74|
+MAPLEBENCH|sqlite-aegis|10000|habits page (all habits)|0.13|0.07|
+MAPLEBENCH|sqlite-aegis|10000|search with no match (scans every note)|12.06|11.56|
+MAPLEBENCH|sqlite-aegis|10000|post a note (insert + tags, own transaction)|0.07|0.11|
+MAPLEBENCH|sqlite-aegis|10000|toggle pin|0.03|0.04|
+MAPLEBENCH|sqlite-aegis|10000|edit a note (update + re-tag)|0.05|0.05|
+MAPLEBENCH|md-folder|10000|bulk load (one file per note)|1539.94|1539.94|154 µs/note
+MAPLEBENCH|md-folder|10000|open + first feed page (cold: index every file)|297.04|297.04|index holds 33 MB
+MAPLEBENCH|md-folder|10000|database size|0.00|0.00|7.5 MB in 10000 files
+MAPLEBENCH|md-folder|10000|feed: first page|0.03|0.00|
+MAPLEBENCH|md-folder|10000|feed: page after scrolling 1,000 notes|0.06|0.02|
+MAPLEBENCH|md-folder|10000|tag counts (side menu, Tags page)|2.44|1.86|
+MAPLEBENCH|md-folder|10000|search with no match (scans every note)|1.69|1.19|
+MAPLEBENCH|md-folder|10000|toggle pin (rewrite the file)|0.19|0.27|
+MAPLEBENCH|md-folder|10000|post a note (write a file)|0.18|0.21|
+MAPLEBENCH|sqlite|50000|bulk load (one transaction)|1041.98|1041.98|21 µs/note
+MAPLEBENCH|sqlite|50000|open + first feed page (cold)|0.97|0.97|
+MAPLEBENCH|sqlite|50000|database size|0.00|0.00|74.1 MB, readable header
+MAPLEBENCH|sqlite|50000|feed: first page|0.18|0.11|
+MAPLEBENCH|sqlite|50000|feed: page after scrolling 1,000 notes|0.18|0.13|
+MAPLEBENCH|sqlite|50000|pinned list|1.33|0.90|
+MAPLEBENCH|sqlite|50000|tag counts (side menu, Tags page)|38.97|38.09|
+MAPLEBENCH|sqlite|50000|label counts|16.90|14.65|
+MAPLEBENCH|sqlite|50000|calendar month counts|0.72|0.62|
+MAPLEBENCH|sqlite|50000|tag filter #work (nested): first page|39.98|39.93|
+MAPLEBENCH|sqlite|50000|label filter: first page|21.03|21.03|
+MAPLEBENCH|sqlite|50000|habits page (all habits)|0.14|0.08|
+MAPLEBENCH|sqlite|50000|search with no match (scans every note)|64.31|56.03|
+MAPLEBENCH|sqlite|50000|post a note (insert + tags, own transaction)|0.05|0.08|
+MAPLEBENCH|sqlite|50000|toggle pin|0.02|0.03|
+MAPLEBENCH|sqlite|50000|edit a note (update + re-tag)|0.04|0.05|
+MAPLEBENCH|sqlite-sqlcipher|50000|bulk load (one transaction)|3289.74|3289.74|66 µs/note
+MAPLEBENCH|sqlite-sqlcipher|50000|open + first feed page (cold)|1.96|1.96|
+MAPLEBENCH|sqlite-sqlcipher|50000|database size|0.00|0.00|75.4 MB, encrypted
+MAPLEBENCH|sqlite-sqlcipher|50000|feed: first page|1.08|0.11|
+MAPLEBENCH|sqlite-sqlcipher|50000|feed: page after scrolling 1,000 notes|0.60|0.12|
+MAPLEBENCH|sqlite-sqlcipher|50000|pinned list|19.43|19.34|
+MAPLEBENCH|sqlite-sqlcipher|50000|tag counts (side menu, Tags page)|102.85|107.09|
+MAPLEBENCH|sqlite-sqlcipher|50000|label counts|61.33|61.61|
+MAPLEBENCH|sqlite-sqlcipher|50000|calendar month counts|1.71|0.61|
+MAPLEBENCH|sqlite-sqlcipher|50000|tag filter #work (nested): first page|235.64|235.64|
+MAPLEBENCH|sqlite-sqlcipher|50000|label filter: first page|98.58|98.38|
+MAPLEBENCH|sqlite-sqlcipher|50000|habits page (all habits)|0.92|0.07|
+MAPLEBENCH|sqlite-sqlcipher|50000|search with no match (scans every note)|362.83|357.26|
+MAPLEBENCH|sqlite-sqlcipher|50000|post a note (insert + tags, own transaction)|0.46|0.74|
+MAPLEBENCH|sqlite-sqlcipher|50000|toggle pin|0.21|0.27|
+MAPLEBENCH|sqlite-sqlcipher|50000|edit a note (update + re-tag)|0.27|0.44|
+MAPLEBENCH|sqlite-chacha20|50000|bulk load (one transaction)|1746.79|1746.79|35 µs/note
+MAPLEBENCH|sqlite-chacha20|50000|open + first feed page (cold)|1.31|1.31|
+MAPLEBENCH|sqlite-chacha20|50000|database size|0.00|0.00|74.6 MB, encrypted
+MAPLEBENCH|sqlite-chacha20|50000|feed: first page|0.55|0.11|
+MAPLEBENCH|sqlite-chacha20|50000|feed: page after scrolling 1,000 notes|0.37|0.12|
+MAPLEBENCH|sqlite-chacha20|50000|pinned list|7.97|7.57|
+MAPLEBENCH|sqlite-chacha20|50000|tag counts (side menu, Tags page)|59.39|63.27|
+MAPLEBENCH|sqlite-chacha20|50000|label counts|33.72|33.39|
+MAPLEBENCH|sqlite-chacha20|50000|calendar month counts|1.09|0.60|
+MAPLEBENCH|sqlite-chacha20|50000|tag filter #work (nested): first page|119.78|119.80|
+MAPLEBENCH|sqlite-chacha20|50000|label filter: first page|51.69|53.11|
+MAPLEBENCH|sqlite-chacha20|50000|habits page (all habits)|0.43|0.08|
+MAPLEBENCH|sqlite-chacha20|50000|search with no match (scans every note)|180.27|171.00|
+MAPLEBENCH|sqlite-chacha20|50000|post a note (insert + tags, own transaction)|0.16|0.28|
+MAPLEBENCH|sqlite-chacha20|50000|toggle pin|0.08|0.09|
+MAPLEBENCH|sqlite-chacha20|50000|edit a note (update + re-tag)|0.11|0.16|
+MAPLEBENCH|sqlite-aegis|50000|bulk load (one transaction)|1047.48|1047.48|21 µs/note
+MAPLEBENCH|sqlite-aegis|50000|open + first feed page (cold)|1.01|1.01|
+MAPLEBENCH|sqlite-aegis|50000|database size|0.00|0.00|75.1 MB, encrypted
+MAPLEBENCH|sqlite-aegis|50000|feed: first page|0.19|0.11|
+MAPLEBENCH|sqlite-aegis|50000|feed: page after scrolling 1,000 notes|0.23|0.13|
+MAPLEBENCH|sqlite-aegis|50000|pinned list|1.85|1.43|
+MAPLEBENCH|sqlite-aegis|50000|tag counts (side menu, Tags page)|41.35|40.21|
+MAPLEBENCH|sqlite-aegis|50000|label counts|17.70|16.63|
+MAPLEBENCH|sqlite-aegis|50000|calendar month counts|0.74|0.61|
+MAPLEBENCH|sqlite-aegis|50000|tag filter #work (nested): first page|50.04|49.12|
+MAPLEBENCH|sqlite-aegis|50000|label filter: first page|22.86|23.28|
+MAPLEBENCH|sqlite-aegis|50000|habits page (all habits)|0.17|0.08|
+MAPLEBENCH|sqlite-aegis|50000|search with no match (scans every note)|65.84|65.16|
+MAPLEBENCH|sqlite-aegis|50000|post a note (insert + tags, own transaction)|0.06|0.09|
+MAPLEBENCH|sqlite-aegis|50000|toggle pin|0.03|0.03|
+MAPLEBENCH|sqlite-aegis|50000|edit a note (update + re-tag)|0.05|0.06|
+MAPLEBENCH|md-folder|50000|bulk load (one file per note)|7857.91|7857.91|157 µs/note
+MAPLEBENCH|md-folder|50000|open + first feed page (cold: index every file)|5243.84|5243.84|index holds 162 MB
+MAPLEBENCH|md-folder|50000|database size|0.00|0.00|37.3 MB in 50000 files
+MAPLEBENCH|md-folder|50000|feed: first page|0.03|0.00|
+MAPLEBENCH|md-folder|50000|feed: page after scrolling 1,000 notes|0.11|0.04|
+MAPLEBENCH|md-folder|50000|tag counts (side menu, Tags page)|12.37|9.98|
+MAPLEBENCH|md-folder|50000|search with no match (scans every note)|10.20|10.09|
+MAPLEBENCH|md-folder|50000|toggle pin (rewrite the file)|0.22|0.35|
+MAPLEBENCH|md-folder|50000|post a note (write a file)|0.17|0.20|
+MAPLEBENCH|done
+MAPLEBENCH|ef-core|1000|first query in the process (model + compile + open)|557.19|557.33|21 notes
+MAPLEBENCH|ef-core|1000|feed: first page (new context + connection each time)|2.26|2.52|
+MAPLEBENCH|ef-core|10000|first query in the process (model + compile + open)|4.34|4.34|21 notes
+MAPLEBENCH|ef-core|10000|feed: first page (new context + connection each time)|2.26|2.41|
+MAPLEBENCH|ef-core|50000|first query in the process (model + compile + open)|5.04|5.04|21 notes
+MAPLEBENCH|ef-core|50000|feed: first page (new context + connection each time)|2.55|2.74|

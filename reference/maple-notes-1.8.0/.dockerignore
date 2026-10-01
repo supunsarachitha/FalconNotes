@@ -1,0 +1,22 @@
+# Keep the build context small and free of secrets and local data.
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+src/MapleNotes.Server/wwwroot/
+.git/
+.github/
+.vs/
+.vscode/
+.idea/
+tests/
+docs/
+scripts/
+deploy/
+demo-backup-samples/
+site/
+data/
+secrets/
+.env
+*.env
+**/.DS_Store

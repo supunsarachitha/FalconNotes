@@ -1,0 +1,39 @@
+# --- .NET / MAUI ---
+bin/
+obj/
+*.user
+*.suo
+*.rsuser
+.vs/
+.vscode/*.log
+TestResults/
+*.trx
+coverage*/
+*.apk
+*.aab
+*.msix
+*.app/
+
+# --- Generated CSS (Tailwind output) and tools ---
+src/MapleNotes.UI/wwwroot/css/app.css
+tools/tailwindcss*
+
+# --- Local data, never committed ---
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+benchmarks/**/data*/
+
+# --- Signing material ---
+*.keystore
+*.jks
+*.pfx
+*.p12
+secrets/
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
