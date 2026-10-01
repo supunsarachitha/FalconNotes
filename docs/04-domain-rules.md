@@ -52,8 +52,10 @@ is 🍁; [07](07-screens.md#wording)).
 
 - The query is the box's text, trimmed. A note matches when its text contains it, **or any attachment's file name
   does**, compared with `StringComparison.OrdinalIgnoreCase`.
-- It searches active notes of the enabled kinds, newest first, and returns pages of 20 matches. It reads notes in
-  batches of 200 and stops as soon as a page is full. Cancel the scan when the query changes or the page closes.
+- It searches active notes of the enabled kinds, newest first, and returns pages of 20 matches. It reads the notes
+  in one pass in time order, each once, and stops as soon as a page is full. Cancel the scan when the query changes or
+  the page closes. (The server read batches of 200; here each batch re-sorted the notes, and a search that matched
+  nothing took 4.4 s at 50,000 notes instead of 0.14 s.)
 - Empty result: "No matching notes" / "Archived notes are not included in searches."
 - Reference: `NoteService.ListAsync` (search branch) and `Matches`.
 

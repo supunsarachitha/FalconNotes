@@ -75,8 +75,9 @@ archive. The manifests may differ only in `exportedAt` and `account`.
 
 ## Performance budgets
 
-Measured on the 50,000-note database from the benchmark generator (`benchmarks/storage/Shared/Bench.cs` `Generate`). A
-`[Trait("Category", "Performance")]` test runs them on the CI Mac. Phase 7 repeats them by hand on the slowest Android
+Measured on the 50,000-note database from the benchmark generator (`benchmarks/storage/Shared/Bench.cs` `Generate`,
+ported as `tests/FalconNotes.Core.Tests/Performance/LargeDatabase.cs`). A `[Trait("Category", "Performance")]` test runs
+them on the CI Mac, and locally with `FALCON_PERF=1` (`FALCON_PERF_REPORT=path` writes the timings to a file). Phase 7 repeats them by hand on the slowest Android
 phone supported, against 4× these budgets:
 
 | Operation | Budget (Mac, release build) |

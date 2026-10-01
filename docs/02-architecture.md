@@ -258,10 +258,11 @@ Only these, unless a decision is recorded here first. Every one must be on the a
 | `Microsoft.Data.Sqlite.Core` | MIT | Data access |
 | `SQLite3MC.PCLRaw.bundle` 2.4.x | MIT (bundles SQLite, public domain, and permissive embedded code: see the reference `licensing.md`) | Encrypted SQLite, native for android-arm/arm64/x86/x64, maccatalyst-arm64/x64, win-x86/x64/arm64 |
 | `Markdig` | BSD-2-Clause | Markdown rendering |
-| `SkiaSharp` (+ native assets per platform) | MIT | Shrinking photos |
+| `SkiaSharp` (+ native assets per platform) | MIT, but see below | Shrinking photos. **Not added; decision pending (2026-10-01).** Its native library bundles code under other terms: Adobe's DNG SDK (a custom licence), the GIF decoder (MPL 1.1 / GPL / LGPL), FreeType (FTL, an advertising clause), and it lists libmicrohttpd (LGPL). The licence policy puts custom, MPL and LGPL terms under "review first". The alternative is each platform's own codec (Android `ImageDecoder` and `Bitmap.compress`, Windows `BitmapDecoder`/`BitmapEncoder`, Apple ImageIO) behind `IImageCodec`, with no third-party code. |
 | `CommunityToolkit.Maui` | MIT | File saver, status bar colour |
 | Tailwind CSS 4 standalone CLI | MIT | Build-time only, generates `app.css` |
 | Lucide icons (SVG paths, copied into `Icon.razor`) | ISC | Icons |
+| `Microsoft.Extensions.Logging.Abstractions` | MIT | Logging interfaces in Core (already part of MAUI) |
 | Tests: `xunit.v3`, `bunit` | Apache-2.0, MIT | Tests only |
 
 Not allowed: anything in the reference's "Not allowed" list, and the "known traps" there (FluentAssertions 8+,

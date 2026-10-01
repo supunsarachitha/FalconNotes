@@ -58,6 +58,8 @@ something behaves, the reference does. [docs/09-port-map.md](docs/09-port-map.md
 ```sh
 dotnet test tests/FalconNotes.Core.Tests                                       # rules, storage, crypto, backups
 dotnet test tests/FalconNotes.UI.Tests                                         # components (bUnit)
+FALCON_PERF=1 dotnet test tests/FalconNotes.Core.Tests -c Release -- --filter-trait "Category=Performance"
+                                                                              # the docs/11 budgets on 50,000 notes
 dotnet build src/FalconNotes.App -t:Run -f net10.0-android                     # run on the running emulator/device
 dotnet build src/FalconNotes.App -c Release -f net10.0-android                 # release APK (bin/Release/…-Signed.apk)
 ~/Library/Android/sdk/emulator/emulator -list-avds                            # emulators: MAUI_Emulator_API_36, Medium_Phone_API_36.1

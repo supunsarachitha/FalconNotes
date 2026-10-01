@@ -24,3 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The system file picker, a fast "save as" on Android, and opening files in the system's apps.
 - CI on GitHub Actions: Core and UI tests on Linux, Windows and macOS, and an Android release build that fails if the
   app asks for a network permission.
+- Core, everything but the screens: the text rules (titles, todo lists, habits and their streaks and charts, dates,
+  relative times, Markdown editing, tag suggestions, the tag tree and menu order) with the web app's tests; keys
+  derived from the device key; the database schema and migrations, with a copy kept before each upgrade; notes with
+  every rule of the web app (lists, search, filters, pin, archive, trash and its 30-day purge, daily notes, moves,
+  labels, delete all, storage use); labels, preferences and the profile; attachments added to the encrypted store;
+  Markdown rendering; hourly maintenance. Search over 50,000 notes takes about 0.14 s.

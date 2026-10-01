@@ -56,21 +56,28 @@ the release build reaches its first screen in 0.7–0.9 s. CI goes green once th
 
 ## Phase 1: Core
 
-- [ ] `Domain/*`, `Text/*` (titles, todo, habits, tags, tag suggestions, Markdown editing, dates, relative time, bytes,
+- [x] `Domain/*`, `Text/*` (titles, todo, habits, tags, tag suggestions, Markdown editing, dates, relative time, bytes,
       menu order, tag tree), each with its tests ported from the reference ([11](11-testing.md)).
-- [ ] `Crypto/*`: key material, `AttachmentCipher`, `DecryptingAttachmentStream` with the server's tests (tampering,
+- [x] `Crypto/*`: key material, `AttachmentCipher`, `DecryptingAttachmentStream` with the server's tests (tampering,
       truncation, reordering, wrong key, every chunk boundary).
-- [ ] `Storage/*`: `Database`, migrations, repositories for notes, bodies, tags, labels, attachments and settings.
-- [ ] `Attachments/*`: `AttachmentStore`, `UploadPolicy`, `AttachmentService`, `PhotoShrinker`.
-- [ ] `Notes/*`, `Labels/*`, `Preferences/*`: every rule in [04](04-domain-rules.md), including lists and cursors,
+- [x] `Storage/*`: `Database`, migrations, repositories for notes, bodies, tags, labels, attachments and settings.
+- [x] `Attachments/*`: `AttachmentStore`, `UploadPolicy`, `AttachmentService`, `PhotoShrinker` (its rules; the
+      decoding is the platform's `IImageCodec`, waiting on the SkiaSharp decision in
+      [02](02-architecture.md#dependencies)).
+- [x] `Notes/*`, `Labels/*`, `Settings/*`: every rule in [04](04-domain-rules.md), including lists and cursors,
       search, the calendar, tag and label counts and filters, trash and purge, daily notes, kind moves, delete all, and
       storage use.
-- [ ] `Markdown/MarkdownRenderer` with tag links, task offsets and safe links.
-- [ ] `Maintenance/*`: start-up tasks, purge, cleanup, database copies, temporary files.
-- [ ] `Events/ChangeFeed`.
+- [x] `Markdown/MarkdownRenderer` with tag links, task offsets and safe links.
+- [x] `Maintenance/*`: start-up tasks, purge, cleanup, database copies, temporary files.
+- [x] `Events/ChangeFeed`.
 
 **Acceptance**: Core tests pass on Linux, Windows and macOS. A 50,000-note database (from the benchmark generator) runs
 every list, count, filter and search query within the budgets in [11](11-testing.md#performance-budgets) on the Mac.
+
+Status (2026-10-01): 283 Core tests pass on the Mac; Linux and Windows run in CI once the repository is on GitHub. The
+budgets on an M1 Pro, Release build, 50,000 notes: open and first feed page 0.9 ms, feed page 0.3 ms, pinned 0.3 ms,
+habits 0.2 ms, calendar month 0.5 ms, tag counts 38 ms, label counts 22 ms, tag filter 17 ms, label filter 12 ms,
+search with no match 140 ms, post, edit and pin under 0.2 ms each.
 
 ## Phase 2: backup compatibility
 

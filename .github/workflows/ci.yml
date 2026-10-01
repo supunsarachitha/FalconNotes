@@ -35,6 +35,14 @@ jobs:
         run: dotnet test tests/FalconNotes.Core.Tests
       - name: UI tests
         run: dotnet test tests/FalconNotes.UI.Tests
+      - name: Performance budgets (docs/11), on the Mac only
+        if: runner.os == 'macOS'
+        env:
+          FALCON_PERF: "1"
+          FALCON_PERF_REPORT: ${{ runner.temp }}/performance.txt
+        run: |
+          dotnet test tests/FalconNotes.Core.Tests -c Release -- --filter-trait "Category=Performance"
+          cat "$FALCON_PERF_REPORT"
 
   android:
     name: Android app (Release)
