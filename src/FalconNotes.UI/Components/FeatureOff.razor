@@ -1,0 +1,12 @@
+@* Port of FeatureOff in pages/TodoPage.tsx: shown instead of a tab whose feature is turned off; its notes are kept. *@
+<EmptyState Title="@Title">
+    @ChildContent <a href="/settings" class="font-medium text-maple-700 underline dark:text-maple-400">Turn it on in Settings.</a>
+</EmptyState>
+
+@code {
+    /// <summary>The heading, e.g. "Quick notes are turned off".</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>What happens to the feature's notes while it is off.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

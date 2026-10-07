@@ -1,0 +1,81 @@
+@page "/trash"
+@* Port of TrashPage: deleted notes, todo lists, quick notes and habits, most recently deleted first, each to
+   restore or delete for good, and Empty trash for all of them. Reached from Settings rather than the menu. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
+@using FalconNotes.UI.State
+@inject NoteService Notes
+@inject Toasts Toasts
+@inject AppState State
+
+<a href="/settings/data" class="-ml-2 mb-2 inline-flex h-9 items-center gap-1 rounded-full px-2 text-sm text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800">
+    <Icon Name="IconName.ChevronLeft" Class="size-4" /> Settings
+</a>
+<div class="mb-1 flex items-center gap-3">
+    <h1 class="min-w-0 flex-1 text-xl font-semibold">Trash</h1>
+    @if (_hasNotes)
+    {
+        <Button Variant="ButtonVariant.Danger" Class="h-9" OnClick="() => _confirming = true">Empty trash…</Button>
+    }
+</div>
+<p class="mb-4 text-sm text-stone-600 dark:text-stone-300">
+    Deleted notes wait here for @NoteDaysLeft days, then they are deleted for good. Restore one to put it back where it was. Notes here still count
+    towards your storage.
+</p>
+@if (!State.Preferences.Trash)
+{
+    <p class="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        The trash is turned off, so deleting is immediate and permanent. Notes already here stay until they are deleted.
+        <a href="/settings/features" class="font-medium underline">Turn it on in Settings.</a>
+    </p>
+}
+<NoteList State="NoteState.Trash" Kinds="NoteKinds.All" RenderNote="TrashCard" ShowEndMarker="false" OnLoaded="OnListLoadedAsync">
+    <Empty><EmptyState Title="The trash is empty">Notes you delete wait here for @NoteDaysLeft days.</EmptyState></Empty>
+</NoteList>
+
+<ConfirmDialog Open="_confirming" OpenChanged="open => _confirming = open" Title="Empty the trash?" ConfirmLabel="Empty trash" Busy="_emptying" OnConfirm="EmptyAsync">
+    <Description>Everything in the trash, with its files, is deleted permanently. This cannot be undone.</Description>
+</ConfirmDialog>
+
+@code {
+    private static readonly int NoteDaysLeft = (int)NoteService.TrashRetention.TotalDays;
+
+    private bool _confirming;
+    private bool _emptying;
+    private bool _hasNotes;
+
+    private static RenderFragment<Note> TrashCard => note => builder =>
+    {
+        builder.OpenComponent<Components.TrashCard>(0);
+        builder.AddComponentParameter(1, nameof(Components.TrashCard.Note), note);
+        builder.CloseComponent();
+    };
+
+    private Task OnListLoadedAsync(bool hasAny)
+    {
+        _hasNotes = hasAny;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task EmptyAsync()
+    {
+        _emptying = true;
+        try
+        {
+            var deleted = await Notes.EmptyTrashAsync();
+            _confirming = false;
+            Toasts.Info(deleted.Files > 0
+                ? $"Deleted {deleted.Notes} {(deleted.Notes == 1 ? "note" : "notes")} and {deleted.Files} {(deleted.Files == 1 ? "file" : "files")} for good."
+                : $"Deleted {deleted.Notes} {(deleted.Notes == 1 ? "note" : "notes")} for good.");
+        }
+        catch (Exception)
+        {
+            Toasts.Error("Could not empty the trash. Please try again.");
+        }
+        finally
+        {
+            _emptying = false;
+        }
+    }
+}

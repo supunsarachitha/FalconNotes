@@ -1,10 +1,7 @@
-@page "/archive"
 @page "/todo"
-@page "/quick"
 @page "/habits"
 @page "/tags"
 @page "/help"
-@page "/trash"
 @page "/settings"
 @page "/settings/{Section}"
 @* The pages later phases port (docs/10): each says which phase brings it. *@
@@ -21,19 +18,15 @@
 
     private string Title => Path switch
     {
-        "/archive" => "Archive",
         "/todo" => "Todo",
-        "/quick" => "Quick notes",
         "/habits" => "Habits",
         "/tags" => "Tags",
         "/help" => "Help",
-        "/trash" => "Trash",
         _ => "Settings",
     };
 
     private string Phase => Path switch
     {
-        "/archive" or "/quick" or "/trash" => "Phase 4",
         "/todo" or "/habits" or "/tags" => "Phase 5",
         _ => "Phase 6",
     };

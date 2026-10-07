@@ -121,6 +121,10 @@ else
     /// <summary>Notes shown elsewhere on the page already (the Today card), left out here.</summary>
     [Parameter] public IReadOnlyList<Guid> HideIds { get; set; } = [];
 
+    /// <summary>Called after each load with whether the list has anything at all (before <see cref="HideIds"/> is
+    /// applied), for a caller that needs to know independently of what is actually shown (Trash's "Empty trash…").</summary>
+    [Parameter] public EventCallback<bool> OnLoaded { get; set; }
+
     private bool HasNextPage => _cursor is not null;
 
     private List<Note> Shown => _notes.Where(n => !HideIds.Contains(n.Id)).ToList();
@@ -219,6 +223,7 @@ else
             _loading = false;
             _bound = false; // the sentinel element is fresh; (re)bind it after this render
             StateHasChanged();
+            await OnLoaded.InvokeAsync(_notes.Count > 0);
         }
     }
 
