@@ -1,8 +1,10 @@
+using FalconNotes.Core.Backup.Export;
 using FalconNotes.Core.Backup.Restore;
 using FalconNotes.Core.Crypto;
 using FalconNotes.Core.Domain;
 using FalconNotes.Core.Markdown;
 using FalconNotes.Core.Notes;
+using FalconNotes.Core.Settings;
 using FalconNotes.Core.Startup;
 using FalconNotes.Core.Tests;
 using FalconNotes.UI.State;
@@ -18,10 +20,12 @@ namespace FalconNotes.UI.Tests;
 public sealed class UiTestApp : IDisposable
 {
     private UiTestApp(
-        TestApp core, AppState state, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener, FakeFileSaver saver, FakeClipboard clipboard)
+        TestApp core, AppState state, AppLockState appLock, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener, FakeFileSaver saver,
+        FakeClipboard clipboard)
     {
         Core = core;
         State = state;
+        AppLock = appLock;
         Toasts = toasts;
         Picker = picker;
         Opener = opener;
@@ -34,6 +38,9 @@ public sealed class UiTestApp : IDisposable
 
     /// <summary>The profile and preferences, as every screen reads them.</summary>
     public AppState State { get; }
+
+    /// <summary>The app lock's session state.</summary>
+    public AppLockState AppLock { get; }
 
     /// <summary>The notifications raised during the test.</summary>
     public Toasts Toasts { get; }
@@ -73,6 +80,10 @@ public sealed class UiTestApp : IDisposable
         var toasts = new Toasts(core.Clock);
         var state = new AppState(core.Preferences, core.Profile, core.Feed, toasts);
         await state.LoadAsync();
+        var appLockService = new AppLockService(core.Storage, core.Clock);
+        var fakeAppLock = new FakeAppLock();
+        var appLock = new AppLockState(appLockService, fakeAppLock, core.Clock);
+        await appLock.LoadAsync();
         var picker = new FakeFilePicker();
         var opener = new FakeFileOpener();
         var saver = new FakeFileSaver();
@@ -88,6 +99,9 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton(core.Feed);
         services.AddSingleton<TimeProvider>(core.Clock);
         services.AddSingleton(state);
+        services.AddSingleton(appLockService);
+        services.AddSingleton(appLock);
+        services.AddSingleton<Core.Platform.IAppLock>(fakeAppLock);
         services.AddSingleton(toasts);
         services.AddSingleton<Core.Platform.IFilePicker>(picker);
         services.AddSingleton<Core.Platform.IAppInfo>(new FakeAppInfo());
@@ -95,11 +109,15 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton<Core.Platform.IFileOpener>(opener);
         services.AddSingleton<Core.Platform.IFileSaver>(saver);
         services.AddSingleton<Core.Platform.IClipboard>(clipboard);
+        services.AddSingleton(new ExportService(
+            new NoteExporter(core.Storage, core.Attachments, core.Profile, core.Clock, Microsoft.Extensions.Logging.Abstractions.NullLogger<NoteExporter>.Instance),
+            saver, core.Directories, core.Storage, core.Clock));
         services.AddSingleton(new RestoreReader(core.Directories, core.Clock));
         services.AddSingleton(new RestoreRunner(core.Storage, core.Attachments, core.Feed, core.Clock));
         services.AddSingleton(new KeyLostRecovery(new DeviceKeyStore(core.Secrets), core.Directories, core.Clock));
+        services.AddSingleton(new EraseAllData(new DeviceKeyStore(core.Secrets), core.Storage, core.Directories));
 
-        return new UiTestApp(core, state, toasts, picker, opener, saver, clipboard);
+        return new UiTestApp(core, state, appLock, toasts, picker, opener, saver, clipboard);
     }
 
     /// <summary>Posts a note (docs/04): used to give the calendar, tag counts and lists something to show.</summary>

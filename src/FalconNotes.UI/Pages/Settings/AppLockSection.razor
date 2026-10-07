@@ -1,0 +1,138 @@
+@* New (docs/07, Settings → Privacy & security → App lock; docs/03, App lock). *@
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Settings
+@using FalconNotes.UI.State
+@inject AppLockState AppLock
+@inject IAppInfo AppInfo
+
+<Section Title="App lock">
+    <Description>Ask for a PIN, or your fingerprint, face, Windows Hello or Touch ID, before showing your notes. The lock keeps people out of the app; your notes are encrypted either way.</Description>
+    <ChildContent>
+        <PreferenceSwitch Label="Lock Falcon Notes" Description="Ask for your PIN when Falcon Notes opens or comes back after a while."
+                           Checked="AppLock.Settings.Enabled" CheckedChanged="OnEnabledChanged" />
+        @if (AppInfo.PlatformName == "Android")
+        {
+            <p class="-mt-1 pb-3 text-xs text-stone-500 dark:text-stone-400">
+                While the lock is on, Falcon Notes hides its window from screenshots and the app switcher.
+            </p>
+        }
+
+        @if (AppLock.Settings.Enabled && AppLock.IsBiometricAvailable)
+        {
+            <PreferenceSwitch Label="@($"Unlock with {AppLock.BiometricName}")" Description="You can always use your PIN instead."
+                               Checked="AppLock.Settings.Biometrics" CheckedChanged="OnBiometricsChanged" />
+        }
+
+        @if (AppLock.Settings.Enabled)
+        {
+            <div class="flex flex-col gap-1.5 py-3">
+                <label for="@_lockAfterId" class="text-sm font-medium">Lock after</label>
+                <select id="@_lockAfterId" value="@AppLock.Settings.LockAfterSeconds" @onchange="OnLockAfterChanged"
+                        class="h-11 w-full max-w-xs rounded-xl border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950">
+                    @foreach (var seconds in AppLockSettings.LockAfterChoices)
+                    {
+                        <option value="@seconds">@LockAfterLabel(seconds)</option>
+                    }
+                </select>
+                <p class="text-sm text-stone-600 dark:text-stone-300">How long Falcon Notes may stay in the background before it locks.</p>
+            </div>
+
+            <div class="pt-3">
+                <Button Variant="ButtonVariant.Secondary" OnClick="@(() => _verifyingChange = true)">Change PIN…</Button>
+            </div>
+        }
+    </ChildContent>
+</Section>
+
+<SetPinDialog Open="_settingNewLock" OpenChanged="v => _settingNewLock = v" OnSet="OnNewLockSetAsync" Busy="_busy" />
+<VerifyPinDialog Open="_verifyingDisable" OpenChanged="v => _verifyingDisable = v" OnVerified="OnDisableVerifiedAsync" Title="Turn the app lock off" />
+<VerifyPinDialog Open="_verifyingChange" OpenChanged="v => _verifyingChange = v" OnVerified="OnChangeVerifiedAsync" Title="Change your PIN" />
+<SetPinDialog Open="_changingExisting" OpenChanged="v => _changingExisting = v" OnSet="OnPinChangedAsync" Busy="_busy" />
+
+@code {
+    private readonly string _lockAfterId = $"lock-after-{Guid.NewGuid():N}";
+    private bool _settingNewLock;
+    private bool _verifyingDisable;
+    private bool _verifyingChange;
+    private bool _changingExisting;
+    private bool _busy;
+
+    private static string LockAfterLabel(int seconds) => seconds switch
+    {
+        0 => "Immediately",
+        60 => "After 1 minute",
+        300 => "After 5 minutes",
+        900 => "After 15 minutes",
+        3600 => "After 1 hour",
+        _ => $"After {seconds}s",
+    };
+
+    private void OnEnabledChanged(bool on)
+    {
+        if (on)
+        {
+            _settingNewLock = true;
+        }
+        else
+        {
+            _verifyingDisable = true;
+        }
+    }
+
+    private async Task OnNewLockSetAsync(string pin)
+    {
+        _busy = true;
+        try
+        {
+            await AppLock.EnableAsync(pin);
+            _settingNewLock = false;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task OnDisableVerifiedAsync()
+    {
+        _verifyingDisable = false;
+        await AppLock.DisableAsync();
+    }
+
+    private void OnChangeVerifiedAsync()
+    {
+        _verifyingChange = false;
+        _changingExisting = true;
+    }
+
+    private async Task OnPinChangedAsync(string pin)
+    {
+        _busy = true;
+        try
+        {
+            await AppLock.ChangePinAsync(pin);
+            _changingExisting = false;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task OnBiometricsChanged(bool on)
+    {
+        if (!on)
+        {
+            await AppLock.SetBiometricsAsync(false);
+            return;
+        }
+
+        if (await AppLock.VerifyBiometricAsync("Turn on biometric unlock"))
+        {
+            await AppLock.SetBiometricsAsync(true);
+        }
+    }
+
+    private Task OnLockAfterChanged(ChangeEventArgs e) =>
+        AppLock.SetLockAfterAsync(int.TryParse(e.Value?.ToString(), out var seconds) ? seconds : 60);
+}

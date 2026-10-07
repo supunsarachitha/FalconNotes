@@ -1,0 +1,62 @@
+@* Port of DeleteContentSection in pages/SettingsPage.tsx, adapted (docs/07, Settings → Backup & data): starting
+   again with an empty device instead of an empty account; confirmed in a dialog, not with a password (docs/01, D3). *@
+@using FalconNotes.Core.Notes
+@using FalconNotes.UI.State
+@inject NoteService Notes
+@inject AppLockState AppLock
+@inject Toasts Toasts
+
+<Section Title="Delete all notes and files">
+    <Description>Start again with an empty device. Your name, settings and app lock stay as they are.</Description>
+    <ChildContent>
+        <Button Variant="ButtonVariant.Danger" OnClick="Open">Delete all notes and files…</Button>
+    </ChildContent>
+</Section>
+
+<VerifyPinDialog Open="_verifying" OpenChanged="v => _verifying = v" OnVerified="OnVerifiedAsync" />
+
+<ConfirmDialog Open="_open" OpenChanged="v => _open = v" Title="Delete all your notes and files?" ConfirmLabel="Delete everything" Busy="_busy" OnConfirm="RunAsync">
+    <Description>
+        <p>Every note, todo list, quick note, daily note, habit, tag, label and file is deleted. This cannot be undone.</p>
+        <p class="mt-2">Export your notes first if you might want them back.</p>
+    </Description>
+</ConfirmDialog>
+
+@code {
+    private bool _open;
+    private bool _verifying;
+    private bool _busy;
+
+    private void Open()
+    {
+        if (AppLock.Settings.Enabled)
+        {
+            _verifying = true;
+        }
+        else
+        {
+            _open = true;
+        }
+    }
+
+    private void OnVerifiedAsync()
+    {
+        _verifying = false;
+        _open = true;
+    }
+
+    private async Task RunAsync()
+    {
+        _busy = true;
+        try
+        {
+            var deleted = await Notes.DeleteAllAsync();
+            _open = false;
+            Toasts.Info($"Deleted {deleted.Notes:N0} note{(deleted.Notes == 1 ? "" : "s")} and {deleted.Files:N0} file{(deleted.Files == 1 ? "" : "s")}.");
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

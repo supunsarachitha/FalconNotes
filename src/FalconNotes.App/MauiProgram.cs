@@ -1,6 +1,8 @@
 using CommunityToolkit.Maui;
 using FalconNotes.App.Services;
 using FalconNotes.Core.Attachments;
+using FalconNotes.Core.Backup.Export;
+using FalconNotes.Core.Backup.Restore;
 using FalconNotes.Core.Crypto;
 using FalconNotes.Core.Events;
 using FalconNotes.Core.Labels;
@@ -45,6 +47,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IThemeSource, Services.ThemeSource>();
 #if ANDROID
         builder.Services.AddSingleton<IWindowInsets, Services.AndroidWindowInsets>();
+        builder.Services.AddSingleton<Core.Platform.IAppLock, Services.AndroidAppLock>();
 #endif
 
         // Core and start-up (docs/02, Runtime model): stateless services are singletons.
@@ -62,14 +65,21 @@ public static class MauiProgram
         builder.Services.AddSingleton<LabelService>();
         builder.Services.AddSingleton<PreferencesService>();
         builder.Services.AddSingleton<ProfileService>();
+        builder.Services.AddSingleton<AppLockService>();
         builder.Services.AddSingleton<MarkdownRenderer>();
         builder.Services.AddSingleton<AttachmentCleanup>();
         builder.Services.AddSingleton<StartupTasks>();
         builder.Services.AddSingleton<AppBootstrapper>();
         builder.Services.AddSingleton<MediaHandler>();
+        builder.Services.AddSingleton<NoteExporter>();
+        builder.Services.AddSingleton<ExportService>();
+        builder.Services.AddSingleton<RestoreReader>();
+        builder.Services.AddSingleton<RestoreRunner>();
+        builder.Services.AddSingleton<EraseAllData>();
 
         // UI-wide state (docs/02, Runtime model): lives as long as the BlazorWebView, so it is a singleton too.
         builder.Services.AddSingleton<AppState>();
+        builder.Services.AddSingleton<AppLockState>();
         builder.Services.AddSingleton<Toasts>();
         builder.Services.AddSingleton<AppearanceService>();
         builder.Services.AddTransient<MainPage>();

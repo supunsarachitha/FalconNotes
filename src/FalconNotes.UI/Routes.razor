@@ -9,6 +9,7 @@
 @implements IDisposable
 @inject AppBootstrapper Bootstrapper
 @inject AppState State
+@inject AppLockState AppLock
 @inject AppearanceService Appearance
 @inject IWindowInsets Insets
 @inject NavigationManager Navigation
@@ -17,6 +18,12 @@
 @if (_outcome == StartupOutcome.KeyLost)
 {
     <KeyLost OnStartOver="OnKeyLostStartOverAsync" />
+}
+else if (_outcome == StartupOutcome.Ready && State.Profile is not null && AppLock.IsLocked)
+{
+    @* The router itself is not mounted while locked, so no route, Back press or deep link can reach a note
+       (docs/10, Phase 6 acceptance). *@
+    <Lock />
 }
 else if (_outcome == StartupOutcome.Ready)
 {
@@ -39,6 +46,8 @@ else if (_outcome == StartupOutcome.Ready)
         if (_outcome == StartupOutcome.Ready)
         {
             await State.LoadAsync();
+            await AppLock.LoadAsync();
+            AppLock.Changed += OnAppLockChanged;
         }
     }
 
@@ -87,9 +96,12 @@ else if (_outcome == StartupOutcome.Ready)
         if (_outcome == StartupOutcome.Ready)
         {
             await State.LoadAsync();
+            await AppLock.LoadAsync();
             Navigation.NavigateTo(restore ? "/welcome?restore=1" : "/welcome", replace: true);
         }
     }
+
+    private void OnAppLockChanged() => _ = InvokeAsync(StateHasChanged);
 
     private void OnInsetsChanged() => _ = InvokeAsync(ApplyInsetsAsync);
 
@@ -101,5 +113,9 @@ else if (_outcome == StartupOutcome.Ready)
     }
 
     /// <inheritdoc />
-    public void Dispose() => Insets.Changed -= OnInsetsChanged;
+    public void Dispose()
+    {
+        Insets.Changed -= OnInsetsChanged;
+        AppLock.Changed -= OnAppLockChanged;
+    }
 }
