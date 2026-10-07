@@ -64,7 +64,8 @@ dotnet build src/FalconNotes.App -t:Run -f net10.0-android                     #
 dotnet build src/FalconNotes.App -c Release -f net10.0-android                 # release APK (bin/Release/…-Signed.apk)
 ~/Library/Android/sdk/emulator/emulator -list-avds                            # emulators: MAUI_Emulator_API_36, Medium_Phone_API_36.1
 adb shell am start -n dev.falconnotes.app/crc64a839b5e6635a3aec.MainActivity --es route "/dev/spikes?auto=1"
-                                                                              # Debug builds: open a route (here the Phase 0 spikes)
+                                                                              # Debug builds: open a route (here the Phase 0 spikes);
+                                                                              # only when this starts the app (force-stop it first)
 ```
 
 The app targets Android only for now (Phase 0 is Android first). The Mac Catalyst and Windows heads come later; Mac

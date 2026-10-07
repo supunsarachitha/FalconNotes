@@ -256,6 +256,27 @@ macOS half still to do; what Android's half needed is done:
   regression check — still comfortably inside budget — but Phase 7's own ask (4× the Mac budgets, on the slowest
   phone supported) still needs that phone (S6 in Phase 0 was deferred the same way).
 
+QA pass on the `release/1.0.0` branch (2026-10-07, Android emulator, API 36, Debug build driven through the WebView's
+developer tools, phone and 1,280 dp landscape, light and dark, airplane mode on for the last part): the Android half
+of [11 → Manual QA](11-testing.md#manual-qa) was run item by item. Five faults were found and fixed, each in its own
+commit with a test where one could be written:
+
+- Theme and accent did not follow Settings → Appearance or the device: they were applied once, before the preferences
+  had loaded.
+- Turning note titles on or off left stale text in the cards already on screen (the Markdown cache key).
+- Forgot your PIN → Erase left the Lock screen up until a restart; the app lock's state is now read again after
+  either erase.
+- Welcome → Restore from a backup… never showed the chosen file's summary.
+- Key lost opened blank: `KeyLostRecovery` was not registered in `MauiProgram`. Nothing tests the App project's
+  registrations, so a missing one only shows on a device.
+
+`MainActivity` is now single-top ([12](12-platforms.md)); the `--es route` extra is read in `OnCreate` only, so it
+applies when the command starts the app, not when the app is already running.
+
+Not checked in this pass, still open: TalkBack; a real phone; the daily note's midnight rollover with the clock
+changed; an export restored in the Maple Notes web app itself (the conformance vectors pass); Windows and macOS.
+Biometric unlock and photo shrinking remain stubbed, as recorded under Phase 6.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
