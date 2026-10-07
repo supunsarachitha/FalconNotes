@@ -57,6 +57,9 @@ public enum IconName
     /// <summary>Lucide <c>download</c>.</summary>
     Download,
 
+    /// <summary>Lucide <c>external-link</c>.</summary>
+    ExternalLink,
+
     /// <summary>Lucide <c>file-text</c>.</summary>
     FileText,
 

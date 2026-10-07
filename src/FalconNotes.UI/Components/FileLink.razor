@@ -1,0 +1,66 @@
+@* Port of FileLink in components/AttachmentGallery.tsx, adapted per docs/07, Attachments: choosing a file chip opens
+   a menu with Open (a decrypted copy in the cache, via IFileOpener) and Save a copy (via IFileSaver), instead of the
+   web app's plain download link. *@
+@using FalconNotes.Core.Attachments
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@inject AttachmentService Attachments
+@inject IFileOpener Opener
+@inject IFileSaver Saver
+@inject IAppDirectories Directories
+@inject Toasts Toasts
+
+<DropdownMenu Label="@($"{File.FileName} actions")"
+              TriggerClass="inline-flex max-w-full items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-sm hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800">
+    <Trigger>
+        <Icon Name="IconName.FileText" Class="size-4 shrink-0 text-maple-600 dark:text-maple-400" />
+        <span class="truncate">@File.FileName</span>
+        <span class="shrink-0 text-stone-500 dark:text-stone-400">@Bytes.Format(File.SizeBytes)</span>
+    </Trigger>
+    <ChildContent>
+        <MenuItem IconName="IconName.ExternalLink" OnSelect="OpenAsync">Open</MenuItem>
+        <MenuItem IconName="IconName.Download" OnSelect="SaveCopyAsync">Save a copy…</MenuItem>
+    </ChildContent>
+</DropdownMenu>
+
+@code {
+    /// <summary>The stored file.</summary>
+    [Parameter, EditorRequired] public Attachment File { get; set; } = null!;
+
+    private async Task OpenAsync()
+    {
+        try
+        {
+            var folder = Path.Combine(Directories.CacheDirectory, "open");
+            if (await Attachments.CopyDecryptedAsync(File.Id, folder) is not { } path || !await Opener.OpenAsync(path, File.ContentType))
+            {
+                Toasts.Error("No app on this device can open this file.");
+            }
+        }
+        catch (Exception)
+        {
+            Toasts.Error("Could not open this file.");
+        }
+    }
+
+    private async Task SaveCopyAsync()
+    {
+        try
+        {
+            if (await Attachments.OpenAsync(File.Id) is not { } media)
+            {
+                Toasts.Error("Could not save a copy of this file.");
+                return;
+            }
+
+            await using var content = media.Content;
+            await Saver.SaveAsync(File.FileName, content);
+        }
+        catch (Exception)
+        {
+            Toasts.Error("Could not save a copy of this file.");
+        }
+    }
+}

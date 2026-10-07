@@ -17,12 +17,14 @@ namespace FalconNotes.UI.Tests;
 /// </summary>
 public sealed class UiTestApp : IDisposable
 {
-    private UiTestApp(TestApp core, AppState state, Toasts toasts, FakeFilePicker picker)
+    private UiTestApp(TestApp core, AppState state, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener, FakeFileSaver saver)
     {
         Core = core;
         State = state;
         Toasts = toasts;
         Picker = picker;
+        Opener = opener;
+        Saver = saver;
     }
 
     /// <summary>The underlying Core services and database.</summary>
@@ -36,6 +38,12 @@ public sealed class UiTestApp : IDisposable
 
     /// <summary>Answers restore's file picker; queue the files a test wants chosen.</summary>
     public FakeFilePicker Picker { get; }
+
+    /// <summary>Records calls to Open a stored file.</summary>
+    public FakeFileOpener Opener { get; }
+
+    /// <summary>Records calls to Save a copy of a stored file.</summary>
+    public FakeFileSaver Saver { get; }
 
     /// <summary>
     /// Starts a database, registers it and the UI state into <paramref name="services"/>, and loads <see cref="AppState"/>.
@@ -61,9 +69,12 @@ public sealed class UiTestApp : IDisposable
         var state = new AppState(core.Preferences, core.Profile, core.Feed, toasts);
         await state.LoadAsync();
         var picker = new FakeFilePicker();
+        var opener = new FakeFileOpener();
+        var saver = new FakeFileSaver();
 
         services.AddSingleton(core.Notes);
         services.AddSingleton(core.Labels);
+        services.AddSingleton(core.Attachments);
         services.AddSingleton<MarkdownRenderer>();
         services.AddSingleton(core.Preferences);
         services.AddSingleton(core.Profile);
@@ -73,11 +84,14 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton(toasts);
         services.AddSingleton<Core.Platform.IFilePicker>(picker);
         services.AddSingleton<Core.Platform.IAppInfo>(new FakeAppInfo());
+        services.AddSingleton<Core.Platform.IAppDirectories>(core.Directories);
+        services.AddSingleton<Core.Platform.IFileOpener>(opener);
+        services.AddSingleton<Core.Platform.IFileSaver>(saver);
         services.AddSingleton(new RestoreReader(core.Directories, core.Clock));
         services.AddSingleton(new RestoreRunner(core.Storage, core.Attachments, core.Feed, core.Clock));
         services.AddSingleton(new KeyLostRecovery(new DeviceKeyStore(core.Secrets), core.Directories, core.Clock));
 
-        return new UiTestApp(core, state, toasts, picker);
+        return new UiTestApp(core, state, toasts, picker, opener, saver);
     }
 
     /// <summary>Posts a note (docs/04): used to give the calendar, tag counts and lists something to show.</summary>

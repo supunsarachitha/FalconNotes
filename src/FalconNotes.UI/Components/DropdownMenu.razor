@@ -6,7 +6,7 @@
 <div class="relative">
     <button @ref="_trigger" type="button" aria-label="@Label" title="@Label" aria-haspopup="menu"
             aria-expanded="@(_open ? "true" : "false")" @onclick="ToggleAsync"
-            class="@Classes.Join("inline-flex size-10 shrink-0 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-40 dark:text-stone-300 dark:hover:bg-stone-800", Classes.FocusRing, TriggerClass)">
+            class="@Classes.Join(TriggerClass, Classes.FocusRing)">
         @Trigger
     </button>
     @if (_open)
@@ -32,8 +32,11 @@
     /// <summary>The trigger's icon.</summary>
     [Parameter] public RenderFragment? Trigger { get; set; }
 
-    /// <summary>Extra classes on the trigger.</summary>
-    [Parameter] public string? TriggerClass { get; set; }
+    /// <summary>The trigger's classes, in full (shape and colours, not just extras): a round icon button by default,
+    /// as in the note card's menu.</summary>
+    [Parameter]
+    public string TriggerClass { get; set; } =
+        "inline-flex size-10 shrink-0 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-100 disabled:opacity-40 dark:text-stone-300 dark:hover:bg-stone-800";
 
     /// <summary>The <see cref="MenuItem"/>s and separators.</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }

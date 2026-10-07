@@ -1,0 +1,10 @@
+@* Port of AttachmentThumbnail in components/AttachmentGallery.tsx: a small square thumbnail of a stored attachment,
+   used in the composer's list while editing a note. The media handler serves the file directly from its URL, so
+   there is no decrypt-and-wait step here, unlike the web app's. *@
+@using FalconNotes.Core.Domain
+<img src="@MediaUrl.For(Attachment)" alt="@Attachment.FileName" class="size-full object-cover" />
+
+@code {
+    /// <summary>The stored attachment.</summary>
+    [Parameter, EditorRequired] public Attachment Attachment { get; set; } = null!;
+}

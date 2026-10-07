@@ -19,8 +19,8 @@ public class LabelPickerTests : BunitContext
     private void SetUpDialogsJs()
     {
         var dialogs = JSInterop.SetupModule("./_content/FalconNotes.UI/js/dialogs.js");
-        dialogs.SetupVoid("showModal", _ => true);
-        dialogs.SetupVoid("close", _ => true);
+        dialogs.SetupVoid("showModal", _ => true).SetVoidResult();
+        dialogs.SetupVoid("close", _ => true).SetVoidResult();
     }
 
     [Fact]
