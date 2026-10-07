@@ -80,6 +80,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   versions; it also added the Lucide icon licence that file had been missing. `WindowSoftInputMode = AdjustResize`
   on `MainActivity`, so the composer and dialogs stay above the keyboard.
 
+### Changed
+
+- The falcon mark (`fixtures/falcon-mark.png`, docs/06) replaced with a new feather design, as a transparent PNG
+  rather than a hand-drawn SVG: the Android adaptive icon, splash screen and in-app `Logo` (now an `<img>`, not
+  inline paths) are all generated from it.
+
 ### Fixed
 
 - `Placeholders.razor` kept `@page` routes for Todo, Habits and Tags after Phase 5 ported real pages for them, which

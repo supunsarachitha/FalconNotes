@@ -144,7 +144,7 @@ class strings:
 | `PreferenceSwitch` | `PreferenceSections.tsx` | Label, description, switch |
 | Segmented choices | Theme, menu size, export format, Tags order | Radio inputs hidden with `sr-only`, styled labels |
 | `LabelDot`, `LabelChips`, `LabelPicker` | `Labels.tsx` | |
-| `Logo` | `Logo.tsx`, `BrandMark.tsx` | The falcon mark as inline SVG (`fixtures/falcon-mark.svg`, [below](#app-icon-and-splash)), with unique IDs per instance if it uses gradients |
+| `Logo` | `Logo.tsx`, `BrandMark.tsx` | The falcon mark as an `<img>` onto `fixtures/falcon-mark.png` ([below](#app-icon-and-splash)); `Class` sizes it (`size-7`/`size-9`/`size-14` across the shell) |
 
 ## Icons
 
@@ -162,14 +162,16 @@ New screens may also use `Fingerprint`, `KeyRound` and `Share`. Add any other ic
 
 ## App icon and splash
 
-- **The mark**: an original falcon, drawn for Falcon Notes as SVG. It must not come from an emoji font, an icon set or
-  clip art, and must not resemble another product's mark. It uses the default accent's shades (50 to 700) and stays
-  recognisable at 16 px. It goes in `fixtures/falcon-mark.svg` and the owner approves it before Phase 3 ends; until
-  then the app keeps MAUI's template icon. `fixtures/maple-leaf.svg` is the web app's mark, kept for reference: never
-  ship it.
-- **App icon**: the falcon mark as the foreground on a `#fdf3f3` (maple-50) background, through
-  MAUI's `MauiIcon` (`ForegroundScale` about 0.65). Generate the Android adaptive icon, Windows and macOS sizes from it.
-- **Splash**: the falcon mark centred on `#f5f5f4`. Android 12+ uses the icon.
+- **The mark**: an original feather, created for Falcon Notes as a transparent square PNG (not an icon-set glyph or
+  clip art, and not resembling another product's mark). It replaced the original hand-drawn falcon-head SVG on
+  2026-10-07, owner-approved; the source lives in `fixtures/falcon-mark.png`. Because it is a detailed illustration
+  rather than flat shapes, it reads clearly from about 32 px up (the in-app `Logo` component's smallest use, `size-7`)
+  but softens below that, same as any raster mark would. `fixtures/maple-leaf.svg` is the web app's mark, kept for
+  reference: never ship it.
+- **App icon**: the mark as the foreground on a `#fdf3f3` (maple-50) background, through
+  MAUI's `MauiIcon` (`ForegroundScale` about 0.65, PNG source/foreground). Generate the Android adaptive icon, Windows
+  and macOS sizes from it.
+- **Splash**: the mark centred on `#f5f5f4` (PNG source). Android 12+ uses the icon.
 - Never ship the server's branding feature: the name is always "Falcon Notes".
 
 ## Motion and accessibility

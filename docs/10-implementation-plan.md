@@ -95,8 +95,9 @@ which runs the same checks inside the app: 13 exports match, 13 restores clean, 
 
 ## Phase 3: shell and design system
 
-- [x] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): drawn, approved by the owner, saved as
-      `fixtures/falcon-mark.svg`; the app icon and splash made from it.
+- [x] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): approved by the owner, saved as
+      `fixtures/falcon-mark.png`; the app icon and splash made from it. Replaced 2026-10-07 with a feather mark
+      (same file, now a PNG rather than hand-drawn SVG paths).
 - [x] UI primitives, `Icon`, `Logo`, `Toaster`, `ConfirmDialog`, `DropdownMenu` ([06](06-design-system.md#components)).
 - [x] `AppShell` (sidebar ≥ 1,024 px, drawer below), routes, search box, menu with order and sizes, labels list slot,
       calendar slot.
