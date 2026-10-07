@@ -3,7 +3,9 @@
    natively measured --safe-* variables first (docs/12). *@
 @inherits LayoutComponentBase
 @implements IAsyncDisposable
+@using FalconNotes.UI.State
 @inject NavigationManager Navigation
+@inject AppLockState AppLock
 @inject IJSRuntime JS
 
 <div class="min-h-dvh bg-stone-100 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
@@ -19,7 +21,7 @@
 
     <div class="mx-auto flex max-w-6xl lg:pt-[var(--safe-top,0px)]">
         <aside class="sticky top-[var(--safe-top,0px)] hidden h-[calc(100dvh-var(--safe-top,0px))] w-72 shrink-0 border-r border-stone-200 bg-white lg:block dark:border-stone-800 dark:bg-stone-900">
-            <Sidebar />
+            <Sidebar LockEnabled="AppLock.Settings.Enabled" OnLock="AppLock.LockNow" />
         </aside>
         <main id="main" class="min-w-0 flex-1 px-4 pb-24 pt-4 lg:px-10 lg:pt-8">
             <div class="@Classes.Join("mx-auto", Wide ? "max-w-4xl" : "max-w-2xl")">@Body</div>
@@ -33,7 +35,7 @@
             <IconButton Label="Close navigation" Class="absolute right-2 top-[calc(var(--safe-top,0px)+0.75rem)]" OnClick="CloseDrawerAsync">
                 <Icon Name="IconName.X" Class="size-5" />
             </IconButton>
-            <Sidebar OnNavigate="CloseDrawerAsync" />
+            <Sidebar OnNavigate="CloseDrawerAsync" LockEnabled="AppLock.Settings.Enabled" OnLock="AppLock.LockNow" />
         }
     </dialog>
 
@@ -50,10 +52,16 @@
     private bool Wide => PageAddress.Of(Navigation).Path is var path && (path == "/settings" || path.StartsWith("/settings/", StringComparison.Ordinal));
 
     /// <inheritdoc />
-    protected override void OnInitialized() => Navigation.LocationChanged += OnLocationChanged;
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        AppLock.Changed += OnAppLockChanged;
+    }
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) =>
         _ = InvokeAsync(StateHasChanged);
+
+    private void OnAppLockChanged() => _ = InvokeAsync(StateHasChanged);
 
     private async Task OpenDrawerAsync()
     {
@@ -89,6 +97,7 @@
     public async ValueTask DisposeAsync()
     {
         Navigation.LocationChanged -= OnLocationChanged;
+        AppLock.Changed -= OnAppLockChanged;
         _self?.Dispose();
         if (_dialogs is not null)
         {

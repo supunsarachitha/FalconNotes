@@ -1,0 +1,70 @@
+@* Port of AttachmentGallery in components/AttachmentGallery.tsx: images (one at its own shape, several as a grid of
+   thumbnails, each opening the image viewer), audio and video with native players, other files as chips. The media
+   handler serves every file from its own URL (docs/02), so unlike the web app there is no decrypt-and-wait step and
+   no need to defer loading until a file nears the screen: the browser's own lazy loading and range requests do that. *@
+@using FalconNotes.Core.Domain
+
+@if (Attachments.Count > 0)
+{
+    <div class="mt-3 flex flex-col gap-2">
+        @if (Images.Count > 0)
+        {
+            <div class="@Classes.Join("gap-2", Images.Count == 1 ? "flex" : "grid grid-cols-2", Images.Count >= 3 ? "sm:grid-cols-3" : null)">
+                @for (var i = 0; i < Images.Count; i++)
+                {
+                    var index = i;
+                    var image = Images[index];
+                    <button type="button" @onclick="() => _viewing = index" aria-label="@($"View {image.FileName}")"
+                            class="@Classes.Join("flex items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-maple-500 dark:border-stone-800 dark:bg-stone-800", Images.Count == 1 ? "max-w-full self-start" : "aspect-square w-full")">
+                        <img src="@MediaUrl.For(image)" alt="@image.FileName" loading="lazy" decoding="async"
+                             class="@(Images.Count == 1 ? "block h-auto max-h-[70vh] w-auto max-w-full object-contain" : "size-full object-cover")" />
+                    </button>
+                }
+            </div>
+            <ImageViewer Images="Images" Index="_viewing" IndexChanged="i => _viewing = i" OnClose="() => _viewing = null" />
+        }
+
+        @foreach (var video in Videos)
+        {
+            <video src="@MediaUrl.For(video)" controls preload="metadata" aria-label="@video.FileName" class="w-full rounded-xl bg-black">
+                <track kind="captions" />
+            </video>
+        }
+
+        @foreach (var clip in Audio)
+        {
+            <div class="flex flex-col gap-1">
+                <span class="text-xs text-stone-500 dark:text-stone-400">@clip.FileName</span>
+                <audio src="@MediaUrl.For(clip)" controls preload="metadata" class="w-full"></audio>
+            </div>
+        }
+
+        @if (Files.Count > 0)
+        {
+            <ul class="flex flex-wrap gap-2">
+                @foreach (var file in Files)
+                {
+                    <li><FileLink File="file" /></li>
+                }
+            </ul>
+        }
+    </div>
+}
+
+@code {
+    private int? _viewing;
+
+    /// <summary>The note's files.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<Attachment> Attachments { get; set; } = [];
+
+    private List<Attachment> Images => Attachments.Where(a => a.IsImage).ToList();
+
+    private List<Attachment> Videos =>
+        Attachments.Where(a => a.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase) && !a.IsImage).ToList();
+
+    private List<Attachment> Audio =>
+        Attachments.Where(a => a.ContentType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private List<Attachment> Files =>
+        Attachments.Where(a => !Images.Contains(a) && !Videos.Contains(a) && !Audio.Contains(a)).ToList();
+}

@@ -1,0 +1,86 @@
+@* Port of components/FormatToolbar.tsx: formatting buttons for a Markdown text box. Each edit is computed here
+   (Core/Text/MarkdownEdit.cs) from the text box's own current value and selection (editor.js's getSelection, not a
+   parameter: the same reasoning as the reference reading target.current.value directly), then applied to the DOM
+   through editor.js's applyEdit. That fires a native input event, which is what keeps the caller's bound text in
+   sync, so this component calls nothing back. *@
+@using FalconNotes.Core.Text
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div role="toolbar" aria-label="Formatting" class="-mx-1 flex gap-0.5 overflow-x-auto">
+    @foreach (var tool in Tools)
+    {
+        <button type="button" aria-label="@tool.Label" title="@Title(tool)" @onmousedown:preventDefault
+                @onclick="() => ApplyAsync(tool.Format)"
+                class="flex size-8 shrink-0 items-center justify-center rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-800 focus-visible:outline-2 focus-visible:outline-maple-500 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100">
+            <Icon Name="tool.Icon" Class="size-4" />
+        </button>
+    }
+</div>
+
+@code {
+    private static readonly (MarkdownFormat Format, string Label, IconName Icon, string? Key)[] Tools =
+    [
+        (MarkdownFormat.Bold, "Bold", IconName.Bold, "b"),
+        (MarkdownFormat.Italic, "Italic", IconName.Italic, "i"),
+        (MarkdownFormat.Heading, "Heading", IconName.Heading2, null),
+        (MarkdownFormat.Bullets, "Bulleted list", IconName.List, null),
+        (MarkdownFormat.Checklist, "Checklist", IconName.ListChecks, null),
+        (MarkdownFormat.Quote, "Quote", IconName.Quote, null),
+        (MarkdownFormat.Code, "Code", IconName.Code, null),
+        (MarkdownFormat.Link, "Link", IconName.Link2, "k"),
+    ];
+
+    private IJSObjectReference? _module;
+
+    /// <summary>The text box the toolbar edits.</summary>
+    [Parameter, EditorRequired] public ElementReference Target { get; set; }
+
+    private static string Title((MarkdownFormat Format, string Label, IconName Icon, string? Key) tool) =>
+        tool.Key is null ? tool.Label : $"{tool.Label} ({Mod}{tool.Key.ToUpperInvariant()})";
+
+    private static string Mod => OperatingSystem.IsMacOS() || OperatingSystem.IsIOS() ? "⌘" : "Ctrl+";
+
+    /// <summary>The format for a key press (Ctrl/⌘ + B, I or K), if any; checked before the key reaches the browser.</summary>
+    /// <param name="key">The key, as <see cref="Microsoft.AspNetCore.Components.Web.KeyboardEventArgs.Key"/> gives it.</param>
+    /// <param name="metaKey">Whether ⌘ was held.</param>
+    /// <param name="ctrlKey">Whether Ctrl was held.</param>
+    /// <param name="altKey">Whether Alt was held.</param>
+    /// <param name="shiftKey">Whether Shift was held.</param>
+    /// <returns>The format, or null.</returns>
+    public static MarkdownFormat? ShortcutFormat(string key, bool metaKey, bool ctrlKey, bool altKey, bool shiftKey)
+    {
+        var modHeld = OperatingSystem.IsMacOS() || OperatingSystem.IsIOS() ? metaKey : ctrlKey;
+        if (!modHeld || altKey || shiftKey)
+        {
+            return null;
+        }
+
+        return Tools.FirstOrDefault(tool => tool.Key == key.ToLowerInvariant()) is { Key: not null } tool ? tool.Format : null;
+    }
+
+    /// <summary>Applies a format to the text box's current selection (docs/06); also used for the shortcuts.</summary>
+    /// <param name="format">The format.</param>
+    public async Task ApplyAsync(MarkdownFormat format)
+    {
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/editor.js");
+        var selection = await _module.InvokeAsync<EditorSelection>("getSelection", Target);
+        var edit = MarkdownEdit.Format(format, selection.Value, selection.Start, selection.End);
+        await _module.InvokeVoidAsync("applyEdit", Target, edit);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

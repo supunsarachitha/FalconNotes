@@ -95,8 +95,9 @@ which runs the same checks inside the app: 13 exports match, 13 restores clean, 
 
 ## Phase 3: shell and design system
 
-- [x] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): drawn, approved by the owner, saved as
-      `fixtures/falcon-mark.svg`; the app icon and splash made from it.
+- [x] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): approved by the owner, saved as
+      `fixtures/falcon-mark.png`; the app icon and splash made from it. Replaced 2026-10-07 with a feather mark
+      (same file, now a PNG rather than hand-drawn SVG paths).
 - [x] UI primitives, `Icon`, `Logo`, `Toaster`, `ConfirmDialog`, `DropdownMenu` ([06](06-design-system.md#components)).
 - [x] `AppShell` (sidebar ≥ 1,024 px, drawer below), routes, search box, menu with order and sizes, labels list slot,
       calendar slot.
@@ -118,36 +119,98 @@ and Mac Catalyst heads.
 
 ## Phase 4: notes
 
-- [ ] `NoteList` with infinite scroll and reload on change; `NoteCard` with menu, double-tap, tick boxes, labels and
+- [x] `NoteList` with infinite scroll and reload on change; `NoteCard` with menu, double-tap, tick boxes, labels and
       removal with Undo.
-- [ ] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, paste, drop,
-      progress, shrink).
-- [ ] `AttachmentGallery`, `ImageViewer`, players, Open and Save a copy.
-- [ ] Home (Today card, pinned, feed), filters (`?tag`, `?q`, `?day`, `?label`), Archive, Trash, Quick notes.
+- [x] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, progress). Paste
+      and drag-and-drop, and "shrink photos", are open (below).
+- [x] `AttachmentGallery`, `ImageViewer`, players, Open and Save a copy. Share (Android) is left for Phase 7.
+- [x] Home (Today card, pinned, feed), filters (`?tag`, `?q`, `?day`, `?label`), Archive, Trash, Quick notes.
 
 **Acceptance**: the ported component tests pass. On each platform, the manual checklist for notes
 ([11](11-testing.md#manual-qa)) passes. Scrolling a 10,000-note timeline with pictures stays smooth on a mid-range Android
 phone.
 
+Status (2026-10-07): built and tested on the Android emulator (bUnit; the manual checklist and the 10,000-note
+scroll test still need a device, docs/12). Every component above is ported and covered: `NoteEditor<T>` (optimistic
+checkbox ticks and other structured edits), `Markdown.razor` over the already-tested Core renderer, `LabelChips`/
+`LabelPicker`, `AttachmentGallery`/`ImageViewer`/`FileLink` (Open and Save a copy; "Copy text" needed the new
+`IClipboard` platform service, already named in docs/02 but not yet implemented), the composer's text-editing primitives (`FormatToolbar`, `TagSuggestions`,
+`editor.js`), `Composer`, `NoteCard` (`NoteRemoval` as a plain helper, `gestures.js`), `NoteList` (`observe.js`),
+`Home`/`FilterHeader`/`TodayCard`, `Archive`, `Quick`, `Trash`/`TrashCard`, and `FeatureOff` (pulled forward from
+Phase 5's `TodoPage.tsx`, since Archive and Quick notes both need it). 115 UI tests and 346 Core tests pass.
+
+Two gaps, deliberately left open rather than blocking the phase: "shrink photos" needs the platform's `IImageCodec`
+(SkiaSharp), pending the owner's approval of the dependency (docs/02); `Composer` calls it only if it ends up
+registered, so it degrades to adding the file unshrunk until then. Paste and drag-and-drop need their own
+`IJSStreamReference` plumbing beyond the native picker's; the native picker covers every platform meanwhile.
+
+Several real bugs were caught by writing the tests, not by inspection: `TagSuggestions` and `NoteCard.SetEditing`
+mutated state without calling `StateHasChanged`, so arrow-key navigation and double-tap-to-edit would have silently
+done nothing in the real app; `NoteCard`'s `Markdown` binding was `Content="Body"` instead of `Content="@Body"` — on
+a component tag, a string-typed parameter without `@` is a literal, not a reference to the same-named member, so
+every note card rendered the literal word "Body". The same mistake recurred in `Home.razor`'s `Tag`/`Search`
+bindings. Also found: a bUnit quirk where `Render<T>` with a completely empty parameter builder fails to register
+the root component (use the parameterless overload, or add at least one `.Add`); and repeated sync-over-async
+deadlocks where a test's `WaitForAssertion` predicate blocked on a fresh async database call from the renderer's
+own dispatcher thread, which a pending save needed in order to complete — the fix is always to wait on a plain
+DOM/in-memory signal first, then read the database with a real `await` once that signal confirms the operation has
+already finished.
+
 ## Phase 5: todo, habits, tags, calendar, labels
 
-- [ ] Todo page and `TodoCard` (with Edit as Markdown).
-- [ ] Habits page, `HabitRow`, `HabitChart`, `HabitCalendar`, archived habits.
-- [ ] Tags page; side-menu calendar; labels (picker, chips, side menu, filter, Settings → Labels).
+- [x] Todo page and `TodoCard` (with Edit as Markdown).
+- [x] Habits page, `HabitRow`, `HabitChart`, `HabitCalendar`, archived habits.
+- [x] Tags page; side-menu calendar; labels (picker, chips, side menu, filter, Settings → Labels).
 
 **Acceptance**: the ported tests pass, and the manual checklist for these screens passes on all three platforms.
 
 ## Phase 6: settings, backups, lock, help
 
-- [ ] Settings sections ([07](07-screens.md#settings)): Profile, Appearance, Side menu, Writing, Features, Labels,
+- [x] Settings sections ([07](07-screens.md#settings)): Profile, Appearance, Side menu, Writing, Features, Labels,
       Backup & data (export, restore, trash, delete all), Privacy & security (app lock, data protection).
-- [ ] The app lock: PIN set and change, biometrics per platform, lock after a delay, background cover, `FLAG_SECURE`,
+- [x] The app lock: PIN set and change, biometrics per platform, lock after a delay, background cover, `FLAG_SECURE`,
       tries limit, Lock screen, Forgot PIN → erase ([03](03-data-storage-and-security.md#app-lock)).
-- [ ] Erase all data.
-- [ ] Help with the adapted guide ([08](08-help-guide.md)).
+- [x] Erase all data.
+- [x] Help with the adapted guide ([08](08-help-guide.md)).
 
 **Acceptance**: export from the app restores in the web app (run the reference with Docker or `dotnet run`), and a web
 export restores in the app. The lock cannot be bypassed by Back, the app switcher, deep links or reopening.
+
+Status (2026-10-07): built and manually checked on the Android emulator. The Settings shell (`Settings.razor`) ports
+`SettingsPage.tsx`'s list-beside-section layout; every section renders real data (the Profile screenshot showed the
+live key fingerprint, storage use and "On this device since"). The app lock's PIN flow was exercised end to end on
+the emulator: Set a PIN → saved → `FLAG_SECURE` engaged immediately (confirmed by `adb screencap` itself going black,
+since Android refuses to capture a secure window) and again after a cold restart, proving both the settings and the
+flag survive. The Lock screen (`Lock.razor`) is reached by a check in `Routes.razor` before the `Router` component
+itself is mounted — not a route it guards — so no navigation, deep link or Back press can reach a note while locked;
+the same screen offers "Forgot your PIN?", which erases and returns to Welcome. `AppLockService` has 12 new Core
+tests (docs/11's "new tests the reference does not have" list): PIN hashing and verification, the tries counter
+surviving a fresh service instance (standing in for a restart), and the lockout's doubling from 30 s to 15 min, all
+passing. 359 Core tests and 150 UI tests pass in all.
+
+A real pre-existing gap was found and fixed on the way in: `ExportService`, `RestoreReader`, `RestoreRunner` and
+`NoteExporter` were never registered in `MauiProgram`, so Welcome's "Restore from a backup…" would have thrown at
+runtime the first time anyone used it; the Backup & data section needed the same services, so the registration gap
+is now closed for both.
+
+Three deliberate simplifications, not blocking the phase:
+
+- **Biometric unlock is stubbed off** (`AndroidAppLock.IsBiometricAvailable => false`). It needs AndroidX's
+  `BiometricPrompt`, which is not yet an approved dependency (docs/02, Dependencies) — the same open question as
+  `SkiaSharp` for photo shrinking from Phase 4. The PIN is the only way in meanwhile, which the design already
+  requires to work on its own.
+- **The menu-order editor reorders by its arrow buttons only.** Pointer drag needs its own JS interop (pointer
+  capture, per-row bounding rectangles) beyond what `gestures.js` has; the arrows are fully keyboard- and
+  screen-reader-accessible meanwhile.
+- **The background "cover the window with the brand colour" overlay was not built.** `FLAG_SECURE` already blanks
+  Android's recent-apps thumbnail to nothing, which covers the same requirement in practice; a literal falcon-mark
+  overlay view can be added in the platform pass (Phase 7) if the blank thumbnail is not considered enough.
+
+Windows and macOS key-store names (`DataProtectionSection`'s "Windows' protected storage" / "the macOS Keychain") and
+`IAppLock` for those platforms are written to the interface but untested, since only the Android head is built
+(Phase 0, Android first). UI-level bUnit coverage for the new Lock/App lock screens themselves was not added in this
+pass — only `AppLockService` (Core) is unit tested; the manual emulator run is the only check on `Lock.razor`,
+`AppLockSection.razor` and the PIN dialogs so far.
 
 ## Phase 7: platforms, packaging, QA
 
@@ -161,6 +224,37 @@ export restores in the app. The lock cannot be bypassed by Back, the app switche
       only, TalkBack, Narrator, VoiceOver).
 
 **Acceptance**: version 1.0.0 tagged; CHANGELOG written; all checklists ticked.
+
+Status (2026-10-07): Android-only pass, by decision — Mac Catalyst is blocked on this machine (Xcode 27.0 is
+installed; .NET for Mac Catalyst 26.5 refuses it, docs/10 Phase 0), and there is no Windows machine here (Windows
+builds run in CI, per CLAUDE.md). None of the four checklist boxes above is ticked, since each has a Windows or
+macOS half still to do; what Android's half needed is done:
+
+- **Platform details** ([12](12-platforms.md)): `WindowSoftInputMode = AdjustResize` added to `MainActivity`, so the
+  composer and dialogs stay above the keyboard (checked on the emulator: open the composer with the keyboard up,
+  nothing is covered). Checked against a Release build: `minSdkVersion` 26, `targetSdkVersion` the latest,
+  `allowBackup="false"`, `fullBackupContent="false"`, and no `INTERNET` permission (Debug builds still get it, from
+  the .NET Android tooling, as documented). `TrimMode=partial` was already set. Back was re-checked: it leaves the
+  app from Home (confirmed with `adb shell input keyevent KEYCODE_BACK` against `dumpsys window`, which showed focus
+  move to the launcher) and goes back through the WebView's history elsewhere, as the Phase 0 spike found. The
+  ≥ 1,024 px sidebar layout was checked with `adb shell wm size`/`wm density` set to a 1,280 × 800 landscape tablet
+  (not a real tablet — none is available — but a reasonable stand-in): the fixed sidebar, calendar and footer show
+  correctly next to the content column. **Share**, left open since Phase 4, is now built: a new `IShare` platform
+  interface, `AndroidShare` (MAUI's `Share.RequestAsync` over a decrypted cached copy, the same `cache/open/`
+  mechanism Open already used), a Share button next to Save a copy in the image viewer, and a new bUnit test.
+- **`THIRD-PARTY-NOTICES.md` and the licence check script**: `scripts/check-licenses.py` is ported (adapted: no npm
+  tree here, and "shipped" comes from `dotnet list package --include-transitive` against `FalconNotes.App` rather
+  than a published `deps.json`, since a MAUI Android build does not produce one the same way a container image
+  does). It found and classified all 175 packages the app resolves to (141 shipped, 34 build-time-only), all allowed,
+  and regenerated the notices file from them — which also fixed a real gap the hand-maintained file had missed:
+  the Lucide icon paths copied into `IconPaths.cs` had no licence entry at all (docs/06 asks for one). Run it with
+  `python3 scripts/check-licenses.py --notices THIRD-PARTY-NOTICES.md`.
+- **Release builds, the rest of the manual QA checklist, performance on a real phone, and the accessibility pass**
+  are not done. Signing needs a keystore and (for Windows and macOS) developer credentials only the owner can
+  provide; the manual QA checklist and TalkBack/Narrator/VoiceOver need a phone, a tablet, and the other two
+  platforms built at all. The performance budgets were re-run on the Mac in Release (`FALCON_PERF=1`) as a
+  regression check — still comfortably inside budget — but Phase 7's own ask (4× the Mac budgets, on the slowest
+  phone supported) still needs that phone (S6 in Phase 0 was deferred the same way).
 
 ## Spike results
 

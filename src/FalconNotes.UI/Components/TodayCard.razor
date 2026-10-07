@@ -1,0 +1,81 @@
+@* Port of TodayCard in pages/HomePage.tsx: with daily notes on, today's note, or a composer that starts it with the
+   first words written. Rolls over at midnight while the app is open. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject NoteService Notes
+@inject AppState State
+@inject ChangeFeed Feed
+@inject TimeProvider Time
+
+<section aria-label="Today" class="flex flex-col gap-3">
+    <h2 class="px-1 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">Today</h2>
+    @if (_loading)
+    {
+        <div class="h-28 animate-pulse rounded-2xl bg-stone-200/70 dark:bg-stone-800/70" aria-busy="true" aria-label="Loading today's note"></div>
+    }
+    else if (_note is not null)
+    {
+        <NoteCard Note="_note" />
+    }
+    else
+    {
+        <Composer Daily="new Composer.DailyInfo(_date, Title)" Placeholder="Write about your day…" />
+    }
+</section>
+
+@code {
+    private DateOnly _date;
+    private Note? _note;
+    private bool _loading = true;
+    private ITimer? _timer;
+
+    /// <summary>Called whenever today's note changes (loaded, started, or rolled over to a new day), with its ID
+    /// so the caller can leave it out of the feed below.</summary>
+    [Parameter] public EventCallback<Guid?> OnNoteChanged { get; set; }
+
+    private string Title => DateFormats.Format(_date, State.Preferences.DateFormat);
+
+    private DateOnly Today() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(Time.GetUtcNow(), Time.LocalTimeZone).DateTime);
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _date = Today();
+        Feed.NotesChanged += Reload;
+        _timer = Time.CreateTimer(_ => CheckRollover(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        _note = await Notes.GetDailyAsync(_date);
+        _loading = false;
+        StateHasChanged();
+        await OnNoteChanged.InvokeAsync(_note?.Id);
+    }
+
+    private void CheckRollover()
+    {
+        var today = Today();
+        if (today != _date)
+        {
+            _date = today;
+            _ = InvokeAsync(LoadAsync);
+        }
+    }
+
+    private void Reload() => _ = InvokeAsync(LoadAsync);
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Feed.NotesChanged -= Reload;
+        _timer?.Dispose();
+    }
+}

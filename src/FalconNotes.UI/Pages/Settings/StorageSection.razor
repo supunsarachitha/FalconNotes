@@ -1,0 +1,44 @@
+@* Port of StorageSection + StorageRow in pages/SettingsPage.tsx, adapted (docs/07, Settings → Profile → Storage):
+   no quota, since there is none (docs/04, Storage use). *@
+@using System.Globalization
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@inject NoteService Notes
+
+<Section Title="Storage">
+    <Description>Notes and files you keep, including archived ones and the trash.</Description>
+    <ChildContent>
+        <dl class="text-sm">
+            <dt class="sr-only">Storage used</dt>
+            @if (_usage is null)
+            {
+                <dd class="text-stone-400">…</dd>
+            }
+            else
+            {
+                <dd>
+                    <span class="font-medium">@Bytes.Format(_usage.TotalBytes)</span>
+                    <div class="my-1.5 flex h-2 max-w-72 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800" role="img"
+                         aria-label="@($"Notes {Bytes.Format(_usage.NotesBytes)}, files {Bytes.Format(_usage.FilesBytes)}")">
+                        <div class="bg-maple-700" style="width: @(NotesShare.ToString(CultureInfo.InvariantCulture))%"></div>
+                        <div class="bg-maple-400" style="width: @(FilesShare.ToString(CultureInfo.InvariantCulture))%"></div>
+                    </div>
+                    <span class="text-xs text-stone-500 dark:text-stone-400">
+                        Notes @Bytes.Format(_usage.NotesBytes) (@_usage.NoteCount.ToString("N0", CultureInfo.InvariantCulture)) ·
+                        Files @Bytes.Format(_usage.FilesBytes) (@_usage.FileCount.ToString("N0", CultureInfo.InvariantCulture))
+                    </span>
+                </dd>
+            }
+        </dl>
+    </ChildContent>
+</Section>
+
+@code {
+    private StorageUsage? _usage;
+
+    private double NotesShare => _usage is { TotalBytes: > 0 } u ? Math.Min(100.0 * u.NotesBytes / u.TotalBytes, 100) : 0;
+    private double FilesShare => _usage is { TotalBytes: > 0 } u ? Math.Min(100.0 * u.FilesBytes / u.TotalBytes, 100 - NotesShare) : 0;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync() => _usage = await Notes.StorageUsageAsync();
+}

@@ -1,0 +1,227 @@
+@* Port of LabelPicker in components/Labels.tsx: choose a note's labels by ticking the list, finding one by typing, or
+   creating one from what was typed. The note changes only when Save is chosen. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Labels
+@using FalconNotes.Core.Notes
+@using FalconNotes.UI.State
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject LabelService Labels
+@inject NoteService Notes
+@inject AppState State
+@inject Toasts Toasts
+
+<dialog @ref="_dialog" aria-label="Labels"
+        class="m-auto flex max-h-[min(36rem,calc(100dvh-2rem))] w-[calc(100%-2rem)] max-w-sm flex-col rounded-2xl bg-white p-5 shadow-xl backdrop:bg-black/50 backdrop:backdrop-blur-sm dark:bg-stone-900">
+    @if (Open)
+    {
+        <h2 class="text-lg font-semibold">Labels</h2>
+
+        <form @onsubmit="CreateAsync" @onsubmit:preventDefault class="relative mt-3">
+            <Icon Name="IconName.Search" Class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
+            <input @bind="_filter" @bind:event="oninput" maxlength="@LabelRules.MaxNameLength"
+                   placeholder="Find or create a label" aria-label="Find or create a label"
+                   class="h-10 w-full rounded-xl border border-stone-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-maple-500 dark:border-stone-700 dark:bg-stone-950" />
+        </form>
+
+        <ul aria-label="Labels to choose from" class="-mx-2 mt-2 min-h-0 flex-1 overflow-y-auto">
+            @foreach (var label in Shown)
+            {
+                var isChecked = _selected.Contains(label.Id);
+                <li>
+                    <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 hover:bg-stone-100 dark:hover:bg-stone-800">
+                        <input type="checkbox" checked="@isChecked" @onchange="() => Toggle(label.Id)" class="peer sr-only" />
+                        <span aria-hidden="true"
+                              class="@Classes.Join("flex size-5 shrink-0 items-center justify-center rounded-md border", isChecked ? "border-maple-600 bg-maple-600 text-white" : "border-stone-300 dark:border-stone-600")">
+                            @if (isChecked)
+                            {
+                                <Icon Name="IconName.Check" Class="size-3.5" />
+                            }
+                        </span>
+                        <LabelDot Color="label.Color" />
+                        <span class="min-w-0 flex-1 truncate text-sm">@label.Name</span>
+                    </label>
+                </li>
+            }
+            @if (_loading)
+            {
+                <li class="px-2 py-3 text-sm text-stone-500">Loading labels…</li>
+            }
+            else if (_all.Count == 0 && Typed.Length == 0)
+            {
+                <li class="px-2 py-3 text-sm text-stone-500 dark:text-stone-400">No labels yet. Type a name above to create one.</li>
+            }
+            else if (Typed.Length > 0 && Shown.Count == 0 && !CanCreate)
+            {
+                <li class="px-2 py-3 text-sm text-stone-500 dark:text-stone-400">No label matches.</li>
+            }
+        </ul>
+
+        @if (CanCreate)
+        {
+            <button type="button" @onclick="CreateAsync" disabled="@_creating"
+                    class="mt-1 flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left text-sm font-medium text-maple-700 hover:bg-maple-50 disabled:opacity-50 dark:text-maple-400 dark:hover:bg-maple-600/15">
+                <Icon Name="IconName.Plus" Class="size-4 shrink-0" />
+                <span class="min-w-0 truncate">Create label "@Typed"</span>
+            </button>
+        }
+
+        <div class="mt-4 flex justify-end gap-2">
+            <Button Variant="ButtonVariant.Ghost" OnClick="CancelAsync">Cancel</Button>
+            <Button OnClick="SaveAsync" Busy="_saving">Save</Button>
+        </div>
+    }
+</dialog>
+
+@code {
+    private ElementReference _dialog;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<LabelPicker>? _self;
+    private bool _domShown;
+    private bool _previousOpen;
+    private List<Label> _all = [];
+    private HashSet<Guid> _selected = [];
+    private string _filter = "";
+    private bool _loading;
+    private bool _creating;
+    private bool _saving;
+
+    /// <summary>The note whose labels are being chosen.</summary>
+    [Parameter, EditorRequired] public Note Note { get; set; } = null!;
+
+    /// <summary>Whether the dialog is open.</summary>
+    [Parameter] public bool Open { get; set; }
+
+    /// <summary>Called with false when the dialog is cancelled, saved, or closed by Esc or the backdrop.</summary>
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    private string Typed => _filter.Trim();
+
+    private List<Label> Shown => Typed.Length == 0
+        ? _all
+        : _all.Where(l => l.Name.Contains(Typed, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private bool CanCreate => Typed.Length > 0 && Typed.Length <= LabelRules.MaxNameLength
+        && !LabelRules.HasLabelNamed(_all.Select(l => (l.Id, l.Name)), Typed);
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Open && !_previousOpen)
+        {
+            _selected = [..Note.LabelIds];
+            _filter = "";
+            _creating = false;
+            _loading = true;
+            _all = [];
+            StateHasChanged();
+            _all = (await Labels.ListAsync(State.EnabledKinds)).Select(c => c.Label).ToList();
+            _loading = false;
+        }
+
+        _previousOpen = Open;
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Open == _domShown)
+        {
+            return;
+        }
+
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/dialogs.js");
+        _self ??= DotNetObjectReference.Create(this);
+        if (Open)
+        {
+            await _module.InvokeVoidAsync("showModal", _dialog, _self);
+        }
+        else
+        {
+            await _module.InvokeVoidAsync("close", _dialog);
+        }
+
+        _domShown = Open;
+    }
+
+    /// <summary>Called from dialogs.js when Esc is pressed or the backdrop clicked.</summary>
+    [JSInvokable]
+    public Task Cancel() => CancelAsync();
+
+    private void Toggle(Guid id)
+    {
+        if (!_selected.Remove(id))
+        {
+            _selected.Add(id);
+        }
+    }
+
+    private async Task CreateAsync()
+    {
+        if (!CanCreate || _creating)
+        {
+            return;
+        }
+
+        _creating = true;
+        try
+        {
+            var label = await Labels.CreateAsync(Typed);
+            _all = (await Labels.ListAsync(State.EnabledKinds)).Select(c => c.Label).ToList(); // keeps the name order Save relies on
+            _selected.Add(label.Id);
+            _filter = "";
+        }
+        catch (UserFacingException e)
+        {
+            Toasts.Error(e.Message);
+        }
+        finally
+        {
+            _creating = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        var before = new HashSet<Guid>(Note.LabelIds);
+        if (before.SetEquals(_selected))
+        {
+            await OpenChanged.InvokeAsync(false);
+            return;
+        }
+
+        var labelIds = _all.Where(l => _selected.Contains(l.Id)).Select(l => l.Id).ToList();
+        _saving = true;
+        try
+        {
+            await Notes.PatchAsync(Note.Id, new NotePatch(LabelIds: labelIds));
+            await OpenChanged.InvokeAsync(false);
+        }
+        catch (Exception)
+        {
+            Toasts.Error("The labels could not be saved. Please try again.");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private Task CancelAsync() => _saving ? Task.CompletedTask : OpenChanged.InvokeAsync(false);
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        _self?.Dispose();
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

@@ -1,0 +1,182 @@
+@* Lock (docs/07): shown at start, and after the chosen delay in the background, while the app lock is on. It is a
+   privacy screen, not a key, so nothing here can be bypassed by Back, the app switcher, deep links or reopening — the
+   router itself is not mounted while this shows (docs/10, Phase 6 acceptance). *@
+@using FalconNotes.Core.Settings
+@using FalconNotes.Core.Startup
+@using FalconNotes.UI.State
+@implements IAsyncDisposable
+@inject AppLockState AppLock
+@inject EraseAllData Erase
+@inject AppBootstrapper Bootstrapper
+@inject AppState State
+@inject AppearanceService Appearance
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<AuthLayout Heading="Falcon Notes is locked">
+    <Intro>Enter your PIN to open your notes.</Intro>
+    <ChildContent>
+        <form class="flex flex-col gap-4" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+            <TextField Label="PIN" Type="password" inputmode="numeric" autocomplete="off" Value="@_pin" ValueChanged="OnPinChanged"
+                       Disabled="@(_lockedForSeconds is not null)" Error="@_error" maxlength="@AppLockService.MaxPinLength" />
+            <Button Type="submit" Busy="_busy" Disabled="@(_lockedForSeconds is not null || _pin.Length < AppLockService.MinPinLength)" Class="w-full">
+                @(_lockedForSeconds is { } seconds ? $"Try again in {seconds}s" : "Unlock")
+            </Button>
+        </form>
+        @if (AppLock.Settings.Biometrics && AppLock.IsBiometricAvailable)
+        {
+            <Button Variant="ButtonVariant.Secondary" Class="mt-3 w-full" OnClick="() => TryBiometricAsync(false)">
+                <Icon Name="IconName.Fingerprint" Class="size-4" /> Use @AppLock.BiometricName
+            </Button>
+        }
+        <button type="button" @onclick="() => _forgot = true" class="mt-4 text-sm text-maple-700 hover:underline dark:text-maple-400">
+            Forgot your PIN?
+        </button>
+    </ChildContent>
+</AuthLayout>
+
+<ConfirmDialog Open="_forgot" OpenChanged="v => _forgot = v" Title="Forgot your PIN?" ConfirmLabel="Erase and start over" Busy="_erasing"
+               ConfirmEnabled="@(_typed == "ERASE")" OnConfirm="EraseAsync">
+    <Description>
+        <p>The PIN cannot be reset: that is what keeps others out. To use Falcon Notes again, erase its data on this device and restore your notes from a backup.</p>
+    </Description>
+    <ChildContent>
+        <label class="mt-4 flex flex-col gap-1.5 text-sm">
+            <span class="font-medium">Type ERASE to confirm</span>
+            <input value="@_typed" @oninput="OnTypedInput"
+                   class="h-10 rounded-xl border border-stone-300 bg-white px-3 dark:border-stone-700 dark:bg-stone-950" />
+        </label>
+    </ChildContent>
+</ConfirmDialog>
+
+@code {
+    private string _pin = "";
+    private string? _error;
+    private bool _busy;
+    private bool _erasing;
+    private bool _forgot;
+    private string _typed = "";
+    private int? _lockedForSeconds;
+    private PeriodicTimer? _countdown;
+    private Task? _countdownTask;
+    private bool _biometricTried;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var remaining = await AppLock.LockoutRemainingAsync();
+        if (remaining is { } r)
+        {
+            StartCountdown(r);
+        }
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_biometricTried && AppLock.Settings.Biometrics && AppLock.IsBiometricAvailable)
+        {
+            _biometricTried = true;
+            await TryBiometricAsync(silent: true);
+        }
+    }
+
+    private void OnTypedInput(ChangeEventArgs e) => _typed = e.Value?.ToString() ?? "";
+
+    private void OnPinChanged(string value)
+    {
+        _pin = new string(value.Where(char.IsAsciiDigit).ToArray());
+        if (_pin.Length > AppLockService.MaxPinLength)
+        {
+            _pin = _pin[..AppLockService.MaxPinLength];
+        }
+
+        _error = null;
+    }
+
+    private async Task SubmitAsync()
+    {
+        _busy = true;
+        try
+        {
+            if (!await AppLock.TryPinAsync(_pin))
+            {
+                _pin = "";
+                var remaining = await AppLock.LockoutRemainingAsync();
+                _error = remaining is { } r ? $"Too many tries. Try again in {(int)Math.Ceiling(r.TotalSeconds)} seconds." : "That PIN is not right.";
+                if (remaining is { } wait)
+                {
+                    StartCountdown(wait);
+                }
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task TryBiometricAsync(bool silent)
+    {
+        var ok = await AppLock.TryBiometricAsync("Unlock Falcon Notes");
+        if (!ok && !silent)
+        {
+            _error = "That didn't work. Please try again.";
+        }
+    }
+
+    private void StartCountdown(TimeSpan remaining)
+    {
+        _countdown?.Dispose();
+        _lockedForSeconds = (int)Math.Ceiling(remaining.TotalSeconds);
+        _countdown = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _countdownTask = TickAsync(_countdown);
+    }
+
+    private async Task TickAsync(PeriodicTimer timer)
+    {
+        try
+        {
+            while (await timer.WaitForNextTickAsync())
+            {
+                _lockedForSeconds = _lockedForSeconds is > 1 ? _lockedForSeconds - 1 : null;
+                await InvokeAsync(StateHasChanged);
+                if (_lockedForSeconds is null)
+                {
+                    return;
+                }
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private async Task EraseAsync()
+    {
+        _erasing = true;
+        await Erase.RunAsync();
+        await Bootstrapper.RestartAsync();
+        State.Clear();
+        var module = await Appearance.ModuleAsync(JS);
+        await module.InvokeVoidAsync("forget");
+        Navigation.NavigateTo("/welcome", replace: true);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        _countdown?.Dispose();
+        if (_countdownTask is not null)
+        {
+            try
+            {
+                await _countdownTask;
+            }
+            catch
+            {
+                // The timer's own loop already swallows what matters; nothing more to do on the way out.
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+@* Port of components/VersionNote.tsx, adapted (docs/07, Settings and Help): the app's own version; no server to ask. *@
+@using FalconNotes.Core.Platform
+@inject IAppInfo AppInfo
+
+<p class="mt-8 text-center text-xs text-stone-500 dark:text-stone-400">
+    Falcon Notes @AppInfo.Version
+    <span class="block">Based on Maple Notes 1.8.0</span>
+</p>

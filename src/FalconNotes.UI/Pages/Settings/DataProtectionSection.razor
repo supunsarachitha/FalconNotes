@@ -1,0 +1,28 @@
+@* New (docs/07, Settings → Privacy & security → Data protection). *@
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Storage
+@inject IAppInfo AppInfo
+@inject StorageContext Storage
+
+<Section Title="Data protection">
+    <p class="text-sm text-stone-600 dark:text-stone-300">
+        Your notes, labels and files are stored encrypted on this device (AEGIS-256 for the database, AES-256-GCM for files).
+        The key is kept in @KeyStoreName, never in the files themselves, so a copy of the app's files cannot be read elsewhere.
+    </p>
+    <p class="mt-2 text-sm text-stone-600 dark:text-stone-300">
+        Exports are not encrypted. Uninstalling Falcon Notes deletes your notes from this device; export them first.
+    </p>
+    <p class="mt-3 text-sm">
+        Key fingerprint: <code class="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs dark:bg-stone-800">@Storage.Keys.Fingerprint</code>
+    </p>
+</Section>
+
+@code {
+    private string KeyStoreName => AppInfo.PlatformName switch
+    {
+        "Android" => "the Android Keystore",
+        "Windows" => "Windows' protected storage",
+        "macOS" => "the macOS Keychain",
+        _ => "the device's secure storage",
+    };
+}

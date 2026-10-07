@@ -1,0 +1,85 @@
+@* New (docs/07): the PIN or biometric check Settings asks for before turning the app lock off, changing the PIN, or
+   running Erase all data / Delete all notes and files while the lock is on. *@
+@using FalconNotes.UI.State
+@inject AppLockState AppLock
+
+<ConfirmDialog Open="Open" OpenChanged="OnDialogOpenChanged" Title="@Title" ConfirmLabel="Continue" ConfirmEnabled="@(_pin.Length > 0)" Busy="_busy" OnConfirm="SubmitAsync">
+    <Description>
+        <p>Enter your PIN to continue.</p>
+    </Description>
+    <ChildContent>
+        <div class="mt-4 flex flex-col gap-3">
+            <TextField Label="PIN" Type="password" inputmode="numeric" autocomplete="off" Value="@_pin" ValueChanged="OnPinChanged" Error="@_error" />
+            @if (AppLock.Settings.Biometrics && AppLock.IsBiometricAvailable)
+            {
+                <Button Variant="ButtonVariant.Secondary" OnClick="TryBiometricAsync">
+                    <Icon Name="IconName.Fingerprint" Class="size-4" /> Use @AppLock.BiometricName
+                </Button>
+            }
+        </div>
+    </ChildContent>
+</ConfirmDialog>
+
+@code {
+    private string _pin = "";
+    private string? _error;
+    private bool _busy;
+
+    /// <summary>Whether the dialog is open.</summary>
+    [Parameter] public bool Open { get; set; }
+
+    /// <summary>Called when the dialog is cancelled.</summary>
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    /// <summary>The heading.</summary>
+    [Parameter] public string Title { get; set; } = "Confirm it's you";
+
+    /// <summary>Called once the PIN or a biometric check succeeds; the dialog does not close itself.</summary>
+    [Parameter] public EventCallback OnVerified { get; set; }
+
+    private void OnPinChanged(string value)
+    {
+        _pin = value;
+        _error = null;
+    }
+
+    private async Task OnDialogOpenChanged(bool open)
+    {
+        if (!open)
+        {
+            _pin = "";
+            _error = null;
+        }
+
+        await OpenChanged.InvokeAsync(open);
+    }
+
+    private async Task SubmitAsync()
+    {
+        _busy = true;
+        try
+        {
+            if (await AppLock.TryPinAsync(_pin))
+            {
+                _pin = "";
+                await OnVerified.InvokeAsync();
+            }
+            else
+            {
+                _error = "That PIN is not right.";
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task TryBiometricAsync()
+    {
+        if (await AppLock.TryBiometricAsync("Confirm it's you"))
+        {
+            await OnVerified.InvokeAsync();
+        }
+    }
+}

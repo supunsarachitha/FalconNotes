@@ -1,0 +1,72 @@
+@* Port of AppearanceSection in components/PreferenceSections.tsx (docs/07, Settings: unchanged). *@
+@using System.Globalization
+@using FalconNotes.Core.Domain
+@using FalconNotes.UI.State
+@inject AppState State
+
+<Section Title="Appearance">
+    <fieldset>
+        <legend class="mb-2 text-sm font-medium">Theme</legend>
+        <div class="grid grid-cols-3 gap-2">
+            @foreach (var theme in Themes)
+            {
+                var active = State.Preferences.Theme == theme;
+                <label class="@Classes.Join("flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-maple-500",
+                                             active ? "border-maple-600 bg-maple-50 font-medium text-maple-700 dark:border-maple-500 dark:bg-maple-600/15 dark:text-maple-400" : "border-stone-200 hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800")">
+                    <input type="radio" name="theme" checked="@active" @onchange="() => SaveAsync(p => p with { Theme = theme })" class="sr-only" />
+                    <Icon Name="ThemeIcons[theme]" Class="size-4" />
+                    @(theme == Theme.System ? "Device" : theme.ToString())
+                </label>
+            }
+        </div>
+        <p class="mt-1.5 text-sm text-stone-600 dark:text-stone-300">Device follows your phone or computer's light or dark setting.</p>
+    </fieldset>
+
+    <fieldset class="mt-5">
+        <legend class="mb-2 text-sm font-medium">Accent colour</legend>
+        <div class="flex flex-wrap gap-3">
+            @foreach (var accent in Accents)
+            {
+                var active = State.Preferences.Accent == accent;
+                <label class="flex cursor-pointer flex-col items-center gap-1 text-xs text-stone-600 dark:text-stone-300">
+                    <input type="radio" name="accent" checked="@active" @onchange="() => SaveAsync(p => p with { Accent = accent })" class="peer sr-only" />
+                    <span aria-hidden="true" style="background-color: @AppearanceService.Swatches[accent]"
+                          class="@Classes.Join("size-9 rounded-full ring-offset-2 ring-offset-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-stone-500 dark:ring-offset-stone-900", active ? "ring-2 ring-stone-900 dark:ring-stone-100" : "")"></span>
+                    @accent
+                </label>
+            }
+        </div>
+    </fieldset>
+
+    <div class="mt-5">
+        <label for="@_weekId" class="mb-2 block text-sm font-medium">Week starts on</label>
+        <select id="@_weekId" value="@State.Preferences.WeekStart" @onchange="OnWeekStartChanged"
+                class="h-11 w-full max-w-xs rounded-xl border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950">
+            @foreach (var day in WeekStarts)
+            {
+                <option value="@day">@(day == WeekStart.Auto ? "Automatic (from your language settings)" : day.ToString())</option>
+            }
+        </select>
+        <p class="mt-1.5 text-sm text-stone-600 dark:text-stone-300">For the calendars and the weekly habit chart.</p>
+    </div>
+</Section>
+
+@code {
+    private static readonly IReadOnlyList<Theme> Themes = [Theme.System, Theme.Light, Theme.Dark];
+    private static readonly IReadOnlyList<Accent> Accents = Enum.GetValues<Accent>();
+    private static readonly IReadOnlyList<WeekStart> WeekStarts = Enum.GetValues<WeekStart>();
+
+    private static readonly IReadOnlyDictionary<Theme, Components.Ui.IconName> ThemeIcons = new Dictionary<Theme, Components.Ui.IconName>
+    {
+        [Theme.System] = Components.Ui.IconName.Monitor,
+        [Theme.Light] = Components.Ui.IconName.Sun,
+        [Theme.Dark] = Components.Ui.IconName.Moon,
+    };
+
+    private readonly string _weekId = $"week-{Guid.NewGuid():N}";
+
+    private Task SaveAsync(Func<Preferences, Preferences> change) => State.UpdatePreferencesAsync(change);
+
+    private Task OnWeekStartChanged(ChangeEventArgs e) =>
+        SaveAsync(p => p with { WeekStart = Enum.Parse<WeekStart>(e.Value?.ToString() ?? nameof(WeekStart.Auto)) });
+}

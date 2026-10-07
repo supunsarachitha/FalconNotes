@@ -1,0 +1,98 @@
+@* Port of ProfileSection + DisplayNameRow in pages/SettingsPage.tsx, adapted (docs/07, Settings → Profile): no
+   username, role or "member since" — "On this device since" instead, and no username to fall back to when the name
+   is cleared. *@
+@using System.Globalization
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Settings
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject ProfileService Profiles
+@inject AppState State
+@inject Toasts Toasts
+@inject TimeProvider Time
+
+<Section Title="Profile">
+    <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+        <dt class="text-stone-500 dark:text-stone-400">Display name</dt>
+        @if (!_editing)
+        {
+            <dd class="flex flex-wrap items-center gap-x-3">
+                <span>@State.Profile?.DisplayName</span>
+                <button type="button" @onclick="StartEditing" aria-label="Change display name"
+                        class="text-sm font-medium text-maple-700 hover:underline dark:text-maple-400">
+                    Change
+                </button>
+            </dd>
+        }
+        else
+        {
+            <dd>
+                <form @onsubmit="SaveAsync" @onsubmit:preventDefault class="flex flex-wrap items-center gap-2">
+                    <input value="@_draft" @oninput="OnDraftInput" maxlength="@ProfileService.MaxDisplayNameLength" aria-label="Display name"
+                           class="h-9 min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-2 text-sm dark:border-stone-700 dark:bg-stone-950" />
+                    <Button Type="submit" Busy="_saving" Class="h-9 px-3">Save</Button>
+                    <Button Variant="ButtonVariant.Secondary" Class="h-9 px-3" OnClick="CancelEditing">Cancel</Button>
+                </form>
+                @if (_error is not null)
+                {
+                    <p role="alert" class="mt-1 text-xs text-red-700 dark:text-red-400">@_error</p>
+                }
+            </dd>
+        }
+        <dt class="text-stone-500 dark:text-stone-400">On this device since</dt>
+        <dd>@(State.Profile is { } profile ? RelativeTime.Absolute(profile.CreatedAtUtc, Time.LocalTimeZone, Uses24Hour) : "")</dd>
+    </dl>
+</Section>
+
+@code {
+    private bool _editing;
+    private string _draft = "";
+    private string? _error;
+    private bool _saving;
+
+    private static bool Uses24Hour => !CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.Contains("tt", StringComparison.Ordinal);
+
+    /// <inheritdoc />
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private void StartEditing()
+    {
+        _draft = State.Profile?.DisplayName ?? "";
+        _error = null;
+        _editing = true;
+    }
+
+    private void CancelEditing() => _editing = false;
+
+    private void OnDraftInput(ChangeEventArgs e)
+    {
+        _draft = e.Value?.ToString() ?? "";
+        _error = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        try
+        {
+            await Profiles.SetDisplayNameAsync(_draft);
+            _editing = false;
+            _error = null;
+            Toasts.Info("Display name changed.");
+        }
+        catch (UserFacingException e)
+        {
+            _error = e.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose() => State.Changed -= OnStateChanged;
+}

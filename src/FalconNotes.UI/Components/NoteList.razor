@@ -1,0 +1,290 @@
+@* Port of components/NoteList.tsx: an infinitely scrolling list of notes using the cursor pagination in
+   Core/Notes/NoteService.cs. The IntersectionObserver that notices the load-more sentinel coming into view is
+   observe.js, the only slice of lib/viewport.ts this port needs (the gallery's own lazy loading is unnecessary,
+   docs/02). *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject NoteService Notes
+@inject ChangeFeed Feed
+@inject TimeProvider Time
+
+@if (_loading)
+{
+    <div class="flex flex-col gap-3" aria-busy="true" aria-label="Loading notes">
+        @for (var i = 0; i < 3; i++)
+        {
+            <div class="h-28 animate-pulse rounded-2xl bg-stone-200/70 dark:bg-stone-800/70"></div>
+        }
+    </div>
+}
+else if (_failed)
+{
+    <div class="flex flex-col items-center gap-3 py-10 text-center">
+        <p class="text-stone-600 dark:text-stone-300">Your notes could not be loaded.</p>
+        <Button Variant="ButtonVariant.Secondary" OnClick="() => ReloadAsync()">Try again</Button>
+    </div>
+}
+else if (Shown.Count == 0 && !HasNextPage)
+{
+    @Empty
+}
+else
+{
+    <section class="flex flex-col gap-3">
+        @Header
+        @foreach (var note in Shown)
+        {
+            @if (RenderNote is not null)
+            {
+                @RenderNote(note)
+            }
+            else
+            {
+                <NoteCard Note="note" />
+            }
+        }
+        @if (HasNextPage || _fetchingNextPage)
+        {
+            <div @ref="_sentinel" class="flex min-h-12 items-center justify-center py-4">
+                @if (_fetchingNextPage)
+                {
+                    <Spinner Class="size-5 text-stone-400" />
+                }
+                else
+                {
+                    <Button Variant="ButtonVariant.Ghost" OnClick="LoadMoreAsync">Load more</Button>
+                }
+            </div>
+        }
+        @if (!HasNextPage && ShowEndMarker && Shown.Count > 5)
+        {
+            <p class="py-4 text-center text-sm text-stone-500 dark:text-stone-400">You're all caught up 🦅</p>
+        }
+    </section>
+}
+
+@code {
+    private const int SentinelMarginPixels = 600;
+
+    private List<Note> _notes = [];
+    private int _pagesLoaded;
+    private NoteCursor? _cursor;
+    private bool _loading = true;
+    private bool _fetchingNextPage;
+    private bool _failed;
+    private ElementReference _sentinel;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<NoteList>? _self;
+    private bool _bound;
+
+    private NoteState _lastState;
+    private string? _lastTag;
+    private string? _lastSearch;
+    private DateOnly? _lastDay;
+    private Guid? _lastLabel;
+    private IReadOnlyList<NoteKind>? _lastKinds;
+
+    /// <summary>Which notes: feed, pinned, active, archived or trash.</summary>
+    [Parameter, EditorRequired] public NoteState State { get; set; }
+
+    /// <summary>Only notes with this tag (and tags nested under it).</summary>
+    [Parameter] public string? Tag { get; set; }
+
+    /// <summary>Text to search for.</summary>
+    [Parameter] public string? Search { get; set; }
+
+    /// <summary>Which kinds of notes; the timeline (<see cref="NoteKind.Note"/>) when left null.</summary>
+    [Parameter] public IReadOnlyList<NoteKind>? Kinds { get; set; }
+
+    /// <summary>Only notes created on this local day.</summary>
+    [Parameter] public DateOnly? Day { get; set; }
+
+    /// <summary>Only notes with this label.</summary>
+    [Parameter] public Guid? Label { get; set; }
+
+    /// <summary>How each note is shown; a <see cref="NoteCard"/> when left null.</summary>
+    [Parameter] public RenderFragment<Note>? RenderNote { get; set; }
+
+    /// <summary>Shown instead of the list when it has nothing to show.</summary>
+    [Parameter] public RenderFragment? Empty { get; set; }
+
+    /// <summary>Shown above the notes, once the list has something to show.</summary>
+    [Parameter] public RenderFragment? Header { get; set; }
+
+    /// <summary>Shows "You're all caught up" once a long, fully loaded list ends.</summary>
+    [Parameter] public bool ShowEndMarker { get; set; } = true;
+
+    /// <summary>Notes shown elsewhere on the page already (the Today card), left out here.</summary>
+    [Parameter] public IReadOnlyList<Guid> HideIds { get; set; } = [];
+
+    /// <summary>Called after each load with whether the list has anything at all (before <see cref="HideIds"/> is
+    /// applied), for a caller that needs to know independently of what is actually shown (Trash's "Empty trash…").</summary>
+    [Parameter] public EventCallback<bool> OnLoaded { get; set; }
+
+    private bool HasNextPage => _cursor is not null;
+
+    private List<Note> Shown => _notes.Where(n => !HideIds.Contains(n.Id)).ToList();
+
+    private NoteQuery Query
+    {
+        get
+        {
+            DateTime? from = null;
+            DateTime? to = null;
+            if (Day is { } day)
+            {
+                (from, to) = DateFormats.DayRange(day, Time.LocalTimeZone);
+            }
+
+            return new NoteQuery(State, Kinds ?? [NoteKind.Note], Tag, Label, from, to, Search);
+        }
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        Feed.NotesChanged += Reload;
+        RememberQueryShape();
+        await ReloadAsync();
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        if (QueryShapeChanged())
+        {
+            RememberQueryShape();
+            await ReloadAsync();
+        }
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!HasNextPage || _bound)
+        {
+            return;
+        }
+
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/observe.js");
+        _self ??= DotNetObjectReference.Create(this);
+        await _module.InvokeVoidAsync("bindSentinel", _sentinel, _self, SentinelMarginPixels);
+        _bound = true;
+    }
+
+    /// <summary>Called from observe.js when the load-more sentinel comes near the viewport.</summary>
+    [JSInvokable]
+    public async Task OnNearEnd()
+    {
+        if (!_fetchingNextPage)
+        {
+            await LoadMoreAsync();
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loading = true;
+        _failed = false;
+        StateHasChanged();
+        try
+        {
+            var query = Query;
+            var notes = new List<Note>();
+            NoteCursor? cursor = null;
+            var pages = Math.Max(1, _pagesLoaded);
+            var fetched = 0;
+            for (var i = 0; i < pages; i++)
+            {
+                var page = await Notes.ListAsync(query, cursor);
+                notes.AddRange(page.Items);
+                cursor = page.Next;
+                fetched++;
+                if (cursor is null)
+                {
+                    break;
+                }
+            }
+
+            _notes = notes;
+            _cursor = cursor;
+            _pagesLoaded = fetched;
+        }
+        catch (Exception)
+        {
+            _failed = true;
+        }
+        finally
+        {
+            _loading = false;
+            _bound = false; // the sentinel element is fresh; (re)bind it after this render
+            StateHasChanged();
+            await OnLoaded.InvokeAsync(_notes.Count > 0);
+        }
+    }
+
+    private async Task LoadMoreAsync()
+    {
+        if (_cursor is not { } cursor)
+        {
+            return;
+        }
+
+        _fetchingNextPage = true;
+        StateHasChanged();
+        try
+        {
+            var page = await Notes.ListAsync(Query, cursor);
+            _notes.AddRange(page.Items);
+            _cursor = page.Next;
+            _pagesLoaded++;
+        }
+        catch (Exception)
+        {
+            // Leaves the "Load more" button in place; the user can try again.
+        }
+        finally
+        {
+            _fetchingNextPage = false;
+            _bound = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Reload() => _ = InvokeAsync(ReloadAsync);
+
+    private bool QueryShapeChanged() =>
+        _lastState != State || _lastTag != Tag || _lastSearch != Search || _lastDay != Day || _lastLabel != Label
+        || !(_lastKinds ?? []).SequenceEqual(Kinds ?? [NoteKind.Note]);
+
+    private void RememberQueryShape()
+    {
+        _lastState = State;
+        _lastTag = Tag;
+        _lastSearch = Search;
+        _lastDay = Day;
+        _lastLabel = Label;
+        _lastKinds = Kinds ?? [NoteKind.Note];
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        Feed.NotesChanged -= Reload;
+        _self?.Dispose();
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

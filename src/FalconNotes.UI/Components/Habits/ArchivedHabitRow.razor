@@ -1,0 +1,59 @@
+@namespace FalconNotes.UI.Components
+@* Port of ArchivedHabitRow in components/HabitRow.tsx: an archived habit, out of the list and the chart, with its
+   history kept, until it is restored or deleted. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using HabitsText = FalconNotes.Core.Text.Habits
+@using FalconNotes.UI.State
+@inject NoteService Notes
+@inject AppState State
+@inject Toasts Toasts
+
+<li class="flex items-center gap-2 py-2">
+    <span class="min-w-0 flex-1 break-words">@Name</span>
+    <span class="shrink-0 text-sm tabular-nums text-stone-500 dark:text-stone-400">@HabitLayout.DayCount(_habit.Days.Count)</span>
+    <Button Variant="ButtonVariant.Secondary" Class="h-9" OnClick="RestoreAsync">
+        <Icon Name="IconName.ArchiveRestore" Class="size-4" /> Restore
+    </Button>
+    <IconButton Label="@(_removal.InTrash ? $"Move {Name} to the trash" : $"Delete {Name}")" OnClick="@(() => _removal.StartAsync())">
+        <Icon Name="IconName.Trash2" Class="size-5" />
+    </IconButton>
+    <ConfirmDialog Open="_removal.Confirming" OpenChanged="@(open => { if (!open) { _removal.CancelConfirm(); } })"
+                    Title="@_removal.ConfirmTitle" ConfirmLabel="Delete" Busy="_removal.Removing" OnConfirm="_removal.ConfirmAsync">
+        <Description>
+            "@Name"@(_habit.Days.Count > 0 ? $" and its history ({HabitLayout.DayCount(_habit.Days.Count)} done)" : "") will be deleted permanently.
+        </Description>
+    </ConfirmDialog>
+</li>
+
+@code {
+    private NoteRemoval _removal = null!;
+
+    /// <summary>The habit's note.</summary>
+    [Parameter, EditorRequired] public Note Note { get; set; } = null!;
+
+    private Habit _habit = null!;
+
+    private string Name => HabitLayout.Name(_habit);
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        _habit = HabitsText.Parse(Note.Content);
+        _removal = new NoteRemoval(Note, "habit", "Delete this habit?", "", Notes, State, Toasts, StateHasChanged);
+    }
+
+    private async Task RestoreAsync()
+    {
+        try
+        {
+            await Notes.PatchAsync(Note.Id, new NotePatch(IsArchived: false));
+            Toasts.Info($"Restored \"{Name}\".");
+        }
+        catch (Exception)
+        {
+            Toasts.Error("That didn't work. Please try again.");
+        }
+    }
+}

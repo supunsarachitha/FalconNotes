@@ -1,0 +1,124 @@
+@page "/tags"
+@* Port of TagsPage: every tag with how many notes use it, nested tags under their parents, a filter and two
+   orders (A-Z, most used). *@
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject NoteService Notes
+@inject AppState State
+@inject ChangeFeed Feed
+
+<h1 class="mb-4 text-xl font-semibold">Tags</h1>
+@if (!State.Preferences.Tags)
+{
+    <FeatureOff Title="The Tags page is turned off">Tags in your notes still work.</FeatureOff>
+}
+else if (!_loaded)
+{
+    <div class="h-40 animate-pulse rounded-2xl bg-stone-200/70 dark:bg-stone-800/70" aria-busy="true" aria-label="Loading tags"></div>
+}
+else if (_tags.Count == 0)
+{
+    <EmptyState Title="No tags yet">Add #tags to your notes, like #ideas or #work/meetings, and they appear here.</EmptyState>
+}
+else
+{
+    <div class="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+        <div class="flex flex-wrap items-center gap-2 p-1">
+            <div class="relative min-w-48 flex-1">
+                <Icon Name="IconName.Search" Class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
+                <input type="search" value="@_filter" @oninput="@(e => _filter = e.Value?.ToString() ?? "")"
+                       placeholder="@($"Filter {_tags.Count} tags")" aria-label="Filter tags"
+                       class="h-10 w-full rounded-full border border-stone-200 bg-stone-50 pl-9 pr-3 text-sm outline-none focus:border-maple-500 focus:bg-white dark:border-stone-700 dark:bg-stone-800 dark:focus:bg-stone-900" />
+            </div>
+            <div role="radiogroup" aria-label="Order" class="flex rounded-full bg-stone-100 p-1 text-sm dark:bg-stone-800">
+                <button type="button" role="radio" aria-checked="@(_order == TagOrder.Name ? "true" : "false")" @onclick="() => _order = TagOrder.Name"
+                        class="@OrderButtonClass(TagOrder.Name)">A–Z</button>
+                <button type="button" role="radio" aria-checked="@(_order == TagOrder.Count ? "true" : "false")" @onclick="() => _order = TagOrder.Count"
+                        class="@OrderButtonClass(TagOrder.Count)">Most used</button>
+            </div>
+        </div>
+        @if (Matches is { } matches)
+        {
+            @if (matches.Count == 0)
+            {
+                <p class="px-3 py-6 text-center text-sm text-stone-500">No tags match "@(_filter.Trim())".</p>
+            }
+            else
+            {
+                <ul aria-label="Matching tags" class="mt-1">
+                    @foreach (var tag in matches)
+                    {
+                        <TagBranch @key="tag.Name" Node="@(new TagNode(tag.Name, tag.Name, tag.NoteCount, tag.NoteCount, []))" />
+                    }
+                </ul>
+            }
+        }
+        else
+        {
+            <ul aria-label="All tags" class="mt-1">
+                @foreach (var node in Tree)
+                {
+                    <TagBranch @key="node.Path" Node="node" />
+                }
+            </ul>
+        }
+    </div>
+}
+
+@code {
+    private List<TagCount> _tags = [];
+    private bool _loaded;
+    private string _filter = "";
+    private TagOrder _order = TagOrder.Name;
+
+    private IReadOnlyList<TagNode> Tree => TagTree.Build(_tags, _order);
+
+    private string Needle => _filter.Trim().TrimStart('#').ToLowerInvariant();
+
+    private List<TagCount>? Matches
+    {
+        get
+        {
+            var needle = Needle;
+            if (needle.Length == 0)
+            {
+                return null;
+            }
+
+            var matches = _tags.Where(t => t.Name.ToLowerInvariant().Contains(needle, StringComparison.Ordinal)).ToList();
+            matches.Sort((a, b) => _order == TagOrder.Count && b.NoteCount != a.NoteCount
+                ? b.NoteCount.CompareTo(a.NoteCount)
+                : TagTree.LabelComparer.Compare(a.Name, b.Name));
+            return matches;
+        }
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        Feed.NotesChanged += Reload;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _tags = (await Notes.TagCountsAsync(State.EnabledKinds)).ToList();
+        _loaded = true;
+    }
+
+    private void Reload() => _ = InvokeAsync(async () =>
+    {
+        await LoadAsync();
+        StateHasChanged();
+    });
+
+    private string OrderButtonClass(TagOrder value) => Classes.Join(
+        "rounded-full px-3 py-1",
+        _order == value ? "bg-white font-medium shadow-sm dark:bg-stone-900" : "text-stone-600 dark:text-stone-300");
+
+    /// <inheritdoc />
+    public void Dispose() => Feed.NotesChanged -= Reload;
+}

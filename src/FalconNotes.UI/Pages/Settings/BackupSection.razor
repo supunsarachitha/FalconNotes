@@ -1,0 +1,173 @@
+@* Port of ExportSection.tsx + RestorePanel.tsx, adapted (docs/05, Writing the file; docs/07, Settings → Backup &
+   data): wording changed ("Download ZIP" → "Export ZIP…"), a save dialog instead of a browser download, and the
+   restore flow shared with Welcome and Key lost (RestoreFlow.razor). *@
+@using FalconNotes.Core.Backup.Export
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@inject ExportService Export
+@inject Toasts Toasts
+@inject TimeProvider Time
+
+<Section Title="Backup & restore">
+    <p class="text-sm text-stone-600 dark:text-stone-300">
+        Save your notes as a ZIP archive with attachments in an <code>attachments</code> folder linked from each note.
+        Todo lists, quick notes and habits go in <code>todo</code>, <code>quick-notes</code> and <code>habits</code> folders.
+        <strong>Exports are not encrypted</strong>, so keep them somewhere safe. The archive is the same as the Maple
+        Notes web app's, so you can restore it there too.
+    </p>
+    <p class="mt-2 text-sm text-stone-600 dark:text-stone-300">
+        @(_lastExport is { } last ? $"Last export: {RelativeTime.Format(last, Time.GetUtcNow(), Time.LocalTimeZone)}" : "You have not exported yet.")
+    </p>
+
+    <div class="mt-4 flex flex-col gap-5">
+        <fieldset>
+            <legend class="mb-2 text-sm font-medium">Format</legend>
+            <div class="grid grid-cols-3 gap-2">
+                @foreach (var format in Formats)
+                {
+                    var active = _format == format.Value;
+                    <label class="@Classes.Join("flex cursor-pointer flex-col rounded-xl border px-3 py-2 text-sm transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-maple-500",
+                                                 active ? "border-maple-600 bg-maple-50 dark:bg-maple-600/15" : "border-stone-300 hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800")">
+                        <input type="radio" name="export-format" checked="@active" @onchange="() => _format = format.Value" class="sr-only" />
+                        <span class="font-medium">@format.Label</span>
+                        <span class="text-xs text-stone-500 dark:text-stone-400">@format.Hint</span>
+                    </label>
+                }
+            </div>
+        </fieldset>
+
+        <div>
+            <label for="@_layoutId" class="mb-2 block text-sm font-medium">Folders</label>
+            <select id="@_layoutId" value="@_layout" @onchange="@(e => _layout = Enum.Parse<ExportLayout>(e.Value?.ToString() ?? nameof(ExportLayout.Month)))"
+                    class="h-11 w-full rounded-xl border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950">
+                @foreach (var choice in Layouts)
+                {
+                    <option value="@choice.Value">@choice.Label</option>
+                }
+            </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label for="@_fromId" class="mb-2 block text-sm font-medium">From (optional)</label>
+                <input id="@_fromId" type="date" value="@_from?.ToString("yyyy-MM-dd")" @oninput="@(e => _from = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null)"
+                       class="h-11 w-full rounded-xl border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950" />
+            </div>
+            <div>
+                <label for="@_toId" class="mb-2 block text-sm font-medium">To (optional)</label>
+                <input id="@_toId" type="date" value="@_to?.ToString("yyyy-MM-dd")" @oninput="@(e => _to = DateOnly.TryParse(e.Value?.ToString(), out var d) ? d : null)"
+                       class="h-11 w-full rounded-xl border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950" />
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-2 text-sm">
+            <label class="flex items-center gap-2">
+                <input type="checkbox" checked="@_includeAttachments" @onchange="@(e => _includeAttachments = (bool)(e.Value ?? false))" class="size-4 accent-maple-600" />
+                Include attachments
+            </label>
+            <label class="flex items-center gap-2">
+                <input type="checkbox" checked="@_includeArchived" @onchange="@(e => _includeArchived = (bool)(e.Value ?? false))" class="size-4 accent-maple-600" />
+                Include archived notes
+            </label>
+        </div>
+
+        @if (_error is not null)
+        {
+            <ErrorMessage>@_error</ErrorMessage>
+        }
+
+        <div class="flex flex-wrap items-center gap-3">
+            <Button Busy="_progress is not null" OnClick="ExportAsync">
+                @if (_progress is null)
+                {
+                    <Icon Name="IconName.Download" Class="size-4" />
+                }
+                Export ZIP…
+            </Button>
+            <span class="text-xs text-stone-500 dark:text-stone-400" aria-live="polite">
+                @(_progress ?? $"Dates use your time zone ({ExportOptions.IanaName(Time.LocalTimeZone)}).")
+            </span>
+        </div>
+    </div>
+
+    <section aria-labelledby="restore-heading" class="mt-6 border-t border-stone-100 pt-5 dark:border-stone-800">
+        <h3 id="restore-heading" class="text-sm font-semibold">Restore</h3>
+        <p class="mt-1 text-sm text-stone-600 dark:text-stone-300">
+            Bring notes back from an export (<code>.zip</code>, any format) made by Falcon Notes, the Maple Notes web
+            app or a Maple Notes server, or add <code>.md</code>, <code>.txt</code> and <code>.json</code> files. Notes
+            keep their dates, pins, archive state and files. Notes you already have are skipped, so restoring the same
+            export twice is safe. Labels are not part of exports.
+        </p>
+        <RestoreFlow />
+    </section>
+</Section>
+
+@code {
+    private static readonly (ExportFormat Value, string Label, string Hint)[] Formats =
+    [
+        (ExportFormat.Md, "Markdown", ".md with front matter"),
+        (ExportFormat.Txt, "Plain text", ".txt"),
+        (ExportFormat.Json, "JSON", ".json, one per note"),
+    ];
+
+    private static readonly (ExportLayout Value, string Label)[] Layouts =
+    [
+        (ExportLayout.Month, "By month"),
+        (ExportLayout.Year, "By year"),
+        (ExportLayout.Day, "By day"),
+        (ExportLayout.Flat, "All in one folder"),
+    ];
+
+    private readonly string _layoutId = $"export-layout-{Guid.NewGuid():N}";
+    private readonly string _fromId = $"export-from-{Guid.NewGuid():N}";
+    private readonly string _toId = $"export-to-{Guid.NewGuid():N}";
+
+    private ExportFormat _format = ExportFormat.Md;
+    private ExportLayout _layout = ExportLayout.Month;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private bool _includeAttachments = true;
+    private bool _includeArchived;
+    private string? _error;
+    private string? _progress;
+    private DateTime? _lastExport;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync() => _lastExport = await Export.LastExportAsync();
+
+    private async Task ExportAsync()
+    {
+        _error = null;
+        var options = new ExportOptions(_format, _layout, _includeArchived, _includeAttachments, _from, _to, Time.LocalTimeZone);
+        try
+        {
+            options.Validate();
+        }
+        catch (UserFacingException e)
+        {
+            _error = e.Message;
+            return;
+        }
+
+        _progress = "Preparing your export…";
+        try
+        {
+            var progress = new Progress<int>(n => { _progress = $"Reading your notes… {n:N0}"; StateHasChanged(); });
+            var result = await Export.ExportAsync(options, progress);
+            if (result is not null)
+            {
+                _lastExport = Time.GetUtcNow().UtcDateTime;
+                Toasts.Info(ExportService.Summary(result));
+            }
+        }
+        catch (UserFacingException e)
+        {
+            _error = e.Message;
+        }
+        finally
+        {
+            _progress = null;
+        }
+    }
+}

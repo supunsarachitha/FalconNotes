@@ -1,0 +1,64 @@
+@* Port of LabelChips in components/Labels.tsx: the labels on a note, as coloured chips that list each label's
+   notes; nothing while labels are turned off. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Labels
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject LabelService Labels
+@inject AppState State
+@inject ChangeFeed Feed
+
+@if (State.Preferences.Labels && _shown.Count > 0)
+{
+    <ul aria-label="Labels" class="mt-3 flex flex-wrap gap-1.5">
+        @foreach (var label in _shown)
+        {
+            <li>
+                <a href="@($"/?label={Uri.EscapeDataString(label.Id.ToString())}")"
+                   class="@Classes.Join("inline-flex h-6 max-w-full items-center rounded-full px-2.5 text-xs font-medium hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-maple-500", LabelStyles.Chip(label.Color))">
+                    <span class="truncate">@label.Name</span>
+                </a>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<Label> _all = [];
+    private List<Label> _shown = [];
+    private bool _loaded;
+
+    /// <summary>The note's label IDs; some may belong to labels deleted since.</summary>
+    [Parameter] public IReadOnlyList<Guid> Ids { get; set; } = [];
+
+    private bool ShouldLoad => State.Preferences.Labels && Ids.Count > 0;
+
+    /// <inheritdoc />
+    protected override void OnInitialized() => Feed.LabelsChanged += Reload;
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_loaded && ShouldLoad)
+        {
+            _loaded = true;
+            _all = (await Labels.ListAsync(State.EnabledKinds)).Select(c => c.Label).ToList();
+        }
+
+        Recompute();
+    }
+
+    private void Recompute() => _shown = _all.Where(l => Ids.Contains(l.Id)).OrderBy(l => l.Name, LabelService.NameOrder).ToList();
+
+    private void Reload() => _ = InvokeAsync(async () =>
+    {
+        _all = (await Labels.ListAsync(State.EnabledKinds)).Select(c => c.Label).ToList();
+        _loaded = true;
+        Recompute();
+        StateHasChanged();
+    });
+
+    /// <inheritdoc />
+    public void Dispose() => Feed.LabelsChanged -= Reload;
+}

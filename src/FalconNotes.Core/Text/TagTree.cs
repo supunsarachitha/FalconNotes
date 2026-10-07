@@ -58,8 +58,9 @@ public static class TagTree
         return Sort(roots, order);
     }
 
-    /// <summary>Compares labels as the browser's <c>localeCompare</c> does.</summary>
-    internal static readonly StringComparer LabelComparer = StringComparer.Create(CultureInfo.CurrentCulture, CompareOptions.None);
+    /// <summary>Compares labels as the browser's <c>localeCompare</c> does; also used to sort a flat match list the
+    /// same way (the Tags page's filter).</summary>
+    public static readonly StringComparer LabelComparer = StringComparer.Create(CultureInfo.CurrentCulture, CompareOptions.None);
 
     private static List<TagNode> Sort(List<Builder> nodes, TagOrder order) =>
         nodes

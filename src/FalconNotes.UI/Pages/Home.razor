@@ -1,5 +1,154 @@
 @page "/"
-@* Home (pages/HomePage.tsx) comes in Phase 4: the composer, the Today card, pinned notes, the timeline and filters. *@
+@* Port of HomePage.tsx: today's note, the composer, pinned notes and the feed; or, with ?tag=, ?q=, ?day= or
+   ?label=, the matching notes. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Labels
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.Layout
+@using FalconNotes.UI.State
+@using Microsoft.AspNetCore.Components.Routing
+@implements IDisposable
 @inject NavigationManager Navigation
+@inject AppState State
+@inject LabelService Labels
+@inject ChangeFeed Feed
 
-<EmptyState Title="Not ported yet">Home, with the composer and the timeline, comes in Phase 4 of the implementation plan.</EmptyState>
+@if (_dayFilter is { } day)
+{
+    <FilterHeader IconName="IconName.CalendarDays" Label="@DateFormats.Format(day, State.Preferences.DateFormat)" />
+    <NoteList State="NoteState.Active" Kinds="State.EnabledKinds" Day="day">
+        <Empty>
+            <EmptyState Title="No notes on this day">Archived notes are not included.</EmptyState>
+        </Empty>
+    </NoteList>
+}
+else if (_labelId is { } labelId)
+{
+    @if (CurrentLabel is { } currentLabel)
+    {
+        <FilterHeader IconName="IconName.Tag" Label="@LabelName">
+            <Marker><LabelDot Color="currentLabel.Color" Class="size-3.5" /></Marker>
+        </FilterHeader>
+    }
+    else
+    {
+        <FilterHeader IconName="IconName.Tag" Label="@LabelName" />
+    }
+    <NoteList State="NoteState.Active" Label="labelId" Kinds="State.EnabledKinds">
+        <Empty>
+            <EmptyState Title="No notes with this label">Put it on a note from the note's ⋯ menu. Archived notes are not included.</EmptyState>
+        </Empty>
+    </NoteList>
+}
+else if (_tag is not null || _search is not null)
+{
+    <FilterHeader IconName="@(_tag is not null ? IconName.Hash : IconName.Search)" Label="@(_tag ?? $"“{_search}”")" />
+    <NoteList State="NoteState.Active" Tag="@_tag" Search="@_search" Kinds="State.EnabledKinds">
+        <Empty>
+            <EmptyState Title="No matching notes">Archived notes are not included in searches.</EmptyState>
+        </Empty>
+    </NoteList>
+}
+else
+{
+    <h1 class="sr-only">Home</h1>
+    @if (State.Preferences.DailyNotes)
+    {
+        <div class="mb-6">
+            <TodayCard OnNoteChanged="OnTodayNoteChanged" />
+        </div>
+    }
+    <Composer />
+    <div class="mt-6 flex flex-col gap-6">
+        <NoteList State="NoteState.Pinned" ShowEndMarker="false" HideIds="HideIds">
+            <Header>
+                <h2 class="px-1 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">Pinned</h2>
+            </Header>
+        </NoteList>
+        <NoteList State="NoteState.Feed" HideIds="HideIds">
+            <Empty>
+                <EmptyState Title="Nothing here yet">Write your first note above. Add #tags to organise notes, and attach photos or files.</EmptyState>
+            </Empty>
+        </NoteList>
+    </div>
+}
+
+@code {
+    private string? _tag;
+    private string? _search;
+    private DateOnly? _dayFilter;
+    private Guid? _labelId;
+    private Guid? _todayNoteId;
+    private List<LabelCount> _labels = [];
+    private bool _labelsLoaded;
+
+    private IReadOnlyList<Guid> HideIds => _todayNoteId is { } id ? [id] : [];
+
+    private Label? CurrentLabel => _labelId is { } id ? _labels.FirstOrDefault(l => l.Label.Id == id)?.Label : null;
+
+    private string LabelName => CurrentLabel?.Name ?? (_labelsLoaded ? "Deleted label" : "Label");
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        Feed.LabelsChanged += OnLabelsChanged;
+        ReadQuery();
+        if (_labelId is not null)
+        {
+            _ = LoadLabelsAsync();
+        }
+    }
+
+    private void ReadQuery()
+    {
+        var query = PageAddress.Of(Navigation).Query;
+        _tag = NullIfEmpty(query.GetValueOrDefault("tag"));
+        _search = NullIfEmpty(query.GetValueOrDefault("q"));
+        _labelId = Guid.TryParse(query.GetValueOrDefault("label"), out var id) ? id : null;
+        _dayFilter = DateFormats.ParseKey(query.GetValueOrDefault("day"));
+    }
+
+    private static string? NullIfEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
+    private async Task LoadLabelsAsync()
+    {
+        _labels = (await Labels.ListAsync(State.EnabledKinds)).ToList();
+        _labelsLoaded = true;
+        StateHasChanged();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => _ = InvokeAsync(async () =>
+    {
+        var hadLabel = _labelId;
+        ReadQuery();
+        if (_labelId is not null && _labelId != hadLabel)
+        {
+            await LoadLabelsAsync();
+        }
+
+        StateHasChanged();
+    });
+
+    private void OnLabelsChanged() => _ = InvokeAsync(async () =>
+    {
+        if (_labelId is not null)
+        {
+            await LoadLabelsAsync();
+        }
+    });
+
+    private void OnTodayNoteChanged(Guid? id)
+    {
+        _todayNoteId = id;
+        StateHasChanged();
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        Feed.LabelsChanged -= OnLabelsChanged;
+    }
+}

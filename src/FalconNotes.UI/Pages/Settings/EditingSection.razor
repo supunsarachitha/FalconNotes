@@ -1,0 +1,14 @@
+@* Port of EditingSection in components/PreferenceSections.tsx (docs/07, Settings: unchanged). *@
+@using FalconNotes.UI.State
+@inject AppState State
+
+<Section Title="Editing">
+    <div class="divide-y divide-stone-100 dark:divide-stone-800">
+        <PreferenceSwitch Label="Suggest tags while typing"
+                           Description="When you type # in a note, your existing tags that match are offered; choose one with the arrows and Enter, or tap it."
+                           Checked="State.Preferences.TagSuggestions" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { TagSuggestions = on }))" />
+        <PreferenceSwitch Label="Double-tap to edit"
+                           Description="Double-tap a note, or double-click it, to start editing it. Its ⋯ menu still has Edit too."
+                           Checked="State.Preferences.DoubleTapToEdit" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { DoubleTapToEdit = on }))" />
+    </div>
+</Section>

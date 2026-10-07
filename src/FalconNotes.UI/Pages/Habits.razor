@@ -1,0 +1,191 @@
+@page "/habits"
+@* Port of HabitsPage: daily habits to tick off, a chart of the progress, and a month calendar. A small form starts
+   a new habit; archived ones wait collapsed at the bottom, with their history kept. *@
+@using System.Globalization
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using HabitsText = FalconNotes.Core.Text.Habits
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject NoteService Notes
+@inject Toasts Toasts
+@inject AppState State
+@inject ChangeFeed Feed
+@inject TimeProvider Time
+
+<h1 class="mb-4 text-xl font-semibold">Habits</h1>
+@if (!State.Preferences.HabitTracker)
+{
+    <FeatureOff Title="The habit tracker is turned off">Your habits are kept and come back when you turn it on again.</FeatureOff>
+}
+else
+{
+    <form @onsubmit="CreateAsync" @onsubmit:preventDefault class="flex gap-2">
+        <input value="@_name" @oninput="@(e => _name = e.Value?.ToString() ?? "")" placeholder="New habit, e.g. Stretch"
+               aria-label="New habit name" maxlength="300"
+               class="h-11 min-w-0 flex-1 rounded-xl border border-stone-300 bg-white px-3 text-base outline-none focus:border-maple-500 dark:border-stone-700 dark:bg-stone-900" />
+        <Button Type="submit" Busy="_saving" Disabled="@(_name.Trim().Length == 0)" Class="h-11">
+            <Icon Name="IconName.Plus" Class="size-4" /> Add habit
+        </Button>
+    </form>
+    <div class="mt-6">
+        @if (!_loaded)
+        {
+            <div class="flex justify-center py-10"><Spinner Class="size-6 text-maple-600" /></div>
+        }
+        else if (_active.Count == 0)
+        {
+            <EmptyState Title="No habits yet">Add one above, then tick off each day you do it.</EmptyState>
+        }
+        else
+        {
+            <section aria-label="Days done" class="rounded-2xl border border-stone-200 bg-white px-3 py-2 shadow-sm sm:px-4 dark:border-stone-800 dark:bg-stone-900">
+                <div class="@(HabitLayout.Row) border-b border-stone-100 pb-2 dark:border-stone-800">
+                    <div class="flex min-w-0 items-center">
+                        <IconButton Label="Earlier days" OnClick="() => _weeksBack++" Class="-ml-2"><Icon Name="IconName.ChevronLeft" Class="size-5" /></IconButton>
+                        <span class="min-w-0 text-sm font-medium tabular-nums text-stone-700 dark:text-stone-300" aria-live="polite">@WeekRangeLabel()</span>
+                        <IconButton Label="Later days" Disabled="@(_weeksBack == 0)" OnClick="() => _weeksBack--"><Icon Name="IconName.ChevronRight" Class="size-5" /></IconButton>
+                    </div>
+                    <div class="@(HabitLayout.DayGrid)" aria-hidden="true">
+                        @foreach (var day in Days)
+                        {
+                            var date = DateFormats.ParseKey(day)!.Value;
+                            <span class="@(Classes.Join("flex w-10 flex-col items-center text-xs leading-tight text-stone-500 sm:w-9 dark:text-stone-400", day == Today ? "font-semibold text-maple-700 dark:text-maple-400" : null))">
+                                <span>@(DateFormats.Format(date, "dddd")[..3])</span>
+                                <span class="tabular-nums">@date.Day</span>
+                            </span>
+                        }
+                    </div>
+                    <span class="hidden w-10 sm:order-3 sm:block"></span>
+                </div>
+                <ul aria-label="Your habits" class="divide-y divide-stone-100 dark:divide-stone-800">
+                    @foreach (var note in _active)
+                    {
+                        <HabitRow @key="note.Id" Note="note" Days="Days" Today="@Today" />
+                    }
+                </ul>
+            </section>
+            <HabitChart Notes="_active" Today="@Today" WeekStart="WeekStart" />
+            <HabitCalendar Notes="_active" Today="@Today" WeekStart="WeekStart" />
+        }
+    </div>
+    @if (_archived.Count > 0)
+    {
+        <section class="mt-8">
+            <button type="button" aria-expanded="@(_archivedOpen ? "true" : "false")" aria-controls="@_archivedId" @onclick="() => _archivedOpen = !_archivedOpen"
+                    class="flex items-center gap-1 rounded-lg py-1 pr-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100">
+                <Icon Name="IconName.ChevronRight" Class="@(Classes.Join("size-4 transition-transform", _archivedOpen ? "rotate-90" : null))" />
+                Archived habits (@_archived.Count)
+            </button>
+            @if (_archivedOpen)
+            {
+                <ul id="@_archivedId" class="mt-2 divide-y divide-stone-100 rounded-2xl border border-stone-200 bg-white px-4 dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-900">
+                    @foreach (var note in _archived)
+                    {
+                        <ArchivedHabitRow @key="note.Id" Note="note" />
+                    }
+                </ul>
+            }
+        </section>
+    }
+}
+
+@code {
+    private readonly string _archivedId = $"archived-habits-{Guid.NewGuid():N}";
+    private List<Note> _active = [];
+    private List<Note> _archived = [];
+    private bool _loaded;
+    private bool _archivedOpen;
+    private int _weeksBack;
+    private string _name = "";
+    private bool _saving;
+    private ITimer? _timer;
+    private string _today = "";
+
+    private string Today => _today;
+
+    private DayOfWeek WeekStart => DateFormats.WeekStartDay(State.Preferences.WeekStart, CultureInfo.CurrentCulture);
+
+    private IReadOnlyList<string> Days => HabitsText.DaysEnding(HabitsText.AddDays(Today, -7 * _weeksBack), 7);
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _today = DateFormats.LocalKey(Time.GetUtcNow(), Time.LocalTimeZone);
+        Feed.NotesChanged += Reload;
+        // Today rolls over at midnight while the app is open (useToday checks every minute).
+        _timer = Time.CreateTimer(_ =>
+        {
+            var now = DateFormats.LocalKey(Time.GetUtcNow(), Time.LocalTimeZone);
+            if (now != _today)
+            {
+                _today = now;
+                _ = InvokeAsync(StateHasChanged);
+            }
+        }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var habits = await Notes.ListHabitsAsync();
+        _active = habits.Where(n => !n.IsArchived).ToList();
+        _archived = habits.Where(n => n.IsArchived).ToList();
+        _loaded = true;
+    }
+
+    private void Reload() => _ = InvokeAsync(async () =>
+    {
+        await LoadAsync();
+        StateHasChanged();
+    });
+
+    /// <summary>The shown week, e.g. "Sep 23 – 29"; the year joins in when it is not today's (port of Intl's
+    /// <c>formatRange</c>, which collapses the parts the two ends share).</summary>
+    private string WeekRangeLabel()
+    {
+        var first = DateFormats.ParseKey(Days[0])!.Value;
+        var last = DateFormats.ParseKey(Days[^1])!.Value;
+        var withYear = first.Year != DateFormats.ParseKey(Today)!.Value.Year;
+        if (!withYear && first.Month == last.Month)
+        {
+            return $"{DateFormats.Format(first, "MMM")} {first.Day} – {last.Day}";
+        }
+
+        string Side(DateOnly d) => withYear ? $"{DateFormats.Format(d, "MMM")} {d.Day}, {d.Year}" : $"{DateFormats.Format(d, "MMM")} {d.Day}";
+        return $"{Side(first)} – {Side(last)}";
+    }
+
+    private async Task CreateAsync()
+    {
+        var clean = _name.Trim();
+        if (clean.Length == 0 || _saving)
+        {
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            await Notes.CreateAsync(HabitsText.Serialize(new Habit(clean, [], "")), NoteKind.Habit);
+            _name = "";
+        }
+        catch (Exception)
+        {
+            Toasts.Error("Could not add the habit.");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Feed.NotesChanged -= Reload;
+        _timer?.Dispose();
+    }
+}

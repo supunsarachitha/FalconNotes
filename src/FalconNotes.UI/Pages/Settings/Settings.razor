@@ -1,0 +1,115 @@
+@page "/settings"
+@page "/settings/{SectionId}"
+@* Port of pages/SettingsPage.tsx (docs/07, Settings): the sections' list, each with its own address. Wide screens
+   show the list beside the open section; phones show the list, then each section on its own page with a way back. *@
+@using FalconNotes.UI.Components.Ui
+
+<div class="flex flex-col gap-6 md:grid md:grid-cols-[13.5rem_minmax(0,1fr)] md:items-start md:gap-8">
+    <div class="@Classes.Join("flex flex-col gap-3 md:sticky md:top-8", Current is not null ? "hidden md:flex" : "")">
+        @if (Current is not null)
+        {
+            <p class="px-1 text-xl font-semibold" aria-hidden="true">Settings</p>
+        }
+        else
+        {
+            <h1 class="px-1 text-xl font-semibold">Settings</h1>
+        }
+        <nav aria-label="Settings sections">
+            <ul class="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm md:flex md:flex-col md:gap-0.5 md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:shadow-none dark:border-stone-800 dark:bg-stone-900 md:dark:bg-transparent">
+                @foreach (var section in Sections)
+                {
+                    var active = section.Id == Shown.Id;
+                    <li class="border-b border-stone-100 last:border-b-0 md:border-0 dark:border-stone-800">
+                        <a href="@($"/settings/{section.Id}")"
+                           aria-current="@(Current is not null && active ? "page" : null)"
+                           class="@Classes.Join("flex min-h-14 items-center gap-3 px-4 py-2.5 hover:bg-stone-50 md:min-h-10 md:rounded-xl md:px-3 md:py-2 dark:hover:bg-stone-800",
+                                                active ? "md:bg-white md:font-medium md:text-maple-700 md:shadow-sm md:hover:bg-white dark:md:bg-stone-900 dark:md:text-maple-400" : "")">
+                            <Icon Name="section.Icon" Class="size-5 shrink-0 text-stone-500 dark:text-stone-400" />
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-[15px] md:text-sm">@section.Title</span>
+                                <span class="block text-xs text-stone-500 md:hidden dark:text-stone-400">@section.Summary</span>
+                            </span>
+                            <Icon Name="IconName.ChevronRight" Class="size-4 shrink-0 text-stone-400 md:hidden" />
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+        <VersionNote />
+    </div>
+
+    <div class="@Classes.Join("flex min-w-0 flex-col gap-4", Current is null ? "hidden md:flex" : "")">
+        <div>
+            <a href="/settings" class="-ml-2 mb-2 inline-flex h-9 items-center gap-1 rounded-full px-2 text-sm text-stone-600 hover:bg-stone-200 md:hidden dark:text-stone-300 dark:hover:bg-stone-800">
+                <Icon Name="IconName.ChevronLeft" Class="size-4" /> Settings
+            </a>
+            @if (Current is not null)
+            {
+                <h1 class="text-xl font-semibold">@Shown.Title</h1>
+            }
+            else
+            {
+                <h2 class="text-xl font-semibold">@Shown.Title</h2>
+            }
+            <p class="mt-1 text-sm text-stone-600 dark:text-stone-300">@Shown.Summary</p>
+        </div>
+        <div class="flex flex-col gap-4">
+            @switch (Shown.Id)
+            {
+                case "appearance":
+                    <AppearanceSection />
+                    break;
+                case "menu":
+                    <MenuSection />
+                    break;
+                case "writing":
+                    <WritingSection />
+                    <EditingSection />
+                    break;
+                case "features":
+                    <FeaturesSection />
+                    break;
+                case "labels":
+                    <LabelSettings />
+                    break;
+                case "data":
+                    <BackupSection />
+                    <TrashSection />
+                    <DeleteContentSection />
+                    break;
+                case "security":
+                    <AppLockSection />
+                    <DataProtectionSection />
+                    break;
+                default:
+                    <ProfileSection />
+                    <StorageSection />
+                    <EraseSection />
+                    break;
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private sealed record SettingsSection(string Id, string Title, string Summary, IconName Icon);
+
+    private static readonly IReadOnlyList<SettingsSection> Sections =
+    [
+        new("account", "Profile", "Your name and how much you store.", IconName.CircleUserRound),
+        new("appearance", "Appearance", "Light or dark, the accent colour and the first day of the week.", IconName.Palette),
+        new("menu", "Side menu", "The order of the menu's items and their size.", IconName.PanelLeft),
+        new("writing", "Writing", "Titles, dates, tag suggestions and editing.", IconName.PenLine),
+        new("features", "Features", "The pages and tools you use.", IconName.ToggleRight),
+        new("labels", "Labels", "Coloured labels for your notes.", IconName.Tag),
+        new("data", "Backup & data", "Export, restore, the trash and starting over.", IconName.DatabaseBackup),
+        new("security", "Privacy & security", "App lock, and how your notes are protected.", IconName.ShieldCheck),
+    ];
+
+    /// <summary>The section named in the address, if any.</summary>
+    [Parameter] public string? SectionId { get; set; }
+
+    private SettingsSection? Current => Sections.FirstOrDefault(s => s.Id == SectionId);
+
+    private SettingsSection Shown => Current ?? Sections[0];
+}

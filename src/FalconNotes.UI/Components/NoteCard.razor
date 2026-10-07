@@ -1,0 +1,230 @@
+@* Port of components/NoteCard.tsx: one note in a list, rendered Markdown, attachments and labels, with an actions
+   menu (pin, edit, labels, move between Home and quick notes, archive, delete). Lists that mix kinds label todo
+   lists and quick notes. Ticking a checkbox shows at once and saves in the background (NoteEditor); with
+   Double-tap to edit on, double-tapping or double-clicking opens it for editing. Deleting moves it to the trash,
+   unless the trash is off (NoteRemoval). Link previews are gone (docs/07). *@
+@using System.Globalization
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject NoteService Notes
+@inject AppState State
+@inject Toasts Toasts
+@inject TimeProvider Time
+@inject IClipboard Clipboard
+
+@if (_editing)
+{
+    <Composer Note="@(Note with { Content = _editor.Value })" OnDone="() => SetEditing(false)" AllowTitle="AllowTitleWhenEditing" AutoFocus="true" />
+}
+else
+{
+    <article @ref="_article"
+             class="@Classes.Join("note-card rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900", TapToEdit ? "touch-manipulation" : null)">
+        <header class="-mt-1 mb-1 flex items-center gap-2 text-sm text-stone-500 dark:text-stone-400">
+            <time datetime="@Note.CreatedAtUtc.ToString("o")" title="@RelativeTime.Absolute(Note.CreatedAtUtc, Time.LocalTimeZone, Uses24Hour)">
+                @RelativeTime.Format(Note.CreatedAtUtc, Time.GetUtcNow(), Time.LocalTimeZone)
+            </time>
+            @if (Edited)
+            {
+                <span title="@($"Edited {RelativeTime.Absolute(Note.UpdatedAtUtc, Time.LocalTimeZone, Uses24Hour)}")">· edited</span>
+            }
+            @if (ShowKind && Note.Kind != NoteKind.Note)
+            {
+                <span class="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                    @(Note.Kind == NoteKind.Todo ? "Todo list" : "Quick note")
+                </span>
+            }
+            @if (Note.IsPinned && !Note.IsArchived)
+            {
+                <span class="inline-flex items-center gap-1 text-maple-600 dark:text-maple-400">
+                    <Icon Name="IconName.Pin" Class="size-3.5" /> Pinned
+                </span>
+            }
+            <div class="-mr-2 ml-auto">
+                <DropdownMenu Label="Note actions">
+                    <Trigger><Icon Name="IconName.MoreHorizontal" Class="size-5" /></Trigger>
+                    <ChildContent>
+                        @if (!Note.IsArchived)
+                        {
+                            <MenuItem IconName="@(Note.IsPinned ? IconName.PinOff : IconName.Pin)"
+                                      OnSelect="@(() => ChangeAsync(new NotePatch(IsPinned: !Note.IsPinned), Note.IsPinned ? "Unpinned." : "Pinned to the top."))">
+                                @(Note.IsPinned ? "Unpin" : "Pin to top")
+                            </MenuItem>
+                            <MenuItem IconName="IconName.Pencil" OnSelect="() => SetEditing(true)">Edit</MenuItem>
+                            @if (State.Preferences.Labels)
+                            {
+                                <MenuItem IconName="IconName.Tag" OnSelect="() => _choosingLabels = true">Labels…</MenuItem>
+                            }
+                            @if (Note.Kind == NoteKind.Quick)
+                            {
+                                <MenuItem IconName="IconName.Home" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Note), "Moved to Home."))">Move to Home</MenuItem>
+                            }
+                            @if (Note.Kind == NoteKind.Note && State.Preferences.QuickNotes)
+                            {
+                                <MenuItem IconName="IconName.Zap" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Quick), "Moved to quick notes."))">Move to quick notes</MenuItem>
+                            }
+                        }
+                        <MenuItem IconName="IconName.Copy" OnSelect="CopyTextAsync">Copy text</MenuItem>
+                        @if (State.Preferences.Archive || Note.IsArchived)
+                        {
+                            <MenuItem IconName="@(Note.IsArchived ? IconName.ArchiveRestore : IconName.Archive)"
+                                      OnSelect="@(() => ChangeAsync(new NotePatch(IsArchived: !Note.IsArchived), Note.IsArchived ? "Restored to your feed." : "Archived."))">
+                                @(Note.IsArchived ? "Restore" : "Archive")
+                            </MenuItem>
+                        }
+                        <MenuSeparator />
+                        <MenuItem IconName="IconName.Trash2" Danger="true" OnSelect="_removal.StartAsync">@_removal.MenuLabel</MenuItem>
+                    </ChildContent>
+                </DropdownMenu>
+            </div>
+        </header>
+
+        @if (Title.Length > 0)
+        {
+            <h3 class="mb-1 break-words text-lg font-semibold leading-snug">@Title</h3>
+        }
+        @if (Body.Trim().Length > 0)
+        {
+            <Markdown Note="Note" Content="@Body" OnToggleTask="@(Note.IsArchived ? default : EventCallback.Factory.Create<int>(this, ToggleItem))" />
+        }
+        <AttachmentGallery Attachments="Note.Attachments" />
+        <LabelChips Ids="Note.LabelIds" />
+
+        <ConfirmDialog Open="_removal.Confirming" OpenChanged="@(open => { if (!open) { _removal.CancelConfirm(); } })"
+                        Title="@_removal.ConfirmTitle" ConfirmLabel="Delete" Busy="_removal.Removing" OnConfirm="_removal.ConfirmAsync">
+            <Description>@_removal.ConfirmDescription</Description>
+        </ConfirmDialog>
+        @if (State.Preferences.Labels)
+        {
+            <LabelPicker Note="Note" Open="_choosingLabels" OpenChanged="open => _choosingLabels = open" />
+        }
+    </article>
+}
+
+@code {
+    private ElementReference _article;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<NoteCard>? _self;
+    private bool _bound;
+    private bool _editing;
+    private bool _choosingLabels;
+    private NoteEditor<string> _editor = null!;
+    private NoteRemoval _removal = null!;
+
+    /// <summary>The note.</summary>
+    [Parameter, EditorRequired] public Note Note { get; set; } = null!;
+
+    /// <summary>Whether a mixed list should label todo lists and quick notes.</summary>
+    [Parameter] public bool ShowKind { get; set; } = true;
+
+    private bool TapToEdit => State.Preferences.DoubleTapToEdit && !Note.IsArchived;
+
+    private bool Edited => (Note.UpdatedAtUtc - Note.CreatedAtUtc) > TimeSpan.FromMinutes(1);
+
+    private bool AllowTitleWhenEditing => Note.Kind == NoteKind.Note || (Note.Kind == NoteKind.Quick && State.Preferences.QuickNoteTitles);
+
+    private static bool Uses24Hour => !CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.Contains("tt", StringComparison.Ordinal);
+
+    private (string Title, string Body) Split => State.Preferences.NoteTitles ? Titles.Split(_editor.Value) : ("", _editor.Value);
+
+    private string Title => Split.Title;
+
+    private string Body => Split.Body;
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        _editor = new NoteEditor<string>(Notes, Note, c => c, c => c,
+            _ => Toasts.Error("A change to this note could not be saved. Please try again."));
+        _removal = new NoteRemoval(
+            Note, "note", "Delete this note?",
+            Note.Attachments.Count > 0
+                ? $"The note and its {Note.Attachments.Count} attached file(s) will be deleted permanently. To keep it out of sight instead, archive it."
+                : "The note will be deleted permanently. To keep it out of sight instead, archive it.",
+            Notes, State, Toasts, StateHasChanged);
+    }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet() => _editor.Reload(Note);
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_editing || TapToEdit == _bound)
+        {
+            return;
+        }
+
+        _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/gestures.js");
+        _self ??= DotNetObjectReference.Create(this);
+        await _module.InvokeVoidAsync(TapToEdit ? "bindDoubleTap" : "unbindDoubleTap", _article, _self);
+        _bound = TapToEdit;
+    }
+
+    /// <summary>Called from gestures.js on a double-tap or double-click.</summary>
+    [JSInvokable]
+    public void OnDoubleTap() => SetEditing(true);
+
+    private void SetEditing(bool value)
+    {
+        _editing = value;
+        _bound = false; // the article is gone while editing; re-bind if it comes back
+        StateHasChanged();
+    }
+
+    private async Task ChangeAsync(NotePatch patch, string message)
+    {
+        try
+        {
+            await Notes.PatchAsync(Note.Id, patch);
+            Toasts.Info(message);
+        }
+        catch (Exception)
+        {
+            Toasts.Error("That didn't work. Please try again.");
+        }
+    }
+
+    private void ToggleItem(int offset)
+    {
+        var content = _editor.Value;
+        var next = MarkdownEdit.ToggleTask(content, content.Length - Body.Length + offset);
+        if (next is not null)
+        {
+            _editor.Commit(next);
+        }
+    }
+
+    private async Task CopyTextAsync()
+    {
+        if (await Clipboard.SetTextAsync(_editor.Value))
+        {
+            Toasts.Info("Copied to the clipboard.");
+        }
+        else
+        {
+            Toasts.Error("Copying is not allowed here.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        _self?.Dispose();
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

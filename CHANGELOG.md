@@ -41,3 +41,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Welcome (start writing, or restore from a backup) and Key lost (move the unreadable data aside and start again,
   with or without a restore), wired into start-up: no profile yet always opens Welcome, with the app shell held back
   from both screens.
+- Notes: Home (today's note, pinned notes and the feed), the composer (titles with today's date suggestion, the
+  format toolbar and its shortcuts, tag suggestions, attaching files through the native picker with progress),
+  note cards (the actions menu, double-tap to edit, checkbox ticks saved in the background, labels), the attachment
+  gallery and image viewer (Open and Save a copy), and the `?tag`, `?q`, `?day` and `?label` filters, Archive, Quick
+  notes and Trash. "Shrink photos" and paste/drag-and-drop for attachments are not yet wired up (the native file
+  picker covers every platform meanwhile); Share on Android is left for the platform pass.
+- The clipboard, for a note's "Copy text".
+- The Todo tab: a form to start a new list, `TodoCard` (tick, add, edit and remove items; edit them all at once as
+  Markdown; rename, label, pin, archive or delete the list) and `ItemsEditor`, ported with the web app's markup,
+  shortcuts and tests.
+- The Habits tab: a form to start a new habit, `HabitRow` (tick a day, rename, archive or delete), `ArchivedHabitRow`,
+  `HabitChart` (the share of days done per week or month, with streaks for one habit) and `HabitCalendar` (a month at
+  a glance), with the week header and the collapsed Archived habits section, ported with the web app's markup and
+  tests.
+- The Tags page: every tag with how many notes use it, nested under their parents, a filter and the A–Z/Most used
+  orders (`TagBranch`, `Core/Text/TagTree.cs`). Settings → Labels (`LabelSettings`, `LabelRow`, `LabelColorPicker`):
+  turning labels on or off, and creating, renaming, recolouring and deleting the account's labels. The side-menu
+  calendar and labels list, and the `?label=` filter on Home, were already wired in from earlier phases.
+- The Settings page shell (`Settings.razor`), with every section: Profile (display name, storage use, Erase all
+  data), Appearance, Side menu (order by arrows, text size — pointer drag is left for a later pass), Writing and
+  Editing, Features (without Link previews; "Shrink photos before adding"), Labels, Backup & data (`ExportService`
+  and `RestoreReader`/`RestoreRunner` are now wired into the app, which Welcome's restore flow already depended on
+  but had never been registered), and Privacy & security.
+- The app lock (docs/03): a PIN (PBKDF2-HMAC-SHA256, 210,000 iterations, a growing lockout after five wrong tries),
+  the Lock screen (shown before the router itself mounts, so nothing can navigate around it), the sidebar's Lock
+  button, the background timer (Android `Window.Stopped`/`Resumed`), and `FLAG_SECURE` while the lock is on, which
+  also blanks the app from the recent-apps thumbnail. Biometric unlock is stubbed off for now: AndroidX
+  `BiometricPrompt` is not yet an approved dependency (docs/02), the same open question as `SkiaSharp` for photo
+  shrinking.
+- Erase all data (Settings → Profile): deletes the database, attachments, database copies and cache, and forgets the
+  device key, then returns to Welcome.
+- Help: the adapted user guide (`UI/Help/Guide.cs`, docs/08), with a contents list and every section.
+- Share on Android: the image viewer's Share button hands a decrypted copy of the image to the system share sheet
+  (`IShare`, `AndroidShare`), the same `cache/open/` mechanism Open already uses.
+- `scripts/check-licenses.py`, ported from the Maple Notes server, checks every NuGet package the app ships or
+  builds with against the licence policy and regenerates `THIRD-PARTY-NOTICES.md` from the exact dependency
+  versions; it also added the Lucide icon licence that file had been missing. `WindowSoftInputMode = AdjustResize`
+  on `MainActivity`, so the composer and dialogs stay above the keyboard.
+
+### Changed
+
+- The falcon mark (`fixtures/falcon-mark.png`, docs/06) replaced with a new feather design, as a transparent PNG
+  rather than a hand-drawn SVG: the Android adaptive icon, splash screen and in-app `Logo` (now an `<img>`, not
+  inline paths) are all generated from it.
+
+### Fixed
+
+- `Placeholders.razor` kept `@page` routes for Todo, Habits and Tags after Phase 5 ported real pages for them, which
+  made Blazor's router throw "ambiguous routes" on start-up and left the WebView blank.

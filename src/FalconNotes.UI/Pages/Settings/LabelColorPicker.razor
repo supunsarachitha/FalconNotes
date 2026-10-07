@@ -1,0 +1,51 @@
+@* Port of ColorPicker in components/LabelSettings.tsx: a swatch button that opens the label colours to choose from.
+   Built on DropdownMenu rather than a hand-rolled menu, with its own grid layout (MenuClass) in place of a column
+   of items; its arrow-key cycling expects role="menuitem", so the swatches (role="menuitemradio", for their
+   checked state) are reachable by Tab and click but not by arrow key — a small, acceptable gap next to duplicating
+   dialogs.js's interop. *@
+@using FalconNotes.Core.Domain
+
+<DropdownMenu @ref="_menu" Label="@AriaLabel" TriggerClass="flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-maple-500 dark:hover:bg-stone-800"
+              MenuClass="z-50 grid grid-cols-5 gap-1 rounded-xl border border-stone-200 bg-white p-2 shadow-lg dark:border-stone-700 dark:bg-stone-900">
+    <Trigger><LabelDot Color="Color" Class="size-4" /></Trigger>
+    <ChildContent>
+        @foreach (var option in Colors)
+        {
+            <button type="button" role="menuitemradio" tabindex="-1" aria-checked="@(option == Color ? "true" : "false")" aria-label="@option" title="@option"
+                    @onclick="() => ChooseAsync(option)"
+                    class="flex size-9 cursor-pointer items-center justify-center rounded-lg outline-none hover:bg-stone-100 dark:hover:bg-stone-800">
+                <span class="@Classes.Join("flex size-6 items-center justify-center rounded-full text-white", LabelStyles.Dot(option))">
+                    @if (option == Color)
+                    {
+                        <Icon Name="IconName.Check" Class="size-3.5" StrokeWidth="3" />
+                    }
+                </span>
+            </button>
+        }
+    </ChildContent>
+</DropdownMenu>
+
+@code {
+    private static readonly LabelColor[] Colors = Enum.GetValues<LabelColor>();
+    private DropdownMenu _menu = null!;
+
+    /// <summary>The swatch's current colour.</summary>
+    [Parameter, EditorRequired] public LabelColor Color { get; set; }
+
+    /// <summary>What this swatch is for, e.g. "Colour of Work" or "Colour of the new label".</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>Called with the chosen colour.</summary>
+    [Parameter] public EventCallback<LabelColor> ColorChanged { get; set; }
+
+    private string AriaLabel => $"{Label}: {Color}";
+
+    private async Task ChooseAsync(LabelColor color)
+    {
+        await _menu.Close();
+        if (color != Color)
+        {
+            await ColorChanged.InvokeAsync(color);
+        }
+    }
+}

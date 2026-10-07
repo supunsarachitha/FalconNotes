@@ -1,0 +1,66 @@
+@* New (docs/07, Settings → Privacy & security → Set a PIN): used both to turn the app lock on and to change the PIN. *@
+@using FalconNotes.Core.Settings
+
+<ConfirmDialog Open="Open" OpenChanged="OnDialogOpenChanged" Title="Set a PIN" ConfirmLabel="Set PIN" ConfirmEnabled="@(_pin.Length > 0 && _repeat.Length > 0)"
+               Busy="Busy" OnConfirm="SubmitAsync">
+    <Description>
+        <p>Choose a PIN of 4 to 8 digits. If you forget it, the only way back in is to erase the app's data and restore a backup.</p>
+    </Description>
+    <ChildContent>
+        <div class="mt-4 flex flex-col gap-3">
+            <TextField Label="PIN" Type="password" inputmode="numeric" autocomplete="off" Value="@_pin" ValueChanged="@(v => { _pin = v; _error = null; })" />
+            <TextField Label="Repeat PIN" Type="password" inputmode="numeric" autocomplete="off" Value="@_repeat" ValueChanged="@(v => { _repeat = v; _error = null; })" Error="@_error" />
+        </div>
+    </ChildContent>
+</ConfirmDialog>
+
+@code {
+    private string _pin = "";
+    private string _repeat = "";
+    private string? _error;
+
+    /// <summary>Whether the dialog is open.</summary>
+    [Parameter] public bool Open { get; set; }
+
+    /// <summary>Called when the dialog closes, cancelled or not.</summary>
+    [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    /// <summary>Shows a spinner while the PIN is being saved.</summary>
+    [Parameter] public bool Busy { get; set; }
+
+    /// <summary>Called with the chosen PIN once it passes validation; the dialog does not close itself.</summary>
+    [Parameter] public EventCallback<string> OnSet { get; set; }
+
+    private async Task OnDialogOpenChanged(bool open)
+    {
+        if (!open)
+        {
+            _pin = "";
+            _repeat = "";
+            _error = null;
+        }
+
+        await OpenChanged.InvokeAsync(open);
+    }
+
+    private async Task SubmitAsync()
+    {
+        try
+        {
+            AppLockService.ValidatePin(_pin);
+        }
+        catch (FalconNotes.Core.Domain.UserFacingException e)
+        {
+            _error = e.Message;
+            return;
+        }
+
+        if (_pin != _repeat)
+        {
+            _error = "The PINs do not match.";
+            return;
+        }
+
+        await OnSet.InvokeAsync(_pin);
+    }
+}

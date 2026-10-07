@@ -1,0 +1,40 @@
+@* Port of MenuSection in components/PreferenceSections.tsx (docs/07, Settings: unchanged). *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.UI.State
+@inject AppState State
+
+<Section Title="Menu order">
+    <Description>Arrange the side menu's items the way you use them. The order follows you to every device.</Description>
+    <ChildContent>
+        <MenuOrderEditor />
+    </ChildContent>
+</Section>
+<Section Title="Menu text size">
+    <fieldset>
+        <legend class="sr-only">Menu text size</legend>
+        <div class="grid grid-cols-3 gap-2">
+            @foreach (var size in Sizes)
+            {
+                var active = State.Preferences.MenuTextSize == size;
+                <label class="@Classes.Join("flex cursor-pointer items-center justify-center rounded-xl border px-3 py-2.5 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-maple-500",
+                                             SizeText[size],
+                                             active ? "border-maple-600 bg-maple-50 font-medium text-maple-700 dark:border-maple-500 dark:bg-maple-600/15 dark:text-maple-400" : "border-stone-200 hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800")">
+                    <input type="radio" name="menuTextSize" checked="@active" @onchange="() => State.UpdatePreferencesAsync(p => p with { MenuTextSize = size })" class="sr-only" />
+                    @size
+                </label>
+            }
+        </div>
+        <p class="mt-1.5 text-sm text-stone-600 dark:text-stone-300">The size of the items in the side menu.</p>
+    </fieldset>
+</Section>
+
+@code {
+    private static readonly IReadOnlyList<MenuTextSize> Sizes = Enum.GetValues<MenuTextSize>();
+
+    private static readonly IReadOnlyDictionary<MenuTextSize, string> SizeText = new Dictionary<MenuTextSize, string>
+    {
+        [MenuTextSize.Small] = "text-[13px]",
+        [MenuTextSize.Medium] = "text-[15px]",
+        [MenuTextSize.Large] = "text-[17px]",
+    };
+}

@@ -1,0 +1,27 @@
+@* Port of FilterHeader in pages/HomePage.tsx: the heading for a filtered view (?tag, ?q, ?day, ?label), with Clear
+   back to Home. *@
+<div class="mb-4 flex items-center gap-3">
+    @if (Marker is not null)
+    {
+        @Marker
+    }
+    else
+    {
+        <Icon Name="IconName" Class="size-5 text-maple-600 dark:text-maple-400" />
+    }
+    <h1 class="min-w-0 flex-1 truncate text-xl font-semibold">@Label</h1>
+    <a href="/" class="inline-flex h-9 items-center gap-1 rounded-full px-3 text-sm text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-800">
+        <Icon Name="IconName.X" Class="size-4" /> Clear
+    </a>
+</div>
+
+@code {
+    /// <summary>The icon shown before the label, unless <see cref="Marker"/> is given.</summary>
+    [Parameter, EditorRequired] public IconName IconName { get; set; }
+
+    /// <summary>Replaces the icon, e.g. a label's own colour dot.</summary>
+    [Parameter] public RenderFragment? Marker { get; set; }
+
+    /// <summary>The filter's value: a tag, a search term, a day or a label's name.</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+}
