@@ -41,6 +41,11 @@ export function positionPopup(textarea, popup, offset, width) {
   popup.style.visibility = "visible";
 }
 
+/** Plain focus, caret where the browser puts it (the start, for a field with text): moving on from the title. */
+export function focus(element) {
+  element?.focus();
+}
+
 /** Focuses a field with the caret after its last character (browsers put it at the start otherwise). */
 export function focusAtEnd(element) {
   if (!element) return;

@@ -73,6 +73,7 @@ public sealed class UiTestApp : IDisposable
         var saver = new FakeFileSaver();
 
         services.AddSingleton(core.Notes);
+        services.AddSingleton(new DailyNotes(core.Notes));
         services.AddSingleton(core.Labels);
         services.AddSingleton(core.Attachments);
         services.AddSingleton<MarkdownRenderer>();
