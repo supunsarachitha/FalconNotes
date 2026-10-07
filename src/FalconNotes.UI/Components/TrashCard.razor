@@ -3,6 +3,7 @@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
 @using FalconNotes.Core.Text
+@using HabitsText = FalconNotes.Core.Text.Habits
 @using FalconNotes.UI.State
 @inject NoteService Notes
 @inject Toasts Toasts
@@ -78,7 +79,7 @@
         _ => "Note",
     };
 
-    private Habit? Habit => Note.Kind == NoteKind.Habit ? Habits.Parse(Note.Content) : null;
+    private Habit? Habit => Note.Kind == NoteKind.Habit ? HabitsText.Parse(Note.Content) : null;
 
     private async Task RestoreAsync()
     {

@@ -1,0 +1,147 @@
+@namespace FalconNotes.UI.Components
+@* Port of components/HabitChart.tsx: the share of days done per week (last 12) or month (last 12), for all habits or
+   one, with streaks for one habit. A habit counts from its start (Core/Text/Habits.cs, Start), and no day after
+   today counts. The bars are plain elements so labels stay readable at any width; screen readers get the table. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Text
+@using HabitsText = FalconNotes.Core.Text.Habits
+@inject TimeProvider Time
+
+<section aria-labelledby="@_headingId" class="mt-6 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+    <div class="flex flex-wrap items-center gap-2">
+        <h2 id="@_headingId" class="mr-auto text-base font-semibold">Progress</h2>
+        <select aria-label="Habits in the chart" value="@(Single?.Id.ToString() ?? "all")" @onchange="@(e => _selected = e.Value?.ToString() ?? "all")"
+                class="h-9 max-w-48 min-w-0 rounded-full border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950">
+            <option value="all">All habits</option>
+            @foreach (var habit in _habits)
+            {
+                <option value="@habit.Id">@habit.Name</option>
+            }
+        </select>
+        <div role="group" aria-label="Period" class="flex rounded-full border border-stone-300 p-0.5 dark:border-stone-700">
+            <button type="button" aria-pressed="@(_range == ChartRange.Weeks ? "true" : "false")" @onclick="() => _range = ChartRange.Weeks"
+                    class="@RangeButtonClass(ChartRange.Weeks)">Weeks</button>
+            <button type="button" aria-pressed="@(_range == ChartRange.Months ? "true" : "false")" @onclick="() => _range = ChartRange.Months"
+                    class="@RangeButtonClass(ChartRange.Months)">Months</button>
+        </div>
+    </div>
+
+    <p class="mt-3 text-sm text-stone-600 dark:text-stone-400">This @Unit: <strong class="text-stone-900 dark:text-stone-100">@Percent(HabitsText.Share(Scores.TakeLast(1)))</strong> · Last 12 @(Unit)s: <strong class="text-stone-900 dark:text-stone-100">@Percent(HabitsText.Share(Scores))</strong></p>
+    @if (Single is not null)
+    {
+        var stats = HabitsText.Streaks(Single.Days, Today);
+        <p class="mt-1 text-sm text-stone-600 dark:text-stone-400">Current streak: <strong class="text-stone-900 dark:text-stone-100">@HabitLayout.DayCount(stats.Current)</strong> · Best: <strong class="text-stone-900 dark:text-stone-100">@HabitLayout.DayCount(stats.Best)</strong> · Done: <strong class="text-stone-900 dark:text-stone-100">@HabitLayout.DayCount(stats.Total)</strong></p>
+    }
+
+    <div aria-hidden="true" class="mt-5">
+        <div class="flex">
+            <div class="relative h-36 w-10 shrink-0 text-[11px] tabular-nums text-stone-400 dark:text-stone-500">
+                @foreach (var (mark, i) in new[] { ("100%", 0), ("50%", 1), ("0%", 2) })
+                {
+                    <span class="absolute right-2 -translate-y-1/2" style="top: @(i * 50)%">@mark</span>
+                }
+            </div>
+            <div class="relative h-36 flex-1 border-b border-stone-300 dark:border-stone-600">
+                <div class="absolute inset-x-0 top-0 border-t border-dashed border-stone-200 dark:border-stone-700"></div>
+                <div class="absolute inset-x-0 top-1/2 border-t border-dashed border-stone-200 dark:border-stone-700"></div>
+                <div class="absolute inset-0 flex items-end gap-1 px-1 sm:gap-2">
+                    @for (var i = 0; i < Scores.Count; i++)
+                    {
+                        var score = Scores[i];
+                        var rate = Rate(score);
+                        var current = i == Scores.Count - 1;
+                        <div class="flex h-full min-w-0 flex-1 items-end justify-center">
+                            @if (rate is not null)
+                            {
+                                <div data-bar title="@($"{BarLabel(score)}: {Percent(rate)} ({score.Done} of {HabitLayout.DayCount(score.Possible)})")"
+                                     style="@(rate == 0 ? null : $"height: {rate * 100}%")"
+                                     class="@(Classes.Join("w-full max-w-9 rounded-t", rate == 0 ? "h-0.5 bg-stone-300 dark:bg-stone-600" : current ? "bg-maple-600 dark:bg-maple-400" : "bg-maple-400 dark:bg-maple-700"))"></div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="ml-10 mt-1 flex gap-1 px-1 sm:gap-2">
+            @for (var i = 0; i < Scores.Count; i++)
+            {
+                var hideOnPhone = _range == ChartRange.Weeks && (Scores.Count - 1 - i) % 2 == 1;
+                <span class="@(Classes.Join("flex min-w-0 flex-1 justify-center text-[11px] text-stone-500 dark:text-stone-400", hideOnPhone ? "invisible sm:visible" : null))">
+                    <span class="whitespace-nowrap">@BarLabel(Scores[i])</span>
+                </span>
+            }
+        </div>
+    </div>
+
+    <table class="sr-only">
+        <caption>Share of days done per @Unit, @(Single is not null ? Single.Name : "all habits")</caption>
+        <thead>
+            <tr><th scope="col">@(_range == ChartRange.Weeks ? "Week" : "Month")</th><th scope="col">Share</th><th scope="col">Days done</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var score in Scores)
+            {
+                <tr><th scope="row">@RowLabel(score)</th><td>@Percent(Rate(score))</td><td>@(score.Possible > 0 ? $"{score.Done} of {HabitLayout.DayCount(score.Possible)}" : "No habits yet")</td></tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+@code {
+    private readonly string _headingId = $"habit-chart-{Guid.NewGuid():N}";
+    private ChartRange _range = ChartRange.Weeks;
+    private string _selected = "all";
+    private IReadOnlyList<HabitSummary> _habits = [];
+
+    private sealed record HabitSummary(Guid Id, string Name, string Start, IReadOnlyList<string> Days);
+
+    /// <summary>The active habits' notes.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<Note> Notes { get; set; } = [];
+
+    /// <summary>Today's day key (<c>yyyy-MM-dd</c>).</summary>
+    [Parameter, EditorRequired] public string Today { get; set; } = "";
+
+    /// <summary>The week's first day.</summary>
+    [Parameter] public DayOfWeek WeekStart { get; set; } = DayOfWeek.Sunday;
+
+    /// <inheritdoc />
+    protected override void OnParametersSet() =>
+        _habits = Notes.Select(note =>
+        {
+            var habit = HabitsText.Parse(note.Content);
+            return new HabitSummary(note.Id, HabitLayout.Name(habit), HabitsText.Start(habit, note.CreatedAtUtc, Time.LocalTimeZone), habit.Days);
+        }).ToList();
+
+    // One archived or deleted meanwhile: falls back to all habits, as the reference does.
+    private HabitSummary? Single => _habits.FirstOrDefault(h => h.Id.ToString() == _selected);
+
+    private string Unit => _range == ChartRange.Weeks ? "week" : "month";
+
+    private IReadOnlyList<PeriodScore> Scores
+    {
+        get
+        {
+            var tracked = (Single is { } single ? [single] : _habits)
+                .Select(h => new TrackedHabit(h.Start, h.Days)).ToList();
+            return HabitsText.RecentPeriods(_range, Today, WeekStart).Select(period => HabitsText.ScorePeriod(tracked, period, Today)).ToList();
+        }
+    }
+
+    private static double? Rate(PeriodScore score) => score.Possible > 0 ? (double)score.Done / score.Possible : null;
+
+    private static string Percent(double? value) => value is null ? "—" : $"{Math.Round(value.Value * 100, MidpointRounding.AwayFromZero)}%";
+
+    private string BarLabel(PeriodScore score) =>
+        DateFormats.Format(DateFormats.ParseKey(score.Start)!.Value, _range == ChartRange.Weeks ? "MMM d" : "MMM");
+
+    private string RowLabel(PeriodScore score) =>
+        _range == ChartRange.Weeks
+            ? $"Week of {DateFormats.Format(DateFormats.ParseKey(score.Start)!.Value, "MMM d")}"
+            : DateFormats.Format(DateFormats.ParseKey(score.Start)!.Value, "MMMM yyyy");
+
+    private string RangeButtonClass(ChartRange value) => Classes.Join(
+        "h-8 rounded-full px-3 text-sm transition-colors", Classes.FocusRing,
+        _range == value
+            ? "bg-maple-600 font-medium text-white"
+            : "text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800");
+}

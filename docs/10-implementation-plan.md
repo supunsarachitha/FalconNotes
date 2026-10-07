@@ -158,7 +158,7 @@ already finished.
 ## Phase 5: todo, habits, tags, calendar, labels
 
 - [x] Todo page and `TodoCard` (with Edit as Markdown).
-- [ ] Habits page, `HabitRow`, `HabitChart`, `HabitCalendar`, archived habits.
+- [x] Habits page, `HabitRow`, `HabitChart`, `HabitCalendar`, archived habits.
 - [ ] Tags page; side-menu calendar; labels (picker, chips, side menu, filter, Settings → Labels).
 
 **Acceptance**: the ported tests pass, and the manual checklist for these screens passes on all three platforms.

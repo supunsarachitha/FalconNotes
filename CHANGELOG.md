@@ -51,3 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Todo tab: a form to start a new list, `TodoCard` (tick, add, edit and remove items; edit them all at once as
   Markdown; rename, label, pin, archive or delete the list) and `ItemsEditor`, ported with the web app's markup,
   shortcuts and tests.
+- The Habits tab: a form to start a new habit, `HabitRow` (tick a day, rename, archive or delete), `ArchivedHabitRow`,
+  `HabitChart` (the share of days done per week or month, with streaks for one habit) and `HabitCalendar` (a month at
+  a glance), with the week header and the collapsed Archived habits section, ported with the web app's markup and
+  tests.
