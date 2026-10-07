@@ -1,6 +1,7 @@
 using FalconNotes.Core.Backup.Restore;
 using FalconNotes.Core.Crypto;
 using FalconNotes.Core.Domain;
+using FalconNotes.Core.Markdown;
 using FalconNotes.Core.Notes;
 using FalconNotes.Core.Startup;
 using FalconNotes.Core.Tests;
@@ -63,6 +64,7 @@ public sealed class UiTestApp : IDisposable
 
         services.AddSingleton(core.Notes);
         services.AddSingleton(core.Labels);
+        services.AddSingleton<MarkdownRenderer>();
         services.AddSingleton(core.Preferences);
         services.AddSingleton(core.Profile);
         services.AddSingleton(core.Feed);
