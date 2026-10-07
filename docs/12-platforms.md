@@ -18,6 +18,7 @@ Phase 0 spikes here.
 | Keyboard | `WindowSoftInputMode = AdjustResize`, so the composer and dialogs stay above the keyboard. Check the drawer and dialogs with the keyboard open. |
 | Back | Goes back in the app's history. On Home (or Welcome, Lock, Key lost) it leaves the app. Closes an open dialog, menu or the image viewer first. The `BlazorWebView` default already goes back through the WebView's history and leaves from the first page (spike S5). |
 | Files | `FilePicker.PickMultipleAsync` (Storage Access Framework); saving uses our `AndroidFileSaver` (`ACTION_CREATE_DOCUMENT`, then a .NET `FileStream` on the descriptor; spike S4); Open uses MAUI's `FileProvider` URI for the cached copy, with read permission granted |
+| Single instance | `LaunchMode.SingleTop` on the only activity: a second launch returns to the open window. A second activity would share the first one's services and its page would not respond (found in the 1.0.0 QA pass). |
 | Share (viewer) | `Share.RequestAsync(new ShareFileRequest)` with the cached decrypted copy |
 | Media | Attachments are served through `WebResourceRequested` with a hand-built `WebResourceResponse` ([02](02-architecture.md#serving-attachments-to-the-webview)); no `INTERNET` permission is needed. |
 | Release | Signed AAB for the Play Store, signed APK for direct installs. R8/trimming: `TrimMode=partial` (raw ADO.NET is trim-friendly; no EF Core). Test the release build, not just debug. |

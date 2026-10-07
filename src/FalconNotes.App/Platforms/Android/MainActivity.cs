@@ -8,8 +8,13 @@ using FalconNotes.UI.State;
 
 namespace FalconNotes.App;
 
-/// <summary>The app's only activity.</summary>
-[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, WindowSoftInputMode = SoftInput.AdjustResize,
+/// <summary>
+/// The app's only activity. It is single-top so that a second launch (another launcher, an installer's Open button,
+/// <c>am start</c>) returns to this window instead of stacking a second one, whose page would share this one's
+/// services and not respond (docs/12, Android: Single instance).
+/// </summary>
+[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop,
+    WindowSoftInputMode = SoftInput.AdjustResize,
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode |
                            ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 public class MainActivity : MauiAppCompatActivity

@@ -88,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Forgot your PIN → Erase and start over now goes to Welcome. Before, the Lock screen stayed until the app was
+  restarted. Erase all data in Settings also turns the app lock's screenshot blocking off at once.
+- Android: starting the app a second time returns to the open window. Before, it could stack a second window that
+  did not respond, which with the app lock on left a Lock screen that took no PIN.
 - Turning note titles on or off now updates the notes already on screen. Before, a note could show its title twice,
   or lose it, until the app was restarted.
 - Settings → Appearance: choosing a theme or an accent colour, and the device switching between light and dark,

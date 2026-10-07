@@ -45,7 +45,10 @@ public class QuickTests : BunitContext
         cut.Find("#composer").Input("jot this down");
         cut.FindAll("button").First(b => b.TextContent.Trim() == "Post").Click();
 
-        cut.WaitForAssertion(() => Assert.Contains("jot this down", cut.Markup, StringComparison.Ordinal), TimeSpan.FromSeconds(5));
+        // The card, not the page's markup: the composer holds the same text until the note is saved.
+        cut.WaitForAssertion(
+            () => Assert.Contains(cut.FindAll("article"), a => a.TextContent.Contains("jot this down", StringComparison.Ordinal)),
+            TimeSpan.FromSeconds(5));
         // Not just "Quick note" as a substring: the page's own <h1> is "Quick notes". The kind badge, when shown
         // elsewhere (ShowKind=true), is this exact chip text inside the note's header.
         Assert.DoesNotContain(cut.FindAll("article span"), s => s.TextContent.Trim() == "Quick note");

@@ -40,7 +40,8 @@ public class TodoPageTests : BunitContext
         cut.Find("input[aria-label='New list name']").Input("Packing");
         cut.Find("form").Submit();
 
-        cut.WaitForAssertion(() => Assert.Contains("Packing", cut.Markup, StringComparison.Ordinal), TimeSpan.FromSeconds(5));
+        // The list's card, not the page's markup: the name field holds the same text until the list is saved.
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("article[aria-label='Packing']")), TimeSpan.FromSeconds(5));
         var created = (await app.Core.Notes.ListAsync(new NoteQuery(NoteState.Feed, [NoteKind.Todo]),
             cancellationToken: Xunit.TestContext.Current.CancellationToken)).Items.Single();
         Assert.Equal("# Packing", created.Content);
