@@ -17,7 +17,8 @@ namespace FalconNotes.UI.Tests;
 /// </summary>
 public sealed class UiTestApp : IDisposable
 {
-    private UiTestApp(TestApp core, AppState state, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener, FakeFileSaver saver)
+    private UiTestApp(
+        TestApp core, AppState state, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener, FakeFileSaver saver, FakeClipboard clipboard)
     {
         Core = core;
         State = state;
@@ -25,6 +26,7 @@ public sealed class UiTestApp : IDisposable
         Picker = picker;
         Opener = opener;
         Saver = saver;
+        Clipboard = clipboard;
     }
 
     /// <summary>The underlying Core services and database.</summary>
@@ -44,6 +46,9 @@ public sealed class UiTestApp : IDisposable
 
     /// <summary>Records calls to Save a copy of a stored file.</summary>
     public FakeFileSaver Saver { get; }
+
+    /// <summary>Records text copied to the clipboard.</summary>
+    public FakeClipboard Clipboard { get; }
 
     /// <summary>
     /// Starts a database, registers it and the UI state into <paramref name="services"/>, and loads <see cref="AppState"/>.
@@ -71,6 +76,7 @@ public sealed class UiTestApp : IDisposable
         var picker = new FakeFilePicker();
         var opener = new FakeFileOpener();
         var saver = new FakeFileSaver();
+        var clipboard = new FakeClipboard();
 
         services.AddSingleton(core.Notes);
         services.AddSingleton(new DailyNotes(core.Notes));
@@ -88,11 +94,12 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton<Core.Platform.IAppDirectories>(core.Directories);
         services.AddSingleton<Core.Platform.IFileOpener>(opener);
         services.AddSingleton<Core.Platform.IFileSaver>(saver);
+        services.AddSingleton<Core.Platform.IClipboard>(clipboard);
         services.AddSingleton(new RestoreReader(core.Directories, core.Clock));
         services.AddSingleton(new RestoreRunner(core.Storage, core.Attachments, core.Feed, core.Clock));
         services.AddSingleton(new KeyLostRecovery(new DeviceKeyStore(core.Secrets), core.Directories, core.Clock));
 
-        return new UiTestApp(core, state, toasts, picker, opener, saver);
+        return new UiTestApp(core, state, toasts, picker, opener, saver, clipboard);
     }
 
     /// <summary>Posts a note (docs/04): used to give the calendar, tag counts and lists something to show.</summary>

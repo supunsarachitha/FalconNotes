@@ -40,6 +40,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<Core.Platform.IFileSaver, Services.FileSaver>();
 #endif
         builder.Services.AddSingleton<IFileOpener, FileOpener>();
+        builder.Services.AddSingleton<Core.Platform.IClipboard, Services.SystemClipboard>();
         builder.Services.AddSingleton<Core.Platform.IAppInfo, Services.AppInfo>();
         builder.Services.AddSingleton<IThemeSource, Services.ThemeSource>();
 #if ANDROID
