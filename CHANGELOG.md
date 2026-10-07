@@ -55,3 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `HabitChart` (the share of days done per week or month, with streaks for one habit) and `HabitCalendar` (a month at
   a glance), with the week header and the collapsed Archived habits section, ported with the web app's markup and
   tests.
+- The Tags page: every tag with how many notes use it, nested under their parents, a filter and the A–Z/Most used
+  orders (`TagBranch`, `Core/Text/TagTree.cs`). Settings → Labels (`LabelSettings`, `LabelRow`, `LabelColorPicker`):
+  turning labels on or off, and creating, renaming, recolouring and deleting the account's labels; not yet placed in
+  a Settings page shell (Phase 6). The side-menu calendar and labels list, and the `?label=` filter on Home, were
+  already wired in from earlier phases.

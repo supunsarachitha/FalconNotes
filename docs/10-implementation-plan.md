@@ -159,7 +159,7 @@ already finished.
 
 - [x] Todo page and `TodoCard` (with Edit as Markdown).
 - [x] Habits page, `HabitRow`, `HabitChart`, `HabitCalendar`, archived habits.
-- [ ] Tags page; side-menu calendar; labels (picker, chips, side menu, filter, Settings → Labels).
+- [x] Tags page; side-menu calendar; labels (picker, chips, side menu, filter, Settings → Labels).
 
 **Acceptance**: the ported tests pass, and the manual checklist for these screens passes on all three platforms.
 

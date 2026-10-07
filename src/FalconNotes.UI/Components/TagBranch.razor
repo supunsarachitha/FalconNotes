@@ -1,0 +1,37 @@
+@* Port of TagLink and TagBranch in pages/TagsPage.tsx: a tag's link (its name, and its note count unless it is a
+   parent that only exists through its nested tags), with its own nested tags underneath, indented one step further. *@
+@using FalconNotes.Core.Text
+
+<li>
+    <a href="@($"/?tag={Uri.EscapeDataString(Node.Path)}")" aria-label="@AriaLabel"
+       style="padding-left: @((0.75 + Depth * 1.25).ToString(System.Globalization.CultureInfo.InvariantCulture))rem"
+       class="flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 hover:bg-stone-100 dark:hover:bg-stone-800">
+        <Icon Name="IconName.Hash" Class="size-4 shrink-0 text-maple-600 dark:text-maple-400" />
+        <span class="min-w-0 flex-1 break-words">@Node.Label</span>
+        @if (Node.Count is { } count)
+        {
+            <span class="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs tabular-nums text-stone-600 dark:bg-stone-800 dark:text-stone-300">@count</span>
+        }
+    </a>
+    @if (Node.Children.Count > 0)
+    {
+        <ul aria-label="@($"Tags under {Node.Path}")">
+            @foreach (var child in Node.Children)
+            {
+                <TagBranch Node="child" Depth="Depth + 1" />
+            }
+        </ul>
+    }
+</li>
+
+@code {
+    /// <summary>The tag.</summary>
+    [Parameter, EditorRequired] public TagNode Node { get; set; } = null!;
+
+    /// <summary>How deeply nested it is, for its indent.</summary>
+    [Parameter] public int Depth { get; set; }
+
+    private string AriaLabel => Node.Count is { } count
+        ? $"{Node.Path}, {count} {(count == 1 ? "note" : "notes")}"
+        : Node.Path;
+}

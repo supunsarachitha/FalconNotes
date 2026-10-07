@@ -189,7 +189,7 @@ public class TodoCardTests : BunitContext
         Assert.Contains(cut.FindAll("button[role=menuitem]"), b => b.TextContent.Trim() == "Labels…");
         MenuItem(cut, "Move to trash").Click();
 
-        cut.WaitForAssertion(() => Assert.Contains(app.Toasts.Current, t => t.Message == "List moved to the trash."));
+        await WaitUntilAsync(() => Task.FromResult(app.Toasts.Current.Any(t => t.Message == "List moved to the trash.")));
         Assert.True((await app.Core.Notes.GetAsync(note.Id))!.IsTrashed);
     }
 }
