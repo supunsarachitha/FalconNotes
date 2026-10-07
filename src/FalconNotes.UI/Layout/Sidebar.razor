@@ -1,0 +1,113 @@
+@* Port of Sidebar in components/AppShell.tsx (docs/07, App shell): the name and mark, search, the menu in the user's
+   order with the Tags count, labels, the calendar, and the profile: name and "On this device" (no sign out). *@
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject AppState State
+@inject NoteService Notes
+@inject ChangeFeed Feed
+@inject NavigationManager Navigation
+
+<div class="flex h-full flex-col" data-menu="@State.Preferences.MenuTextSize.ToString().ToLowerInvariant()">
+    <div class="flex flex-col gap-4 p-4 pb-3 short:gap-3 short:pb-2">
+        <a href="/" @onclick="OnNavigate" class="flex min-w-0 items-center gap-3 px-1">
+            <Logo Class="size-9 shrink-0" />
+            <span class="truncate text-lg font-semibold tracking-tight">Falcon Notes</span>
+        </a>
+        <SearchBox OnNavigate="OnNavigate" />
+    </div>
+
+    @* The menu and the calendar scroll when the window is too short for them; the profile row below always shows. *@
+    <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-1 short:gap-2">
+        <nav aria-label="Main" class="flex flex-col gap-1 short:gap-0">
+            @{
+                var (path, query) = PageAddress.Of(Navigation);
+            }
+            @foreach (var id in MenuOrder.Read(State.Preferences.MenuOrder).Where(id => MenuItems.All[id].Shown(State.Preferences)))
+            {
+                var item = MenuItems.All[id];
+                var active = MenuItems.IsActive(id, path, query);
+                <a href="@item.Href" @onclick="OnNavigate" aria-current="@(active ? "page" : null)"
+                   class="@Classes.Join("flex h-(--menu-row) items-center gap-3 rounded-xl px-3 text-(length:--menu-text) font-medium transition-colors", active ? "bg-maple-50 text-maple-700 dark:bg-maple-600/15 dark:text-maple-400" : "text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800")">
+                    <Icon Name="item.Icon" Class="size-(--menu-icon) shrink-0" />
+                    @item.Label
+                    @if (id == "tags" && _tagCount > 0)
+                    {
+                        <span class="ml-auto text-xs font-normal text-stone-400">@_tagCount</span>
+                    }
+                </a>
+            }
+        </nav>
+
+        @if (State.Preferences.Labels)
+        {
+            <LabelLinks OnNavigate="OnNavigate" />
+        }
+
+        @if (State.Preferences.Calendar)
+        {
+            <Calendar OnNavigate="OnNavigate" />
+        }
+    </div>
+
+    <div class="mx-4 mb-4 mt-3 flex items-center gap-3 border-t border-stone-200 pt-4 short:mb-3 short:mt-2 short:pt-3 dark:border-stone-800">
+        <div aria-hidden="true"
+             class="flex size-9 shrink-0 items-center justify-center rounded-full bg-maple-100 text-sm font-semibold uppercase text-maple-700 dark:bg-maple-600/20 dark:text-maple-400">
+            @Initial
+        </div>
+        <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium">@State.Profile?.DisplayName</p>
+            <p class="truncate text-xs text-stone-500 dark:text-stone-400">On this device</p>
+        </div>
+        @if (LockEnabled)
+        {
+            <IconButton Label="Lock now" OnClick="OnLock"><Icon Name="IconName.Lock" Class="size-5" /></IconButton>
+        }
+    </div>
+</div>
+
+@code {
+    private int _tagCount;
+
+    /// <summary>Called after choosing an item (closes the drawer).</summary>
+    [Parameter] public EventCallback OnNavigate { get; set; }
+
+    /// <summary>Whether the app lock is on, which shows the Lock button (Phase 6).</summary>
+    [Parameter] public bool LockEnabled { get; set; }
+
+    /// <summary>Locks the app now.</summary>
+    [Parameter] public EventCallback OnLock { get; set; }
+
+    private string Initial => State.Profile?.DisplayName is { Length: > 0 } name ? name[..1].ToUpperInvariant() : "";
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        Feed.NotesChanged += Reload;
+        State.Changed += Reload;
+        Navigation.LocationChanged += OnLocationChanged;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync() =>
+        _tagCount = State.Preferences.Tags ? (await Notes.TagCountsAsync(State.EnabledKinds)).Count : 0;
+
+    private void Reload() => _ = InvokeAsync(async () =>
+    {
+        await LoadAsync();
+        StateHasChanged();
+    });
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) =>
+        _ = InvokeAsync(StateHasChanged);
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Feed.NotesChanged -= Reload;
+        State.Changed -= Reload;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

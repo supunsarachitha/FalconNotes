@@ -1,0 +1,55 @@
+@* Port of Button in components/ui.tsx: same classes, busy state and attributes. *@
+<button type="@Type"
+        class="@CssClass"
+        disabled="@(Disabled || Busy)"
+        aria-busy="@(Busy ? "true" : null)"
+        @onclick="OnClick"
+        @attributes="AdditionalAttributes">
+    @if (Busy)
+    {
+        <Spinner Class="size-4" />
+    }
+    @ChildContent
+</button>
+
+@code {
+    private static readonly Dictionary<ButtonVariant, string> Variants = new()
+    {
+        [ButtonVariant.Primary] = "bg-maple-600 text-white hover:bg-maple-700",
+        [ButtonVariant.Secondary] =
+            "border border-stone-300 bg-white text-stone-800 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800",
+        [ButtonVariant.Ghost] = "text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800",
+        [ButtonVariant.Danger] = "bg-red-700 text-white hover:bg-red-800",
+    };
+
+    /// <summary>How the button looks.</summary>
+    [Parameter] public ButtonVariant Variant { get; set; } = ButtonVariant.Primary;
+
+    /// <summary>Shows a spinner and disables the button while its action runs.</summary>
+    [Parameter] public bool Busy { get; set; }
+
+    /// <summary>Disables the button.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>The button's <c>type</c>: <c>button</c> unless it submits a form.</summary>
+    [Parameter] public string Type { get; set; } = "button";
+
+    /// <summary>Extra classes, appended after the variant's.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Called when the button is clicked.</summary>
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    /// <summary>The label.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Any other attributes, such as <c>aria-label</c>, passed to the <c>button</c> element.</summary>
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string CssClass => Classes.Join(
+        "inline-flex h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-medium transition-colors",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        Classes.FocusRing,
+        Variants[Variant],
+        Class);
+}

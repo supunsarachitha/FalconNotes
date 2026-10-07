@@ -1,0 +1,105 @@
+@* The app's router (docs/02, Start-up sequence and Routes). Key lost replaces every route. Otherwise, no profile yet
+   sends every address to Welcome, which (like Key lost) is shown without the app shell; everything else gets it as
+   the default layout. *@
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Startup
+@using FalconNotes.UI.Layout
+@using FalconNotes.UI.State
+@using Microsoft.AspNetCore.Components.Routing
+@implements IDisposable
+@inject AppBootstrapper Bootstrapper
+@inject AppState State
+@inject AppearanceService Appearance
+@inject IWindowInsets Insets
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@if (_outcome == StartupOutcome.KeyLost)
+{
+    <KeyLost OnStartOver="OnKeyLostStartOverAsync" />
+}
+else if (_outcome == StartupOutcome.Ready)
+{
+    <Router AppAssembly="typeof(Routes).Assembly" OnNavigateAsync="OnNavigateAsync">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" DefaultLayout="typeof(AppShell)" />
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+    </Router>
+}
+
+@code {
+    private StartupOutcome? _outcome;
+    private bool _startLogged;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        _outcome = await Bootstrapper.StartAsync();
+        if (_outcome == StartupOutcome.Ready)
+        {
+            await State.LoadAsync();
+        }
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Insets.Changed += OnInsetsChanged;
+            await Appearance.ApplyAsync(JS);
+            await ApplyInsetsAsync();
+        }
+
+        // The start-up budget (docs/11) is measured to the first screen; log it once, with no other detail.
+        if (_outcome is not null && !_startLogged)
+        {
+            _startLogged = true;
+            var elapsed = DateTime.Now - System.Diagnostics.Process.GetCurrentProcess().StartTime;
+            Console.WriteLine($"Falcon Notes: first screen {elapsed.TotalMilliseconds:F0} ms after the process started");
+        }
+    }
+
+    /// <summary>No profile yet sends every address to Welcome (docs/02, step 3); a profile sends Welcome back to Home.</summary>
+    private Task OnNavigateAsync(NavigationContext context)
+    {
+        var isWelcome = context.Path.Equals("welcome", StringComparison.OrdinalIgnoreCase);
+        if (State.Profile is null && !isWelcome)
+        {
+            Navigation.NavigateTo("/welcome", replace: true);
+        }
+        else if (State.Profile is not null && isWelcome)
+        {
+            Navigation.NavigateTo("/", replace: true);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Key lost's buttons moved the unreadable data aside; a fresh key and an empty database now exist, so this
+    /// reruns start-up (always to <see cref="StartupOutcome.Ready"/>) and continues to Welcome (docs/07, Key lost).
+    /// </summary>
+    private async Task OnKeyLostStartOverAsync(bool restore)
+    {
+        _outcome = await Bootstrapper.RestartAsync();
+        if (_outcome == StartupOutcome.Ready)
+        {
+            await State.LoadAsync();
+            Navigation.NavigateTo(restore ? "/welcome?restore=1" : "/welcome", replace: true);
+        }
+    }
+
+    private void OnInsetsChanged() => _ = InvokeAsync(ApplyInsetsAsync);
+
+    private async Task ApplyInsetsAsync()
+    {
+        var insets = Insets.Current;
+        var module = await Appearance.ModuleAsync(JS);
+        await module.InvokeVoidAsync("setInsets", insets.Top, insets.Right, insets.Bottom, insets.Left);
+    }
+
+    /// <inheritdoc />
+    public void Dispose() => Insets.Changed -= OnInsetsChanged;
+}

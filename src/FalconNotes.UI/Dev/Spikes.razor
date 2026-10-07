@@ -1,0 +1,338 @@
+@page "/dev/spikes"
+@* Phase 0 spikes (docs/10), Debug builds only. Results are shown here and logged as FALCONSPIKE lines. *@
+@using System.Diagnostics
+@using System.Security.Cryptography
+@using System.Text
+@using System.Text.Json
+@using FalconNotes.Core.Crypto
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Startup
+@using FalconNotes.Core.Storage
+@using FalconNotes.UI.State
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject IAppDirectories Directories
+@inject DeviceKeyStore Keys
+@inject AppBootstrapper Bootstrapper
+@inject FalconNotes.Core.Attachments.AttachmentService Media
+@inject IFilePicker Picker
+@inject IFileSaver Saver
+@inject IFileOpener Opener
+@inject NavigationManager Navigation
+
+<h1 class="text-xl font-semibold">Phase 0 spikes</h1>
+<p class="mt-1 text-sm text-stone-500"><a class="text-maple-700 underline" href="/">Home</a></p>
+
+<div class="mt-4 flex flex-wrap gap-2">
+    <Button OnClick="RunAutomaticAsync" Busy="_busy">Run S1, S2, S3, S5</Button>
+    <Button Variant="ButtonVariant.Secondary" OnClick="PickAsync">S4 Pick files</Button>
+    <Button Variant="ButtonVariant.Secondary" OnClick="SaveGigabyteAsync">S4 Save 1 GB</Button>
+    <Button Variant="ButtonVariant.Secondary" OnClick="OpenPdfAsync">S4 Open a PDF</Button>
+    <Button Variant="ButtonVariant.Danger" OnClick="ForgetKeyAsync">Forget the device key (testing only)</Button>
+</div>
+
+<img id="spike-image" class="mt-4 max-h-40 rounded-lg" alt="" />
+<video id="spike-video" class="mt-2 w-full rounded-lg" controls playsinline></video>
+
+<pre class="mt-4 whitespace-pre-wrap break-words rounded-xl bg-white p-3 text-xs dark:bg-stone-900">@_log</pre>
+
+@code {
+    private static readonly byte[] SharedTestKey = Enumerable.Repeat((byte)0x42, 32).ToArray();
+    private readonly StringBuilder _log = new();
+    private IJSObjectReference? _module;
+    private bool _busy;
+
+    /// <summary>Runs the automatic spikes when opened with <c>?auto=1</c>.</summary>
+    [SupplyParameterFromQuery(Name = "auto")] public int Auto { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/dev/spikes.js");
+            if (Auto == 1)
+            {
+                await RunAutomaticAsync();
+            }
+        }
+    }
+
+    private void Log(string spike, string message)
+    {
+        _log.AppendLine($"{spike}: {message}");
+        Console.WriteLine($"FALCONSPIKE|{spike}|{message}");
+        File.AppendAllText(Path.Combine(Directories.DataDirectory, "spike-results.txt"), $"{spike}|{message}\n");
+        StateHasChanged();
+    }
+
+    private async Task Step(string spike, Func<Task> step)
+    {
+        try
+        {
+            await step();
+        }
+        catch (Exception ex)
+        {
+            Log(spike, $"FAILED {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    private async Task RunAutomaticAsync()
+    {
+        _busy = true;
+        await Step("S1", S1Async);
+        await Step("S2", S2Async);
+        await Step("S5", S5Async);
+        await Step("S3", S3Async);
+        await Step("S7", S7Async);
+        _busy = false;
+        Log("ALL", "finished");
+    }
+
+    private async Task S1Async()
+    {
+        var folder = Path.Combine(Directories.DataDirectory, "spike");
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, "s1.db");
+        File.Delete(path);
+        var key = RandomNumberGenerator.GetBytes(Database.KeySizeBytes);
+
+        var watch = Stopwatch.StartNew();
+        await using (var c = await new Database(path, key, pooling: false).OpenAsync())
+        {
+            await Exec(c, "CREATE TABLE T (V TEXT); INSERT INTO T VALUES ('hello from Android');");
+        }
+
+        await using (var c = await new Database(path, key, pooling: false).OpenAsync())
+        {
+            Log("S1", $"reopened with the key: {await Scalar(c, "SELECT V FROM T")} ({watch.ElapsedMilliseconds} ms for create, write, reopen, read)");
+        }
+
+        try
+        {
+            await using var c = await new Database(path, RandomNumberGenerator.GetBytes(32), pooling: false).OpenAsync();
+            Log("S1", "FAILED: a wrong key opened the database");
+        }
+        catch (DatabaseKeyException)
+        {
+            Log("S1", "wrong key: DatabaseKeyException (SQLITE_NOTADB)");
+        }
+
+        var header = new byte[16];
+        await using (var f = File.OpenRead(path))
+        {
+            f.ReadExactly(header);
+        }
+
+        Log("S1", $"header readable as SQLite: {header.AsSpan().SequenceEqual("SQLite format 3\0"u8)}");
+
+        watch.Restart();
+        await using (var c = await new Database(path, key).OpenAsync())
+        {
+        }
+
+        Log("S1", $"pooled open: {watch.Elapsed.TotalMilliseconds:F1} ms");
+
+        var android = Path.Combine(folder, "android.db");
+        File.Delete(android);
+        await using (var c = await new Database(android, SharedTestKey, pooling: false).OpenAsync())
+        {
+            await Exec(c, "CREATE TABLE T (V TEXT); INSERT INTO T VALUES ('written on Android');");
+        }
+
+        Log("S1", "wrote spike/android.db with the shared test key");
+
+        var mac = Path.Combine(folder, "mac.db");
+        if (File.Exists(mac))
+        {
+            await using var c = await new Database(mac, SharedTestKey, pooling: false).OpenAsync();
+            Log("S1", $"database made on the Mac reads: {await Scalar(c, "SELECT V FROM T")}");
+        }
+        else
+        {
+            Log("S1", "no spike/mac.db to read");
+        }
+    }
+
+    private async Task S2Async()
+    {
+        var outcome = await Bootstrapper.StartAsync();
+        var key = await Keys.GetAsync();
+        var fingerprint = key is null ? "none" : Convert.ToHexString(SHA256.HashData(key)[..4]);
+        Log("S2", $"startup {outcome}; device key fingerprint {fingerprint}; database exists {File.Exists(Path.Combine(Directories.DataDirectory, DatabaseStartup.DatabaseFileName))}");
+    }
+
+    private async Task S5Async()
+    {
+        var result = await _module!.InvokeAsync<JsonElement>("webViewChecks");
+        foreach (var property in result.EnumerateObject())
+        {
+            Log("S5", $"{property.Name} = {property.Value}");
+        }
+    }
+
+    private async Task S3Async()
+    {
+        var source = Path.Combine(Directories.DataDirectory, "spike-src");
+        var image = Path.Combine(source, "big.jpg");
+        var video = Path.Combine(source, "big.mp4");
+        if (!File.Exists(image) || !File.Exists(video))
+        {
+            Log("S3", "no spike-src/big.jpg and big.mp4 to test with");
+            return;
+        }
+
+        var watch = Stopwatch.StartNew();
+        Guid imageId, videoId;
+        await using (var f = File.OpenRead(image))
+        {
+            imageId = (await Media.AddAsync(f, "big.jpg", "image/jpeg")).Id;
+        }
+
+        await using (var f = File.OpenRead(video))
+        {
+            videoId = (await Media.AddAsync(f, "big.mp4", "video/mp4")).Id;
+        }
+
+        Log("S3", $"encrypted {new FileInfo(image).Length + new FileInfo(video).Length:N0} bytes in {watch.ElapsedMilliseconds} ms");
+        var result = await _module!.InvokeAsync<JsonElement>("mediaChecks", TimeSpan.FromMinutes(2), imageId, videoId);
+        foreach (var property in result.EnumerateObject())
+        {
+            Log("S3", $"{property.Name} = {property.Value}");
+        }
+    }
+
+    private async Task S7Async()
+    {
+        var fixtures = Path.Combine(Directories.DataDirectory, "spike-src");
+        if (!File.Exists(Path.Combine(fixtures, "export-vectors.json")))
+        {
+            Log("S7", "no spike-src/export-vectors.json to test with");
+            return;
+        }
+
+        var watch = Stopwatch.StartNew();
+        await Task.Run(() => BackupConformance.RunAsync(fixtures, Path.Combine(Directories.CacheDirectory, "conformance"), line => InvokeAsync(() => Log("S7", line))));
+        Log("S7", $"took {watch.Elapsed.TotalSeconds:F1} s");
+    }
+
+    private async Task PickAsync() => await Step("S4", async () =>
+    {
+        var files = await Picker.PickFilesAsync();
+        Log("S4", $"picked {files.Count} file(s)");
+        foreach (var file in files)
+        {
+            var watch = Stopwatch.StartNew();
+            await using var stream = await file.OpenReadAsync();
+            var id = (await Media.AddAsync(stream, file.FileName, file.ContentType)).Id;
+            Log("S4", $"{file.FileName} ({file.ContentType}) encrypted as {id} in {watch.ElapsedMilliseconds} ms; seekable source {stream.CanSeek}");
+        }
+    });
+
+    private async Task SaveGigabyteAsync() => await Step("S4", async () =>
+    {
+        var watch = Stopwatch.StartNew();
+        await using var content = new PatternStream(1L << 30);
+        var saved = await Saver.SaveAsync("falcon-spike-1gb.bin", content);
+        Log("S4", $"save 1 GB: {(saved ? "saved" : "cancelled")} after {watch.Elapsed.TotalSeconds:F1} s, {content.Position:N0} bytes read");
+    });
+
+    private async Task OpenPdfAsync() => await Step("S4", async () =>
+    {
+        var folder = Path.Combine(Directories.CacheDirectory, "open", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, "Falcon spike.pdf");
+        await File.WriteAllBytesAsync(path, MinimalPdf());
+        Log("S4", $"open PDF: {(await Opener.OpenAsync(path, "application/pdf") ? "an app opened it" : "no app can open it")}");
+    });
+
+    private async Task ForgetKeyAsync()
+    {
+        await Keys.ForgetAsync();
+        Log("S2", "device key removed; restart the app");
+    }
+
+    private static async Task Exec(Microsoft.Data.Sqlite.SqliteConnection c, string sql)
+    {
+        await using var command = c.CreateCommand();
+        command.CommandText = sql;
+        await Task.Run(() => command.ExecuteNonQuery());
+    }
+
+    private static async Task<string?> Scalar(Microsoft.Data.Sqlite.SqliteConnection c, string sql)
+    {
+        await using var command = c.CreateCommand();
+        command.CommandText = sql;
+        return await Task.Run(() => (string?)command.ExecuteScalar());
+    }
+
+    /// <summary>A one-page PDF saying "Falcon Notes spike", with a correct cross-reference table.</summary>
+    private static byte[] MinimalPdf()
+    {
+        string[] objects =
+        [
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            "<< /Length 49 >>\nstream\nBT /F1 24 Tf 72 760 Td (Falcon Notes spike) Tj ET\nendstream",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        ];
+        var pdf = new StringBuilder("%PDF-1.4\n");
+        var offsets = new List<int>();
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets.Add(Encoding.ASCII.GetByteCount(pdf.ToString()));
+            pdf.Append($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+
+        var xref = Encoding.ASCII.GetByteCount(pdf.ToString());
+        pdf.Append($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets)
+        {
+            pdf.Append($"{offset:D10} 00000 n \n");
+        }
+
+        pdf.Append($"trailer\n<< /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return Encoding.ASCII.GetBytes(pdf.ToString());
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            await _module.DisposeAsync();
+        }
+    }
+
+    /// <summary>A generated stream of a given length, so saving 1 GB needs no 1 GB file.</summary>
+    private sealed class PatternStream(long length) : Stream
+    {
+        private long _position;
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => length;
+        public override long Position { get => _position; set => throw new NotSupportedException(); }
+
+        private static readonly byte[] Pattern = Enumerable.Range(0, 251 * 4096).Select(i => (byte)(i % 251)).ToArray();
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var n = (int)Math.Min(Math.Min(count, length - _position), 251 * 4095);
+            Pattern.AsSpan((int)(_position % 251), n).CopyTo(buffer.AsSpan(offset, n));
+            _position += n;
+            return n;
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+}

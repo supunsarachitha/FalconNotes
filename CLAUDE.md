@@ -56,13 +56,19 @@ something behaves, the reference does. [docs/09-port-map.md](docs/09-port-map.md
 ## Commands
 
 ```sh
-dotnet build                                                                   # everything the OS can build
-dotnet test tests/FalconNotes.Core.Tests                                        # rules, storage, crypto, backups
-dotnet test tests/FalconNotes.UI.Tests                                          # components (bUnit)
-dotnet build src/FalconNotes.App -t:Run -f net10.0-maccatalyst                   # run on this Mac
-dotnet build src/FalconNotes.App -t:Run -f net10.0-android                       # run on the running emulator/device
-dotnet build src/FalconNotes.App -t:Run -f net10.0-windows10.0.19041.0           # on Windows
-~/Library/Android/sdk/emulator/emulator -list-avds                             # emulators: MAUI_Emulator_API_36, Medium_Phone_API_36.1
+dotnet test tests/FalconNotes.Core.Tests                                       # rules, storage, crypto, backups
+dotnet test tests/FalconNotes.UI.Tests                                         # components (bUnit)
+FALCON_PERF=1 dotnet test tests/FalconNotes.Core.Tests -c Release -- --filter-trait "Category=Performance"
+                                                                              # the docs/11 budgets on 50,000 notes
+dotnet build src/FalconNotes.App -t:Run -f net10.0-android                     # run on the running emulator/device
+dotnet build src/FalconNotes.App -c Release -f net10.0-android                 # release APK (bin/Release/…-Signed.apk)
+~/Library/Android/sdk/emulator/emulator -list-avds                            # emulators: MAUI_Emulator_API_36, Medium_Phone_API_36.1
+adb shell am start -n dev.falconnotes.app/crc64a839b5e6635a3aec.MainActivity --es route "/dev/spikes?auto=1"
+                                                                              # Debug builds: open a route (here the Phase 0 spikes)
 ```
+
+The app targets Android only for now (Phase 0 is Android first). The Mac Catalyst and Windows heads come later; Mac
+Catalyst needs Xcode 26.5 (.NET for Mac Catalyst 26.5 refuses Xcode 27). `pm clear` on a Debug build deletes its fast
+deployment files; use `-p:EmbedAssembliesIntoApk=true` when clearing app data between runs.
 
 Update this section when the commands change.

@@ -1,0 +1,16 @@
+@* Port of EmptyState in components/ui.tsx: a friendly placeholder for an empty list. *@
+<div class="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-stone-300 px-6 py-12 text-center dark:border-stone-700">
+    <p class="font-medium">@Title</p>
+    @if (ChildContent is not null)
+    {
+        <p class="max-w-sm text-sm text-stone-600 dark:text-stone-300">@ChildContent</p>
+    }
+</div>
+
+@code {
+    /// <summary>The heading.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>A line of explanation.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

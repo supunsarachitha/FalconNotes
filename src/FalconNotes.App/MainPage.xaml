@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- The page background matches the web app's stone-100 / stone-950, so there is no white flash before Blazor paints. -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:ui="clr-namespace:FalconNotes.UI;assembly=FalconNotes.UI"
+             x:Class="FalconNotes.App.MainPage"
+             BackgroundColor="{AppThemeBinding Light=#f5f5f4, Dark=#0c0a09}">
+
+    <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html"
+                   BackgroundColor="{AppThemeBinding Light=#f5f5f4, Dark=#0c0a09}">
+        <BlazorWebView.RootComponents>
+            <RootComponent Selector="#app" ComponentType="{x:Type ui:Routes}" />
+        </BlazorWebView.RootComponents>
+    </BlazorWebView>
+
+</ContentPage>

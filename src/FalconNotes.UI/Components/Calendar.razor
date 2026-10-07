@@ -1,0 +1,135 @@
+@* Port of components/Calendar.tsx: a month calendar for the side menu. Days with active notes of the enabled kinds get
+   a dot; choosing a day opens its notes on Home (/?day=yyyy-MM-dd). Days are this device's calendar days. *@
+@using System.Globalization
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject NoteService Notes
+@inject AppState State
+@inject ChangeFeed Feed
+@inject TimeProvider Time
+@inject NavigationManager Navigation
+
+<section aria-label="Calendar" class="px-1">
+    <div class="mb-1 flex items-center gap-1 short:mb-0">
+        <h2 class="flex-1 px-2 text-sm font-semibold" aria-live="polite">@_month.ToString("MMMM yyyy", English)</h2>
+        <IconButton Label="Previous month" Class="size-8" OnClick="() => MoveAsync(-1)"><Icon Name="IconName.ChevronLeft" Class="size-4" /></IconButton>
+        <IconButton Label="Next month" Class="size-8" OnClick="() => MoveAsync(1)"><Icon Name="IconName.ChevronRight" Class="size-4" /></IconButton>
+    </div>
+    <div class="grid grid-cols-7 text-center text-[11px] font-medium text-stone-400" aria-hidden="true">
+        @foreach (var name in Weekdays)
+        {
+            <span class="py-1 short:py-0.5">@name</span>
+        }
+    </div>
+    <ol class="grid grid-cols-7 gap-y-0.5 short:gap-y-0">
+        @for (var i = 0; i < Blanks; i++)
+        {
+            <li aria-hidden="true"></li>
+        }
+        @for (var day = 1; day <= DateTime.DaysInMonth(_month.Year, _month.Month); day++)
+        {
+            var date = new DateOnly(_month.Year, _month.Month, day);
+            var key = DateFormats.Key(date);
+            var count = _counts.GetValueOrDefault(date);
+            var selected = key == Selected;
+            var isToday = date == Today;
+            <li class="flex justify-center">
+                <a href="@($"/?day={key}")" @onclick="OnNavigate" aria-current="@(selected ? "page" : null)"
+                   aria-label="@Label(date, count, isToday)" class="@DayClass(selected, isToday, count)">
+                    @day
+                    @if (count > 0)
+                    {
+                        <span aria-hidden="true" class="@Classes.Join("absolute bottom-0.5 size-1 rounded-full", selected ? "bg-white" : "bg-maple-500")"></span>
+                    }
+                </a>
+            </li>
+        }
+    </ol>
+</section>
+
+@code {
+    private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
+    private static readonly string[] Names = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    private DateOnly _month;
+    private Dictionary<DateOnly, int> _counts = [];
+    private ITimer? _timer;
+    private DateOnly _today;
+
+    /// <summary>Called when a day is chosen (closes the drawer).</summary>
+    [Parameter] public EventCallback OnNavigate { get; set; }
+
+    private DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(Time.GetUtcNow(), Time.LocalTimeZone).DateTime);
+
+    private string? Selected => PageAddress.Of(Navigation).Query.GetValueOrDefault("day");
+
+    private DayOfWeek WeekStart => DateFormats.WeekStartDay(State.Preferences.WeekStart, CultureInfo.CurrentCulture);
+
+    private IEnumerable<string> Weekdays => Enumerable.Range(0, 7).Select(i => Names[(i + (int)WeekStart) % 7]);
+
+    private int Blanks => ((int)_month.DayOfWeek - (int)WeekStart + 7) % 7;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        var start = DateFormats.ParseKey(Selected) ?? Today;
+        _month = new DateOnly(start.Year, start.Month, 1);
+        _today = Today;
+        Feed.NotesChanged += Reload;
+        State.Changed += Reload;
+        // Today rolls over at midnight while the app is open (useToday checks every minute).
+        _timer = Time.CreateTimer(_ =>
+        {
+            if (Today != _today)
+            {
+                _today = Today;
+                _ = InvokeAsync(StateHasChanged);
+            }
+        }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var last = _month.AddMonths(1).AddDays(-1);
+        var days = await Notes.CalendarAsync(_month, last, State.EnabledKinds, Time.LocalTimeZone);
+        _counts = days.ToDictionary(d => d.Day, d => d.Count);
+    }
+
+    private async Task MoveAsync(int months)
+    {
+        _month = _month.AddMonths(months);
+        await LoadAsync();
+    }
+
+    private void Reload() => _ = InvokeAsync(async () =>
+    {
+        await LoadAsync();
+        StateHasChanged();
+    });
+
+    private static string Label(DateOnly date, int count, bool isToday) =>
+        date.ToString("dddd, MMMM d, yyyy", English)
+        + (count > 0 ? $", {count} {(count == 1 ? "note" : "notes")}" : "")
+        + (isToday ? " (today)" : "");
+
+    private static string DayClass(bool selected, bool isToday, int count) => Classes.Join(
+        "relative flex size-8 items-center justify-center rounded-full text-xs tabular-nums transition-colors short:size-7",
+        selected
+            ? "bg-maple-600 font-semibold text-white"
+            : isToday
+                ? "font-semibold text-maple-700 ring-1 ring-maple-500 dark:text-maple-400"
+                : count > 0
+                    ? "font-medium text-stone-800 hover:bg-stone-100 dark:text-stone-100 dark:hover:bg-stone-800"
+                    : "text-stone-400 hover:bg-stone-100 dark:text-stone-500 dark:hover:bg-stone-800");
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Feed.NotesChanged -= Reload;
+        State.Changed -= Reload;
+        _timer?.Dispose();
+    }
+}

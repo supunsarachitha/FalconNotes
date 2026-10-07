@@ -1,0 +1,10 @@
+@* Port of LabelDot in components/Labels.tsx: a small round swatch of a label's colour. *@
+<span aria-hidden="true" class="@Classes.Join("inline-block size-2.5 shrink-0 rounded-full", LabelStyles.Dot(Color), Class)"></span>
+
+@code {
+    /// <summary>The colour.</summary>
+    [Parameter] public FalconNotes.Core.Domain.LabelColor Color { get; set; }
+
+    /// <summary>Extra classes.</summary>
+    [Parameter] public string? Class { get; set; }
+}

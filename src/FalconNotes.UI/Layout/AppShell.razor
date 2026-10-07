@@ -1,0 +1,104 @@
+@* Port of components/AppShell.tsx: phones get a top bar with a slide-in drawer; at 1,024 px and wider a fixed sidebar
+   sits beside a centred reading column. The drawer is a <dialog> instead of Radix (docs/06). Safe areas come from the
+   natively measured --safe-* variables first (docs/12). *@
+@inherits LayoutComponentBase
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<div class="min-h-dvh bg-stone-100 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+    <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2">Skip to content</a>
+
+    <header class="sticky top-0 z-30 box-content flex h-14 items-center gap-2 border-b border-stone-200 bg-white/90 px-2 pt-[var(--safe-top,env(safe-area-inset-top))] backdrop-blur lg:hidden dark:border-stone-800 dark:bg-stone-900/90">
+        <IconButton Label="Open navigation" OnClick="OpenDrawerAsync"><Icon Name="IconName.Menu" Class="size-6" /></IconButton>
+        <a href="/" class="flex min-w-0 items-center gap-2">
+            <Logo Class="size-7 shrink-0" />
+            <span class="truncate font-semibold">Falcon Notes</span>
+        </a>
+    </header>
+
+    <div class="mx-auto flex max-w-6xl lg:pt-[var(--safe-top,0px)]">
+        <aside class="sticky top-[var(--safe-top,0px)] hidden h-[calc(100dvh-var(--safe-top,0px))] w-72 shrink-0 border-r border-stone-200 bg-white lg:block dark:border-stone-800 dark:bg-stone-900">
+            <Sidebar />
+        </aside>
+        <main id="main" class="min-w-0 flex-1 px-4 pb-24 pt-4 lg:px-10 lg:pt-8">
+            <div class="@Classes.Join("mx-auto", Wide ? "max-w-4xl" : "max-w-2xl")">@Body</div>
+        </main>
+    </div>
+
+    <dialog @ref="_drawer" aria-label="Navigation"
+            class="fixed inset-y-0 left-0 m-0 h-full max-h-none w-[min(20rem,85vw)] bg-white pt-[var(--safe-top,0px)] text-stone-900 shadow-xl backdrop:bg-black/40 lg:hidden dark:bg-stone-900 dark:text-stone-100">
+        @if (_drawerOpen)
+        {
+            <IconButton Label="Close navigation" Class="absolute right-2 top-[calc(var(--safe-top,0px)+0.75rem)]" OnClick="CloseDrawerAsync">
+                <Icon Name="IconName.X" Class="size-5" />
+            </IconButton>
+            <Sidebar OnNavigate="CloseDrawerAsync" />
+        }
+    </dialog>
+
+    <Toaster />
+</div>
+
+@code {
+    private ElementReference _drawer;
+    private IJSObjectReference? _dialogs;
+    private DotNetObjectReference<AppShell>? _self;
+    private bool _drawerOpen;
+
+    // Settings lists its sections beside the open one, so it gets a wider column than the notes.
+    private bool Wide => PageAddress.Of(Navigation).Path is var path && (path == "/settings" || path.StartsWith("/settings/", StringComparison.Ordinal));
+
+    /// <inheritdoc />
+    protected override void OnInitialized() => Navigation.LocationChanged += OnLocationChanged;
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) =>
+        _ = InvokeAsync(StateHasChanged);
+
+    private async Task OpenDrawerAsync()
+    {
+        _drawerOpen = true;
+        StateHasChanged();
+        _dialogs ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/dialogs.js");
+        _self ??= DotNetObjectReference.Create(this);
+        await _dialogs.InvokeVoidAsync("showModal", _drawer, _self);
+    }
+
+    private async Task CloseDrawerAsync()
+    {
+        if (!_drawerOpen)
+        {
+            return;
+        }
+
+        _drawerOpen = false;
+        if (_dialogs is not null)
+        {
+            await _dialogs.InvokeVoidAsync("close", _drawer);
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>Esc or a click beside the drawer.</summary>
+    /// <returns>A task that completes when it is closed.</returns>
+    [JSInvokable]
+    public Task Cancel() => CloseDrawerAsync();
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        _self?.Dispose();
+        if (_dialogs is not null)
+        {
+            try
+            {
+                await _dialogs.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+@* Port of Card in components/ui.tsx. *@
+<section class="@Classes.Join("rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900", Class)">
+    @ChildContent
+</section>
+
+@code {
+    /// <summary>Extra classes.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>The content.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

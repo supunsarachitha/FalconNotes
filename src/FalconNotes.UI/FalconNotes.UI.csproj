@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FalconNotes.Core\FalconNotes.Core.csproj" />
+  </ItemGroup>
+
+  <!-- The Phase 0 spikes (Dev/, wwwroot/dev/) exist only in Debug builds. -->
+  <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+    <Compile Remove="Dev/**" />
+    <Content Remove="Dev/**;wwwroot/dev/**" />
+    <None Remove="Dev/**;wwwroot/dev/**" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\Tailwind.targets" />
+
+</Project>

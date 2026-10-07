@@ -12,11 +12,10 @@ coverage*/
 *.apk
 *.aab
 *.msix
-*.app/
 
 # --- Generated CSS (Tailwind output) and tools ---
-src/MapleNotes.UI/wwwroot/css/app.css
-tools/tailwindcss*
+src/FalconNotes.UI/wwwroot/css/app.css
+tools/
 
 # --- Local data, never committed ---
 *.db

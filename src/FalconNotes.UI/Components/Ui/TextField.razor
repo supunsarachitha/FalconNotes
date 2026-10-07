@@ -1,0 +1,58 @@
+@* Port of TextField in components/ui.tsx: a labelled input with a hint or an error, linked by aria-describedby. *@
+<div class="@Classes.Join("flex flex-col gap-1.5", Class)">
+    <label for="@_id" class="text-sm font-medium text-stone-700 dark:text-stone-200">@Label</label>
+    <input id="@_id"
+           type="@Type"
+           value="@Value"
+           @oninput="OnInput"
+           aria-invalid="@(Error is not null ? "true" : null)"
+           aria-describedby="@DescribedBy"
+           class="@InputClass"
+           @attributes="AdditionalAttributes" />
+    @if (Error is not null)
+    {
+        <p id="@($"{_id}-error")" class="text-sm text-red-700 dark:text-red-400">@Error</p>
+    }
+    else if (Hint is not null)
+    {
+        <p id="@($"{_id}-hint")" class="text-sm text-stone-500 dark:text-stone-400">@Hint</p>
+    }
+</div>
+
+@code {
+    private readonly string _id = $"field-{Guid.NewGuid():N}";
+
+    /// <summary>The label.</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>The value.</summary>
+    [Parameter] public string? Value { get; set; }
+
+    /// <summary>Called as the user types.</summary>
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>The input's type.</summary>
+    [Parameter] public string Type { get; set; } = "text";
+
+    /// <summary>A hint under the field.</summary>
+    [Parameter] public string? Hint { get; set; }
+
+    /// <summary>An error under the field, which marks it invalid.</summary>
+    [Parameter] public string? Error { get; set; }
+
+    /// <summary>Extra classes on the wrapper.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Any other attributes, passed to the input.</summary>
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string? DescribedBy => Error is not null ? $"{_id}-error" : Hint is not null ? $"{_id}-hint" : null;
+
+    private string InputClass => Classes.Join(
+        "h-11 rounded-xl border bg-white px-3 text-base text-stone-900 placeholder:text-stone-400",
+        "dark:bg-stone-950 dark:text-stone-100",
+        Error is not null ? "border-red-600" : "border-stone-300 dark:border-stone-700",
+        Classes.FocusRing);
+
+    private Task OnInput(ChangeEventArgs e) => ValueChanged.InvokeAsync(e.Value?.ToString() ?? "");
+}

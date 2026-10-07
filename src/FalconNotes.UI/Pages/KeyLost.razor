@@ -1,0 +1,35 @@
+@* Key lost (docs/07): the database exists but the device key is missing or wrong. Nothing is deleted: both ways out
+   move the unreadable data aside first (docs/03, Lost key). *@
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Startup
+@inject KeyLostRecovery Recovery
+@inject IAppInfo App
+
+<AuthLayout Heading="Your notes cannot be opened">
+    <Intro>
+        Falcon Notes keeps your notes encrypted with a key stored by @App.PlatformName. That key is no longer available on this
+        device, so the notes saved here cannot be read. This can happen after reinstalling the app or resetting the device's
+        secure storage.
+    </Intro>
+    <ChildContent>
+        <div class="flex flex-col gap-3">
+            <Button Class="w-full" Busy="_busy" OnClick="() => MoveAsideAsync(restore: true)">Restore from a backup…</Button>
+            <Button Variant="ButtonVariant.Secondary" Class="w-full" Disabled="_busy" OnClick="() => MoveAsideAsync(restore: false)">Start with no notes</Button>
+        </div>
+    </ChildContent>
+    <Footer>Nothing has been deleted. The unreadable data is kept aside in case the key comes back.</Footer>
+</AuthLayout>
+
+@code {
+    private bool _busy;
+
+    /// <summary>Called after the data is moved aside, to start again; true to go on to restoring.</summary>
+    [Parameter] public EventCallback<bool> OnStartOver { get; set; }
+
+    private async Task MoveAsideAsync(bool restore)
+    {
+        _busy = true;
+        await Recovery.MoveAsideAsync();
+        await OnStartOver.InvokeAsync(restore);
+    }
+}

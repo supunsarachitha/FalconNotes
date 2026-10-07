@@ -1,0 +1,35 @@
+@* Port of components/AuthLayout.tsx: the centred card of Welcome, Lock and Key lost. *@
+<main class="flex min-h-dvh items-center justify-center bg-stone-100 px-4 py-10 text-stone-900 dark:bg-stone-950 dark:text-stone-100"
+      style="padding-top: max(2.5rem, var(--safe-top, 0px)); padding-bottom: max(2.5rem, var(--safe-bottom, 0px))">
+    <div class="w-full max-w-sm">
+        <div class="mb-6 flex flex-col items-center gap-3 text-center">
+            <Logo Class="size-14" />
+            <h1 class="text-2xl font-semibold tracking-tight">@Heading</h1>
+            <p class="text-sm text-stone-600 dark:text-stone-300">@Intro</p>
+        </div>
+        <div class="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+            @ChildContent
+        </div>
+        @if (Footer is not null)
+        {
+            <div class="mt-4 text-center text-sm text-stone-600 dark:text-stone-300">@Footer</div>
+        }
+    </div>
+</main>
+
+@code {
+    /// <summary>The link style used in these screens.</summary>
+    public const string LinkClass = "font-medium text-maple-700 underline-offset-2 hover:underline dark:text-maple-400";
+
+    /// <summary>The heading.</summary>
+    [Parameter, EditorRequired] public string Heading { get; set; } = "";
+
+    /// <summary>The line under it.</summary>
+    [Parameter] public RenderFragment? Intro { get; set; }
+
+    /// <summary>The card's content.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Text under the card.</summary>
+    [Parameter] public RenderFragment? Footer { get; set; }
+}

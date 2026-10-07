@@ -1,0 +1,19 @@
+<Project>
+  <!--
+    Shared build settings for every .NET project in the repository.
+    Keep project files minimal; anything that applies to all projects belongs here.
+  -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+
+    <Product>Falcon Notes</Product>
+    <Authors>Falcon Notes contributors</Authors>
+    <Copyright>Copyright (c) 2026 Falcon Notes contributors</Copyright>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+</Project>

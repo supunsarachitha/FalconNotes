@@ -1,0 +1,41 @@
+@* Port of components/Toaster.tsx: the toasts, bottom centre, in a polite live region. *@
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject Toasts Toasts
+
+<div role="status" aria-live="polite"
+     class="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 p-4 pb-[max(1rem,var(--safe-bottom,env(safe-area-inset-bottom)))]">
+    @foreach (var toast in Toasts.Current)
+    {
+        <div @key="toast.Id"
+             class="@Classes.Join("pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-xl px-4 py-3 text-sm shadow-lg", toast.IsError ? "bg-red-800 text-white" : "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900")">
+            <span class="flex-1">@toast.Message</span>
+            @if (toast.Action is { } action)
+            {
+                <button type="button" @onclick="() => RunAsync(toast, action)"
+                        class="-my-1 shrink-0 rounded-md px-2 py-1 font-semibold text-maple-400 hover:bg-white/10 dark:text-maple-700 dark:hover:bg-black/10">
+                    @action.Label
+                </button>
+            }
+            <button type="button" aria-label="Dismiss" @onclick="() => Toasts.Dismiss(toast.Id)" class="opacity-70 hover:opacity-100">
+                <Icon Name="IconName.X" Class="size-4" />
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    /// <inheritdoc />
+    protected override void OnInitialized() => Toasts.Changed += Refresh;
+
+    private void Refresh() => _ = InvokeAsync(StateHasChanged);
+
+    private async Task RunAsync(Toast toast, ToastAction action)
+    {
+        Toasts.Dismiss(toast.Id);
+        await action.OnClick();
+    }
+
+    /// <inheritdoc />
+    public void Dispose() => Toasts.Changed -= Refresh;
+}

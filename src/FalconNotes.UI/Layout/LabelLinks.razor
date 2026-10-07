@@ -1,0 +1,61 @@
+@* Port of LabelLinks in components/AppShell.tsx: the labels with how many notes carry each; each lists its notes. *@
+@using FalconNotes.Core.Events
+@using FalconNotes.Core.Labels
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject LabelService Labels
+@inject AppState State
+@inject ChangeFeed Feed
+@inject NavigationManager Navigation
+
+@if (_labels.Count > 0)
+{
+    var active = PageAddress.Of(Navigation).Query.GetValueOrDefault("label");
+    <nav aria-label="Labels" class="flex flex-col gap-0.5">
+        <h2 class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">Labels</h2>
+        @foreach (var item in _labels)
+        {
+            var id = item.Label.Id.ToString("D");
+            var current = active == id;
+            <a href="@($"/?label={Uri.EscapeDataString(id)}")" @onclick="OnNavigate" aria-current="@(current ? "page" : null)"
+               class="@Classes.Join("flex min-h-9 items-center gap-3 rounded-xl px-3 text-sm transition-colors", current ? "bg-maple-50 font-medium text-maple-700 dark:bg-maple-600/15 dark:text-maple-400" : "text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800")">
+                <LabelDot Color="item.Label.Color" Class="ml-1 size-3" />
+                <span class="min-w-0 flex-1 truncate">@item.Label.Name</span>
+                @if (item.NoteCount > 0)
+                {
+                    <span class="text-xs text-stone-400">@item.NoteCount</span>
+                }
+            </a>
+        }
+    </nav>
+}
+
+@code {
+    private IReadOnlyList<LabelCount> _labels = [];
+
+    /// <summary>Called when a label is chosen (closes the drawer).</summary>
+    [Parameter] public EventCallback OnNavigate { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        Feed.LabelsChanged += Reload;
+        Feed.NotesChanged += Reload;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync() => _labels = await Labels.ListAsync(State.EnabledKinds);
+
+    private void Reload() => _ = InvokeAsync(async () =>
+    {
+        await LoadAsync();
+        StateHasChanged();
+    });
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Feed.LabelsChanged -= Reload;
+        Feed.NotesChanged -= Reload;
+    }
+}

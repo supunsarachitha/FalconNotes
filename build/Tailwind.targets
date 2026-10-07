@@ -1,0 +1,57 @@
+<Project>
+  <!--
+    Builds wwwroot/css/app.css from Styles/app.css with the Tailwind CSS standalone CLI (MIT; build time only).
+    The CLI is downloaded once into tools/ and its SHA-256 checked against the release's published digest, so a
+    tampered or different binary never runs. The output is not committed (see .gitignore). docs/02, Styling pipeline.
+  -->
+  <PropertyGroup>
+    <TailwindVersion>4.3.3</TailwindVersion>
+    <TailwindAsset Condition="$([MSBuild]::IsOSPlatform('OSX')) And '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">tailwindcss-macos-arm64</TailwindAsset>
+    <TailwindSha256 Condition="'$(TailwindAsset)' == 'tailwindcss-macos-arm64'">cdf646702987a743464dff4d9c60fd4480d1c1e73dd819a9a67f1078815dce9d</TailwindSha256>
+    <TailwindAsset Condition="$([MSBuild]::IsOSPlatform('OSX')) And '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64'">tailwindcss-macos-x64</TailwindAsset>
+    <TailwindSha256 Condition="'$(TailwindAsset)' == 'tailwindcss-macos-x64'">7922e0953f2110c05976e3bf58f14e643d90427575e766b7d433f5f80cbee7e1</TailwindSha256>
+    <TailwindAsset Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64'">tailwindcss-linux-x64</TailwindAsset>
+    <TailwindSha256 Condition="'$(TailwindAsset)' == 'tailwindcss-linux-x64'">dc61b3ac6b8c9ca874c0cc4c57b2409791a64c5540404ca5f5367360babc313a</TailwindSha256>
+    <TailwindAsset Condition="$([MSBuild]::IsOSPlatform('Linux')) And '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'Arm64'">tailwindcss-linux-arm64</TailwindAsset>
+    <TailwindSha256 Condition="'$(TailwindAsset)' == 'tailwindcss-linux-arm64'">55fd0b241214eff3de1e8ee4f22796662f2d2e7a49bcfca7477cfd0bac398195</TailwindSha256>
+    <TailwindAsset Condition="$([MSBuild]::IsOSPlatform('Windows'))">tailwindcss-windows-x64.exe</TailwindAsset>
+    <TailwindSha256 Condition="'$(TailwindAsset)' == 'tailwindcss-windows-x64.exe'">e0e260ce048014e9268f6237ff18f8ccf02cef521cbd0ae04e82c2cdf7aa3955</TailwindSha256>
+
+    <TailwindDir>$(MSBuildThisFileDirectory)../tools/tailwindcss-$(TailwindVersion)/</TailwindDir>
+    <TailwindExe>$(TailwindDir)$(TailwindAsset)</TailwindExe>
+    <TailwindInput>$(MSBuildProjectDirectory)/Styles/app.css</TailwindInput>
+    <TailwindOutput>$(MSBuildProjectDirectory)/wwwroot/css/app.css</TailwindOutput>
+  </PropertyGroup>
+
+  <Target Name="TailwindInstall" Condition="!Exists('$(TailwindExe)')">
+    <Error Condition="'$(TailwindAsset)' == ''" Text="No Tailwind CSS CLI is pinned for this OS and architecture. Add it to build/Tailwind.targets." />
+    <DownloadFile SourceUrl="https://github.com/tailwindlabs/tailwindcss/releases/download/v$(TailwindVersion)/$(TailwindAsset)"
+                  DestinationFolder="$(TailwindDir)" DestinationFileName="$(TailwindAsset).download" Retries="2" />
+    <GetFileHash Files="$(TailwindDir)$(TailwindAsset).download" Algorithm="SHA256" HashEncoding="hex">
+      <Output TaskParameter="Hash" PropertyName="_TailwindDownloadedHash" />
+    </GetFileHash>
+    <Delete Condition="'$(_TailwindDownloadedHash.ToLowerInvariant())' != '$(TailwindSha256)'" Files="$(TailwindDir)$(TailwindAsset).download" />
+    <Error Condition="'$(_TailwindDownloadedHash.ToLowerInvariant())' != '$(TailwindSha256)'"
+           Text="The downloaded $(TailwindAsset) has SHA-256 $(_TailwindDownloadedHash), not the pinned $(TailwindSha256). It was deleted." />
+    <Move SourceFiles="$(TailwindDir)$(TailwindAsset).download" DestinationFiles="$(TailwindExe)" />
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows'))" Command="chmod +x &quot;$(TailwindExe)&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <TailwindSource Include="$(TailwindInput);**/*.razor;**/*.cs" Exclude="bin/**;obj/**" />
+  </ItemGroup>
+
+  <Target Name="TailwindBuild" DependsOnTargets="TailwindInstall" BeforeTargets="BeforeBuild"
+          Inputs="@(TailwindSource);$(MSBuildThisFileFullPath)" Outputs="$(TailwindOutput)">
+    <Exec Command="&quot;$(TailwindExe)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify"
+          WorkingDirectory="$(MSBuildProjectDirectory)" StandardOutputImportance="low" />
+  </Target>
+
+  <!-- On a clean checkout the output does not exist when items are evaluated, so add it as a web asset here. -->
+  <Target Name="TailwindAddOutput" AfterTargets="TailwindBuild">
+    <ItemGroup>
+      <Content Remove="$(TailwindOutput)" />
+      <Content Include="$(TailwindOutput)" />
+    </ItemGroup>
+  </Target>
+</Project>

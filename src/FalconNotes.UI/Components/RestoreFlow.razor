@@ -1,0 +1,146 @@
+@* Port of components/RestorePanel.tsx's steps (docs/05, Restore; docs/07, Welcome): choose files with the system picker,
+   see what they hold, restore with progress, then the result. Welcome and Key lost show it on its own; Settings →
+   Backup & data puts it under its intro (Phase 6). *@
+@using FalconNotes.Core.Backup.Restore
+@using FalconNotes.Core.Platform
+@inject IFilePicker Picker
+@inject RestoreReader Reader
+@inject RestoreRunner Runner
+@implements IDisposable
+
+@if (_step is Step.Idle or Step.Reading or Step.Done)
+{
+    <Button Variant="ButtonVariant.Secondary" Class="@ButtonClass" Busy="_step == Step.Reading" Disabled="_step == Step.Reading" OnClick="ChooseAsync">
+        <Icon Name="IconName.Upload" Class="size-4" /> @ChooseLabel
+    </Button>
+}
+
+@if (_step == Step.Ready && _plan is not null)
+{
+    <div class="mt-4 flex flex-col gap-3">
+        <p class="text-sm"><strong>@_label</strong>: @Plural(_plan.Items.Count, "note")@(_plan.FileCount > 0 ? $" with {Plural(_plan.FileCount, "attached file")}" : "").</p>
+        @if (_plan.Problems.Count > 0)
+        {
+            <ProblemList Title="Some files could not be read:" Items="_plan.Problems" />
+        }
+        <div class="flex gap-2">
+            <Button Disabled="_plan.Items.Count == 0" OnClick="RestoreAsync">Restore @Plural(_plan.Items.Count, "note")</Button>
+            <Button Variant="ButtonVariant.Ghost" OnClick="CancelAsync">Cancel</Button>
+        </div>
+    </div>
+}
+
+@if (_step is Step.Running or Step.Done && _progress is not null)
+{
+    <div class="mt-4 flex flex-col gap-3" aria-live="polite">
+        @if (_step == Step.Running)
+        {
+            <div role="progressbar" aria-label="Restore progress" aria-valuemin="0" aria-valuemax="@_progress!.Total" aria-valuenow="@_progress.Done"
+                 class="h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800">
+                <div class="h-full rounded-full bg-maple-600 transition-[width]" style="width: @(_progress.Total > 0 ? Math.Round(100.0 * _progress.Done / _progress.Total) : 100)%"></div>
+            </div>
+        }
+        <p class="text-sm">@(_step == Step.Running ? $"Restoring… {_progress!.Done:N0} of {_progress.Total:N0}" : RestoreRunner.Summary(_progress!))</p>
+        @if (_step == Step.Done && _progress!.Stopped is { } stopped)
+        {
+            <p role="alert" class="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+                Stopped before the last @Plural(_progress.Total - _progress.Done, "note"). @stopped Then restore the same file again: notes already restored are skipped.
+            </p>
+        }
+        @if (_progress!.Failed.Count > 0)
+        {
+            <ProblemList Title="@(_step == Step.Done ? "Not everything could be restored:" : "Problems so far:")" Items="@_progress.Failed.Select(f => $"{f.Source}: {f.Reason}").ToList()" />
+        }
+        @if (_step == Step.Done && Finished is not null)
+        {
+            @Finished
+        }
+    </div>
+}
+
+@code {
+    private enum Step { Idle, Reading, Ready, Running, Done }
+
+    private Step _step = Step.Idle;
+    private RestorePlan? _plan;
+    private string _label = "";
+    private RestoreProgress? _progress;
+
+    /// <summary>The choose button's label.</summary>
+    [Parameter] public string ChooseLabel { get; set; } = "Choose files…";
+
+    /// <summary>Extra classes on the choose button.</summary>
+    [Parameter] public string? ButtonClass { get; set; } = "mt-4";
+
+    /// <summary>Shown under the result, such as a Continue button.</summary>
+    [Parameter] public RenderFragment? Finished { get; set; }
+
+    /// <summary>Called when the restore is done.</summary>
+    [Parameter] public EventCallback<RestoreProgress> OnDone { get; set; }
+
+    /// <summary>Called when the user cancels at the summary.</summary>
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    /// <summary>Opens the picker at once (Welcome's "Restore from a backup…").</summary>
+    [Parameter] public bool StartPicking { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && StartPicking)
+        {
+            await ChooseAsync();
+        }
+    }
+
+    private static string Plural(int count, string noun) => $"{count:N0} {noun}{(count == 1 ? "" : "s")}";
+
+    private async Task ChooseAsync()
+    {
+        var files = await Picker.PickFilesAsync(RestoreReader.Accept);
+        if (files.Count == 0)
+        {
+            if (StartPicking && _step == Step.Idle)
+            {
+                await OnCancel.InvokeAsync();
+            }
+
+            return;
+        }
+
+        _step = Step.Reading;
+        StateHasChanged();
+        _plan?.Dispose();
+        _plan = await Reader.ReadAsync(files.Select(f => new RestoreSource(f.FileName, f.OpenReadAsync)));
+        _label = files.Count == 1 ? files[0].FileName : Plural(files.Count, "file");
+        _step = Step.Ready;
+    }
+
+    private async Task RestoreAsync()
+    {
+        _step = Step.Running;
+        _progress = new RestoreProgress(_plan!.Items.Count, 0, 0, 0, 0, []);
+        var progress = new Progress<RestoreProgress>(p =>
+        {
+            _progress = p;
+            StateHasChanged();
+        });
+        var result = await Runner.RunAsync(_plan.Items, progress);
+        _progress = result;
+        _step = Step.Done;
+        _plan.Dispose();
+        _plan = null;
+        await OnDone.InvokeAsync(result);
+    }
+
+    private async Task CancelAsync()
+    {
+        _plan?.Dispose();
+        _plan = null;
+        _step = Step.Idle;
+        await OnCancel.InvokeAsync();
+    }
+
+    /// <inheritdoc />
+    public void Dispose() => _plan?.Dispose();
+}
