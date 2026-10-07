@@ -1,0 +1,74 @@
+@page "/todo"
+@* Port of TodoPage: the user's todo lists, pinned ones first, with a small form to start a new one. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@using TodoText = FalconNotes.Core.Text.Todo
+@inject NoteService Notes
+@inject Toasts Toasts
+@inject AppState State
+
+<h1 class="mb-4 text-xl font-semibold">Todo</h1>
+@if (!State.Preferences.TodoLists)
+{
+    <FeatureOff Title="Todo lists are turned off">Your lists are kept and come back when you turn them on again.</FeatureOff>
+}
+else
+{
+    <form @onsubmit="CreateAsync" @onsubmit:preventDefault class="flex gap-2">
+        <input value="@_name" @oninput="@(e => _name = e.Value?.ToString() ?? "")" placeholder="New list, e.g. Groceries"
+               aria-label="New list name" maxlength="300"
+               class="h-11 min-w-0 flex-1 rounded-xl border border-stone-300 bg-white px-3 text-base outline-none focus:border-maple-500 dark:border-stone-700 dark:bg-stone-900" />
+        <Button Type="submit" Busy="_saving" Disabled="@(_name.Trim().Length == 0)" Class="h-11">
+            <Icon Name="IconName.Plus" Class="size-4" /> Create list
+        </Button>
+    </form>
+    <div class="mt-6 flex flex-col gap-6">
+        <NoteList State="NoteState.Pinned" Kinds="@(new[] { NoteKind.Todo })" RenderNote="Card" ShowEndMarker="false">
+            <Header><h2 class="px-1 text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400">Pinned</h2></Header>
+        </NoteList>
+        <NoteList State="NoteState.Feed" Kinds="@(new[] { NoteKind.Todo })" RenderNote="Card">
+            <Empty><EmptyState Title="No lists yet">Create one above, then add items and tick them off as you go.</EmptyState></Empty>
+        </NoteList>
+    </div>
+}
+
+@code {
+    private string _name = "";
+    private bool _saving;
+    private Guid? _created;
+
+    private RenderFragment<Note> Card => note => builder =>
+    {
+        builder.OpenComponent<TodoCard>(0);
+        builder.AddComponentParameter(1, nameof(TodoCard.Note), note);
+        builder.AddComponentParameter(2, nameof(TodoCard.AutoFocus), note.Id == _created);
+        builder.CloseComponent();
+    };
+
+    private async Task CreateAsync()
+    {
+        var title = _name.Trim();
+        if (title.Length == 0 || _saving)
+        {
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var note = await Notes.CreateAsync(TodoText.Serialize(new TodoList(title, [])), NoteKind.Todo);
+            _name = "";
+            _created = note.Id;
+        }
+        catch (Exception)
+        {
+            Toasts.Error("Could not create the list.");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

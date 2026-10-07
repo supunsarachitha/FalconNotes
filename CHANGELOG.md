@@ -48,3 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   notes and Trash. "Shrink photos" and paste/drag-and-drop for attachments are not yet wired up (the native file
   picker covers every platform meanwhile); Share on Android is left for the platform pass.
 - The clipboard, for a note's "Copy text".
+- The Todo tab: a form to start a new list, `TodoCard` (tick, add, edit and remove items; edit them all at once as
+  Markdown; rename, label, pin, archive or delete the list) and `ItemsEditor`, ported with the web app's markup,
+  shortcuts and tests.

@@ -1,0 +1,321 @@
+@* Port of components/TodoCard.tsx: a todo list in the Todo tab: tick, add, edit and remove items, or edit them all
+   at once as Markdown; rename, label, pin, archive or delete the list. Every change shows at once and is saved in
+   the background, one save after another, as the list's Markdown (Core/Text/Todo.cs, NoteEditor). *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@using TodoText = FalconNotes.Core.Text.Todo
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject NoteService Notes
+@inject AppState State
+@inject Toasts Toasts
+
+<article aria-label="@List.Title"
+         class="note-card rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+    <header class="-mt-1 flex items-center gap-2">
+        @if (_renaming)
+        {
+            <input @ref="_renameInput" aria-label="List name" value="@_draft" @oninput="@(e => _draft = e.Value?.ToString() ?? "")"
+                   @onblur="FinishRename" @onkeydown="@(e => OnKey(e, FinishRename))"
+                   class="min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-2 py-1 text-lg font-semibold outline-none focus:border-maple-500 dark:border-stone-700 dark:bg-stone-950" />
+        }
+        else
+        {
+            <h3 class="min-w-0 flex-1 break-words text-lg font-semibold leading-snug">@List.Title</h3>
+        }
+        @if (Note.IsPinned && !Note.IsArchived)
+        {
+            <span aria-label="Pinned" class="shrink-0 text-maple-600 dark:text-maple-400"><Icon Name="IconName.Pin" Class="size-4" /></span>
+        }
+        <span class="shrink-0 text-sm tabular-nums text-stone-500 dark:text-stone-400" aria-label="@($"{Done} of {List.Items.Count} done")">
+            @($"{Done}/{List.Items.Count}")
+        </span>
+        <div class="-mr-2">
+            <DropdownMenu Label="List actions">
+                <Trigger><Icon Name="IconName.MoreHorizontal" Class="size-5" /></Trigger>
+                <ChildContent>
+                    @if (!Note.IsArchived)
+                    {
+                        <MenuItem IconName="@(Note.IsPinned ? IconName.PinOff : IconName.Pin)"
+                                  OnSelect="@(() => ChangeAsync(new NotePatch(IsPinned: !Note.IsPinned), Note.IsPinned ? "Unpinned." : "Pinned to the top."))">
+                            @(Note.IsPinned ? "Unpin" : "Pin to top")
+                        </MenuItem>
+                        <MenuItem IconName="IconName.Pencil" OnSelect="StartRename">Rename</MenuItem>
+                        @if (State.Preferences.Labels)
+                        {
+                            <MenuItem IconName="IconName.Tag" OnSelect="() => _choosingLabels = true">Labels…</MenuItem>
+                        }
+                        @if (_markdown is null)
+                        {
+                            <MenuItem IconName="IconName.FileText" OnSelect="StartMarkdown">Edit as Markdown</MenuItem>
+                        }
+                        @if (Done > 0)
+                        {
+                            <MenuItem IconName="IconName.ListChecks" OnSelect="ClearCompleted">Clear completed</MenuItem>
+                        }
+                    }
+                    @if (State.Preferences.Archive || Note.IsArchived)
+                    {
+                        <MenuItem IconName="@(Note.IsArchived ? IconName.ArchiveRestore : IconName.Archive)"
+                                  OnSelect="@(() => ChangeAsync(new NotePatch(IsArchived: !Note.IsArchived), Note.IsArchived ? "Restored." : "Archived."))">
+                            @(Note.IsArchived ? "Restore" : "Archive")
+                        </MenuItem>
+                    }
+                    <MenuSeparator />
+                    <MenuItem IconName="IconName.Trash2" Danger="true" OnSelect="_removal.StartAsync">@_removal.MenuLabel</MenuItem>
+                </ChildContent>
+            </DropdownMenu>
+        </div>
+    </header>
+
+    @if (_markdown is not null && !Note.IsArchived)
+    {
+        <ItemsEditor Title="@List.Title" Initial="@_markdown" OnSave="SaveMarkdown" OnCancel="@(() => _markdown = null)" />
+    }
+    else
+    {
+        @if (List.Items.Count > 0)
+        {
+            <ul class="mt-2 flex flex-col" aria-label="@($"Items in {List.Title}")">
+                @for (var i = 0; i < List.Items.Count; i++)
+                {
+                    var index = i;
+                    var item = List.Items[index];
+                    <li class="flex min-h-10 items-center gap-3">
+                        <input type="checkbox" checked="@item.Done" @onchange="() => Toggle(index)" disabled="@Note.IsArchived"
+                               aria-label="@item.Text" class="size-5 shrink-0 cursor-pointer accent-maple-600" />
+                        @if (_editing == index)
+                        {
+                            <input @ref="_editInput" aria-label="Edit item" value="@_draft" @oninput="@(e => _draft = e.Value?.ToString() ?? "")"
+                                   @onblur="FinishEdit" @onkeydown="@(e => OnKey(e, FinishEdit))"
+                                   class="min-w-0 flex-1 rounded-lg border border-stone-300 bg-white px-2 py-1 text-[15px] outline-none focus:border-maple-500 dark:border-stone-700 dark:bg-stone-950" />
+                        }
+                        else
+                        {
+                            <button type="button" @onclick="() => StartEdit(index)" disabled="@Note.IsArchived" title="Edit"
+                                    class="@Classes.Join("min-w-0 flex-1 break-words py-1 text-left text-[15px]", item.Done ? "text-stone-400 line-through dark:text-stone-500" : null)">
+                                @item.Text
+                            </button>
+                        }
+                        @if (!Note.IsArchived)
+                        {
+                            <IconButton Label="@($"Remove {item.Text}")" OnClick="@(() => Remove(index))" Class="size-8 text-stone-400">
+                                <Icon Name="IconName.X" Class="size-4" />
+                            </IconButton>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (!Note.IsArchived)
+        {
+            <form @onsubmit="Add" @onsubmit:preventDefault class="mt-2 flex items-center gap-2">
+                <input @ref="_addInput" value="@_newItem" @oninput="@(e => _newItem = e.Value?.ToString() ?? "")"
+                       placeholder="Add an item" aria-label="@($"Add an item to {List.Title}")" maxlength="500"
+                       class="h-10 min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 bg-transparent px-3 text-[15px] outline-none focus:border-solid focus:border-maple-500 dark:border-stone-700" />
+            </form>
+        }
+    }
+
+    <LabelChips Ids="Note.LabelIds" />
+    <ConfirmDialog Open="_removal.Confirming" OpenChanged="@(open => { if (!open) { _removal.CancelConfirm(); } })"
+                    Title="@_removal.ConfirmTitle" ConfirmLabel="Delete" Busy="_removal.Removing" OnConfirm="_removal.ConfirmAsync">
+        <Description>"@List.Title" and its @List.Items.Count item(s) will be deleted permanently. To keep it out of sight instead, archive it.</Description>
+    </ConfirmDialog>
+    @if (State.Preferences.Labels)
+    {
+        <LabelPicker Note="Note" Open="_choosingLabels" OpenChanged="open => _choosingLabels = open" />
+    }
+</article>
+
+@code {
+    private IJSObjectReference? _module;
+    private NoteEditor<TodoList> _editor = null!;
+    private NoteRemoval _removal = null!;
+    private int? _editing;
+    private bool _renaming;
+    private string _draft = "";
+    private string _newItem = "";
+    private bool _choosingLabels;
+    private string? _markdown;
+    private bool _focusRename;
+    private bool _focusEditItem;
+    private ElementReference _addInput;
+    private ElementReference _renameInput;
+    private ElementReference _editInput;
+
+    /// <summary>The list's note.</summary>
+    [Parameter, EditorRequired] public Note Note { get; set; } = null!;
+
+    /// <summary>Whether the "Add an item" field should take focus once rendered (a list just created).</summary>
+    [Parameter] public bool AutoFocus { get; set; }
+
+    private TodoList List => _editor.Value;
+
+    private int Done => List.Items.Count(item => item.Done);
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        _editor = new NoteEditor<TodoList>(Notes, Note, TodoText.Parse, TodoText.Serialize,
+            _ => Toasts.Error("A change to this list could not be saved. Please try again."));
+        _removal = new NoteRemoval(
+            Note, "list", "Delete this list?",
+            $"\"{List.Title}\" and its {List.Items.Count} item(s) will be deleted permanently. To keep it out of sight instead, archive it.",
+            Notes, State, Toasts, StateHasChanged);
+    }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet() => _editor.Reload(Note);
+
+    /// <inheritdoc />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AutoFocus)
+        {
+            var module = await ModuleAsync();
+            await module.InvokeVoidAsync("focus", _addInput);
+        }
+
+        if (_focusRename)
+        {
+            _focusRename = false;
+            var module = await ModuleAsync();
+            await module.InvokeVoidAsync("focusAtEnd", _renameInput);
+        }
+
+        if (_focusEditItem)
+        {
+            _focusEditItem = false;
+            var module = await ModuleAsync();
+            await module.InvokeVoidAsync("focusAtEnd", _editInput);
+        }
+    }
+
+    private void Toggle(int index) =>
+        Commit(List with { Items = List.Items.Select((item, i) => i == index ? item with { Done = !item.Done } : item).ToList() });
+
+    private void Add()
+    {
+        var text = _newItem.Trim();
+        if (text.Length == 0)
+        {
+            return;
+        }
+
+        _newItem = "";
+        Commit(List with { Items = [.. List.Items, new TodoItem(text, false)] });
+    }
+
+    private void StartEdit(int index)
+    {
+        _editing = index;
+        _draft = List.Items[index].Text;
+        _focusEditItem = true;
+    }
+
+    private void FinishEdit()
+    {
+        if (_editing is not int index)
+        {
+            return;
+        }
+
+        var text = _draft.Trim();
+        _editing = null;
+        if (text.Length == 0)
+        {
+            Commit(List with { Items = List.Items.Where((_, i) => i != index).ToList() });
+        }
+        else if (text != List.Items[index].Text)
+        {
+            Commit(List with { Items = List.Items.Select((item, i) => i == index ? item with { Text = text } : item).ToList() });
+        }
+    }
+
+    private void Remove(int index) => Commit(List with { Items = List.Items.Where((_, i) => i != index).ToList() });
+
+    private void ClearCompleted() => Commit(List with { Items = List.Items.Where(item => !item.Done).ToList() });
+
+    private void StartRename()
+    {
+        _draft = List.Title;
+        _renaming = true;
+        _focusRename = true;
+    }
+
+    private void FinishRename()
+    {
+        _renaming = false;
+        var title = _draft.Trim();
+        if (title.Length > 0 && title != List.Title)
+        {
+            Commit(List with { Title = title });
+        }
+    }
+
+    private void StartMarkdown()
+    {
+        _editing = null;
+        _markdown = TodoText.SerializeItems(List.Items);
+    }
+
+    private void SaveMarkdown(string text)
+    {
+        _markdown = null;
+        var items = TodoText.ParseItems(text);
+        if (TodoText.SerializeItems(items) != TodoText.SerializeItems(List.Items))
+        {
+            Commit(List with { Items = items });
+        }
+    }
+
+    private void OnKey(KeyboardEventArgs e, Action finish)
+    {
+        if (e.Key == "Enter")
+        {
+            finish();
+        }
+        else if (e.Key == "Escape")
+        {
+            // Resets both flags unconditionally, matching the reference: whichever field is open, it closes without saving.
+            _editing = null;
+            _renaming = false;
+        }
+    }
+
+    private void Commit(TodoList next) => _editor.Commit(next);
+
+    private async Task ChangeAsync(NotePatch patch, string message)
+    {
+        try
+        {
+            await Notes.PatchAsync(Note.Id, patch);
+            Toasts.Info(message);
+        }
+        catch (Exception)
+        {
+            Toasts.Error("That didn't work. Please try again.");
+        }
+    }
+
+    private async Task<IJSObjectReference> ModuleAsync() => _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/editor.js");
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}
