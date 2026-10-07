@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Welcome → Restore from a backup… now shows what the chosen file holds. Before, the button kept spinning after
+  the file was chosen and the restore could not be started from there.
 - Forgot your PIN → Erase and start over now goes to Welcome. Before, the Lock screen stayed until the app was
   restarted. Erase all data in Settings also turns the app lock's screenshot blocking off at once.
 - Android: starting the app a second time returns to the open window. Before, it could stack a second window that
