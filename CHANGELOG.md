@@ -33,3 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backups in the Maple Notes web app's format: export to a ZIP of Markdown, plain text or JSON in any folder layout,
   with files, saved where you choose (`falcon-notes-{date}.zip`); restore from this app's, the web app's or a server's
   exports, or single Markdown, text and JSON files. Restoring the same backup twice changes nothing.
+- The falcon mark, drawn and approved by the owner, with the Android adaptive icon and splash made from it.
+- The app shell: a sidebar at 1,024 px and wider, a drawer below it, the search box, the side menu in the user's
+  chosen order and size, the labels list and a month calendar, and the profile footer. `Icon`, `Logo`, `Toaster`,
+  `ConfirmDialog` and `DropdownMenu`, ported with the web app's markup and classes. The theme, accent and native
+  chrome (Android first) are applied before the first paint.
+- Welcome (start writing, or restore from a backup) and Key lost (move the unreadable data aside and start again,
+  with or without a restore), wired into start-up: no profile yet always opens Welcome, with the app shell held back
+  from both screens.

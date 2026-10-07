@@ -95,16 +95,26 @@ which runs the same checks inside the app: 13 exports match, 13 restores clean, 
 
 ## Phase 3: shell and design system
 
-- [ ] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): drawn, approved by the owner, saved as
+- [x] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): drawn, approved by the owner, saved as
       `fixtures/falcon-mark.svg`; the app icon and splash made from it.
-- [ ] UI primitives, `Icon`, `Logo`, `Toaster`, `ConfirmDialog`, `DropdownMenu` ([06](06-design-system.md#components)).
-- [ ] `AppShell` (sidebar ≥ 1,024 px, drawer below), routes, search box, menu with order and sizes, labels list slot,
+- [x] UI primitives, `Icon`, `Logo`, `Toaster`, `ConfirmDialog`, `DropdownMenu` ([06](06-design-system.md#components)).
+- [x] `AppShell` (sidebar ≥ 1,024 px, drawer below), routes, search box, menu with order and sizes, labels list slot,
       calendar slot.
-- [ ] Appearance: theme, accent and native chrome; first paint without a flash.
-- [ ] `AppBootstrapper`, **Welcome**, **Key lost** ([07](07-screens.md#welcome)).
+- [x] Appearance: theme, accent and native chrome; first paint without a flash (Android; Windows and macOS follow
+      their heads).
+- [x] `AppBootstrapper`, **Welcome**, **Key lost** ([07](07-screens.md#welcome)).
 
 **Acceptance**: side-by-side screenshots of the empty shell match `reference/.../docs/screenshots/*` in light and dark,
 at 375 px and 1,280 px wide, apart from the name and mark.
+
+Status (2026-10-07): built on the Android emulator — Welcome, the gated redirect to it when there is no profile, the
+drawer/sidebar with search, menu, calendar and profile footer, and Key lost's two ways out all run correctly (checked
+against docs/07 by hand; see docs/10's spike results style below for the next session). The falcon mark is approved
+and the Android adaptive icon and splash are generated from it. `AppShellTests` (6), `CalendarTests` (4),
+`WelcomeTests` (5) and `KeyLostTests` (3) port or newly cover docs/11's Phase 3 list; `KeyLostRecoveryTests` (2) covers
+the Core-side move-aside in `Core.Tests`. Still open: the literal side-by-side screenshot diff against
+`reference/.../docs/screenshots/*` (Home itself is Phase 4, so only the chrome can be compared yet), and the Windows
+and Mac Catalyst heads.
 
 ## Phase 4: notes
 

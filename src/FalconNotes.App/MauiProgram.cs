@@ -40,6 +40,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<Core.Platform.IFileSaver, Services.FileSaver>();
 #endif
         builder.Services.AddSingleton<IFileOpener, FileOpener>();
+        builder.Services.AddSingleton<Core.Platform.IAppInfo, Services.AppInfo>();
+        builder.Services.AddSingleton<IThemeSource, Services.ThemeSource>();
+#if ANDROID
+        builder.Services.AddSingleton<IWindowInsets, Services.AndroidWindowInsets>();
+#endif
 
         // Core and start-up (docs/02, Runtime model): stateless services are singletons.
         builder.Services.AddSingleton(TimeProvider.System);
@@ -61,6 +66,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<StartupTasks>();
         builder.Services.AddSingleton<AppBootstrapper>();
         builder.Services.AddSingleton<MediaHandler>();
+
+        // UI-wide state (docs/02, Runtime model): lives as long as the BlazorWebView, so it is a singleton too.
+        builder.Services.AddSingleton<AppState>();
+        builder.Services.AddSingleton<Toasts>();
+        builder.Services.AddSingleton<AppearanceService>();
         builder.Services.AddTransient<MainPage>();
 
 #if DEBUG

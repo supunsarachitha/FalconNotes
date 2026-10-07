@@ -25,6 +25,13 @@ public sealed class AppBootstrapper(DatabaseStartup startup, StartupTasks mainte
     /// <returns>What the check found.</returns>
     public Task<StartupOutcome> StartAsync() => _run ??= RunAsync();
 
+    /// <summary>
+    /// Reruns the check after Key lost has moved the unreadable data aside (docs/07, Key lost): a fresh key and an
+    /// empty database now exist, so this always reaches <see cref="StartupOutcome.Ready"/>.
+    /// </summary>
+    /// <returns>What the check found.</returns>
+    public Task<StartupOutcome> RestartAsync() => _run = RunAsync();
+
     private async Task<StartupOutcome> RunAsync()
     {
         var (outcome, database) = await startup.RunAsync();
