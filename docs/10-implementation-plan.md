@@ -118,16 +118,42 @@ and Mac Catalyst heads.
 
 ## Phase 4: notes
 
-- [ ] `NoteList` with infinite scroll and reload on change; `NoteCard` with menu, double-tap, tick boxes, labels and
+- [x] `NoteList` with infinite scroll and reload on change; `NoteCard` with menu, double-tap, tick boxes, labels and
       removal with Undo.
-- [ ] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, paste, drop,
-      progress, shrink).
-- [ ] `AttachmentGallery`, `ImageViewer`, players, Open and Save a copy.
-- [ ] Home (Today card, pinned, feed), filters (`?tag`, `?q`, `?day`, `?label`), Archive, Trash, Quick notes.
+- [x] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, progress). Paste
+      and drag-and-drop, and "shrink photos", are open (below).
+- [x] `AttachmentGallery`, `ImageViewer`, players, Open and Save a copy. Share (Android) is left for Phase 7.
+- [x] Home (Today card, pinned, feed), filters (`?tag`, `?q`, `?day`, `?label`), Archive, Trash, Quick notes.
 
 **Acceptance**: the ported component tests pass. On each platform, the manual checklist for notes
 ([11](11-testing.md#manual-qa)) passes. Scrolling a 10,000-note timeline with pictures stays smooth on a mid-range Android
 phone.
+
+Status (2026-10-07): built and tested on the Android emulator (bUnit; the manual checklist and the 10,000-note
+scroll test still need a device, docs/12). Every component above is ported and covered: `NoteEditor<T>` (optimistic
+checkbox ticks and other structured edits), `Markdown.razor` over the already-tested Core renderer, `LabelChips`/
+`LabelPicker`, `AttachmentGallery`/`ImageViewer`/`FileLink` (Open and Save a copy; "Copy text" needed the new
+`IClipboard` platform service, already named in docs/02 but not yet implemented), the composer's text-editing primitives (`FormatToolbar`, `TagSuggestions`,
+`editor.js`), `Composer`, `NoteCard` (`NoteRemoval` as a plain helper, `gestures.js`), `NoteList` (`observe.js`),
+`Home`/`FilterHeader`/`TodayCard`, `Archive`, `Quick`, `Trash`/`TrashCard`, and `FeatureOff` (pulled forward from
+Phase 5's `TodoPage.tsx`, since Archive and Quick notes both need it). 115 UI tests and 346 Core tests pass.
+
+Two gaps, deliberately left open rather than blocking the phase: "shrink photos" needs the platform's `IImageCodec`
+(SkiaSharp), pending the owner's approval of the dependency (docs/02); `Composer` calls it only if it ends up
+registered, so it degrades to adding the file unshrunk until then. Paste and drag-and-drop need their own
+`IJSStreamReference` plumbing beyond the native picker's; the native picker covers every platform meanwhile.
+
+Several real bugs were caught by writing the tests, not by inspection: `TagSuggestions` and `NoteCard.SetEditing`
+mutated state without calling `StateHasChanged`, so arrow-key navigation and double-tap-to-edit would have silently
+done nothing in the real app; `NoteCard`'s `Markdown` binding was `Content="Body"` instead of `Content="@Body"` — on
+a component tag, a string-typed parameter without `@` is a literal, not a reference to the same-named member, so
+every note card rendered the literal word "Body". The same mistake recurred in `Home.razor`'s `Tag`/`Search`
+bindings. Also found: a bUnit quirk where `Render<T>` with a completely empty parameter builder fails to register
+the root component (use the parameterless overload, or add at least one `.Add`); and repeated sync-over-async
+deadlocks where a test's `WaitForAssertion` predicate blocked on a fresh async database call from the renderer's
+own dispatcher thread, which a pending save needed in order to complete — the fix is always to wait on a plain
+DOM/in-memory signal first, then read the database with a real `await` once that signal confirms the operation has
+already finished.
 
 ## Phase 5: todo, habits, tags, calendar, labels
 

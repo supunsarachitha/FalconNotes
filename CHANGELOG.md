@@ -41,3 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Welcome (start writing, or restore from a backup) and Key lost (move the unreadable data aside and start again,
   with or without a restore), wired into start-up: no profile yet always opens Welcome, with the app shell held back
   from both screens.
+- Notes: Home (today's note, pinned notes and the feed), the composer (titles with today's date suggestion, the
+  format toolbar and its shortcuts, tag suggestions, attaching files through the native picker with progress),
+  note cards (the actions menu, double-tap to edit, checkbox ticks saved in the background, labels), the attachment
+  gallery and image viewer (Open and Save a copy), and the `?tag`, `?q`, `?day` and `?label` filters, Archive, Quick
+  notes and Trash. "Shrink photos" and paste/drag-and-drop for attachments are not yet wired up (the native file
+  picker covers every platform meanwhile); Share on Android is left for the platform pass.
+- The clipboard, for a note's "Copy text".
