@@ -224,6 +224,37 @@ pass — only `AppLockService` (Core) is unit tested; the manual emulator run is
 
 **Acceptance**: version 1.0.0 tagged; CHANGELOG written; all checklists ticked.
 
+Status (2026-10-07): Android-only pass, by decision — Mac Catalyst is blocked on this machine (Xcode 27.0 is
+installed; .NET for Mac Catalyst 26.5 refuses it, docs/10 Phase 0), and there is no Windows machine here (Windows
+builds run in CI, per CLAUDE.md). None of the four checklist boxes above is ticked, since each has a Windows or
+macOS half still to do; what Android's half needed is done:
+
+- **Platform details** ([12](12-platforms.md)): `WindowSoftInputMode = AdjustResize` added to `MainActivity`, so the
+  composer and dialogs stay above the keyboard (checked on the emulator: open the composer with the keyboard up,
+  nothing is covered). Checked against a Release build: `minSdkVersion` 26, `targetSdkVersion` the latest,
+  `allowBackup="false"`, `fullBackupContent="false"`, and no `INTERNET` permission (Debug builds still get it, from
+  the .NET Android tooling, as documented). `TrimMode=partial` was already set. Back was re-checked: it leaves the
+  app from Home (confirmed with `adb shell input keyevent KEYCODE_BACK` against `dumpsys window`, which showed focus
+  move to the launcher) and goes back through the WebView's history elsewhere, as the Phase 0 spike found. The
+  ≥ 1,024 px sidebar layout was checked with `adb shell wm size`/`wm density` set to a 1,280 × 800 landscape tablet
+  (not a real tablet — none is available — but a reasonable stand-in): the fixed sidebar, calendar and footer show
+  correctly next to the content column. **Share**, left open since Phase 4, is now built: a new `IShare` platform
+  interface, `AndroidShare` (MAUI's `Share.RequestAsync` over a decrypted cached copy, the same `cache/open/`
+  mechanism Open already used), a Share button next to Save a copy in the image viewer, and a new bUnit test.
+- **`THIRD-PARTY-NOTICES.md` and the licence check script**: `scripts/check-licenses.py` is ported (adapted: no npm
+  tree here, and "shipped" comes from `dotnet list package --include-transitive` against `FalconNotes.App` rather
+  than a published `deps.json`, since a MAUI Android build does not produce one the same way a container image
+  does). It found and classified all 175 packages the app resolves to (141 shipped, 34 build-time-only), all allowed,
+  and regenerated the notices file from them — which also fixed a real gap the hand-maintained file had missed:
+  the Lucide icon paths copied into `IconPaths.cs` had no licence entry at all (docs/06 asks for one). Run it with
+  `python3 scripts/check-licenses.py --notices THIRD-PARTY-NOTICES.md`.
+- **Release builds, the rest of the manual QA checklist, performance on a real phone, and the accessibility pass**
+  are not done. Signing needs a keystore and (for Windows and macOS) developer credentials only the owner can
+  provide; the manual QA checklist and TalkBack/Narrator/VoiceOver need a phone, a tablet, and the other two
+  platforms built at all. The performance budgets were re-run on the Mac in Release (`FALCON_PERF=1`) as a
+  regression check — still comfortably inside budget — but Phase 7's own ask (4× the Mac budgets, on the slowest
+  phone supported) still needs that phone (S6 in Phase 0 was deferred the same way).
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._

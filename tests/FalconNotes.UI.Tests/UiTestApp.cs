@@ -21,7 +21,7 @@ public sealed class UiTestApp : IDisposable
 {
     private UiTestApp(
         TestApp core, AppState state, AppLockState appLock, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener, FakeFileSaver saver,
-        FakeClipboard clipboard)
+        FakeClipboard clipboard, FakeShare share)
     {
         Core = core;
         State = state;
@@ -31,6 +31,7 @@ public sealed class UiTestApp : IDisposable
         Opener = opener;
         Saver = saver;
         Clipboard = clipboard;
+        Share = share;
     }
 
     /// <summary>The underlying Core services and database.</summary>
@@ -56,6 +57,9 @@ public sealed class UiTestApp : IDisposable
 
     /// <summary>Records text copied to the clipboard.</summary>
     public FakeClipboard Clipboard { get; }
+
+    /// <summary>Records files handed to the share sheet.</summary>
+    public FakeShare Share { get; }
 
     /// <summary>
     /// Starts a database, registers it and the UI state into <paramref name="services"/>, and loads <see cref="AppState"/>.
@@ -88,6 +92,7 @@ public sealed class UiTestApp : IDisposable
         var opener = new FakeFileOpener();
         var saver = new FakeFileSaver();
         var clipboard = new FakeClipboard();
+        var share = new FakeShare();
 
         services.AddSingleton(core.Notes);
         services.AddSingleton(new DailyNotes(core.Notes));
@@ -109,6 +114,7 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton<Core.Platform.IFileOpener>(opener);
         services.AddSingleton<Core.Platform.IFileSaver>(saver);
         services.AddSingleton<Core.Platform.IClipboard>(clipboard);
+        services.AddSingleton<Core.Platform.IShare>(share);
         services.AddSingleton(new ExportService(
             new NoteExporter(core.Storage, core.Attachments, core.Profile, core.Clock, Microsoft.Extensions.Logging.Abstractions.NullLogger<NoteExporter>.Instance),
             saver, core.Directories, core.Storage, core.Clock));
@@ -117,7 +123,7 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton(new KeyLostRecovery(new DeviceKeyStore(core.Secrets), core.Directories, core.Clock));
         services.AddSingleton(new EraseAllData(new DeviceKeyStore(core.Secrets), core.Storage, core.Directories));
 
-        return new UiTestApp(core, state, appLock, toasts, picker, opener, saver, clipboard);
+        return new UiTestApp(core, state, appLock, toasts, picker, opener, saver, clipboard, share);
     }
 
     /// <summary>Posts a note (docs/04): used to give the calendar, tag counts and lists something to show.</summary>

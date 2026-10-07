@@ -1,7 +1,7 @@
 @* Port of ImageViewer in components/ImageViewer.tsx, adapted per docs/07, Attachments: the download link becomes
-   Save a copy (IFileSaver); Share on Android is left for the platform pass in Phase 7. A full-screen viewer for a
-   note's images, fitted to the screen, with previous/next by button, arrow key or swipe, and Esc or the close
-   button to leave. *@
+   Save a copy (IFileSaver); on Android, Share hands a decrypted copy to the system share sheet (docs/12, Share). A
+   full-screen viewer for a note's images, fitted to the screen, with previous/next by button, arrow key or swipe,
+   and Esc or the close button to leave. *@
 @using FalconNotes.Core.Attachments
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Platform
@@ -10,6 +10,8 @@
 @inject IJSRuntime JS
 @inject AttachmentService Attachments
 @inject IFileSaver Saver
+@inject IShare Share
+@inject IAppDirectories Directories
 @inject Toasts Toasts
 
 <dialog @ref="_dialog" aria-label="@(Image?.FileName ?? "Image")"
@@ -27,6 +29,9 @@
             </h2>
             <button type="button" aria-label="@($"Save a copy of {Image.FileName}")" @onclick="SaveCopyAsync" class="@Control">
                 <Icon Name="IconName.Download" Class="size-5" />
+            </button>
+            <button type="button" aria-label="@($"Share {Image.FileName}")" @onclick="ShareAsync" class="@Control">
+                <Icon Name="IconName.Share" Class="size-5" />
             </button>
             <button type="button" aria-label="Close" @onclick="CloseAsync" class="@Control">
                 <Icon Name="IconName.X" Class="size-5" />
@@ -157,6 +162,30 @@
         catch (Exception)
         {
             Toasts.Error("Could not save a copy of this file.");
+        }
+    }
+
+    private async Task ShareAsync()
+    {
+        if (Image is not { } image)
+        {
+            return;
+        }
+
+        try
+        {
+            var folder = Path.Combine(Directories.CacheDirectory, "open");
+            if (await Attachments.CopyDecryptedAsync(image.Id, folder) is not { } path)
+            {
+                Toasts.Error("Could not share this file.");
+                return;
+            }
+
+            await Share.ShareFileAsync(path, image.ContentType);
+        }
+        catch (Exception)
+        {
+            Toasts.Error("Could not share this file.");
         }
     }
 

@@ -73,6 +73,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Erase all data (Settings → Profile): deletes the database, attachments, database copies and cache, and forgets the
   device key, then returns to Welcome.
 - Help: the adapted user guide (`UI/Help/Guide.cs`, docs/08), with a contents list and every section.
+- Share on Android: the image viewer's Share button hands a decrypted copy of the image to the system share sheet
+  (`IShare`, `AndroidShare`), the same `cache/open/` mechanism Open already uses.
+- `scripts/check-licenses.py`, ported from the Maple Notes server, checks every NuGet package the app ships or
+  builds with against the licence policy and regenerates `THIRD-PARTY-NOTICES.md` from the exact dependency
+  versions; it also added the Lucide icon licence that file had been missing. `WindowSoftInputMode = AdjustResize`
+  on `MainActivity`, so the composer and dialogs stay above the keyboard.
 
 ### Fixed
 

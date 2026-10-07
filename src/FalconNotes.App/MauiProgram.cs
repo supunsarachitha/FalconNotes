@@ -48,6 +48,7 @@ public static class MauiProgram
 #if ANDROID
         builder.Services.AddSingleton<IWindowInsets, Services.AndroidWindowInsets>();
         builder.Services.AddSingleton<Core.Platform.IAppLock, Services.AndroidAppLock>();
+        builder.Services.AddSingleton<Core.Platform.IShare, Services.AndroidShare>();
 #endif
 
         // Core and start-up (docs/02, Runtime model): stateless services are singletons.

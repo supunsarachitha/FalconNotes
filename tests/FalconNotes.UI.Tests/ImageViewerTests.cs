@@ -4,8 +4,8 @@ namespace FalconNotes.UI.Tests;
 
 /// <summary>
 /// Port of the applicable "opens images in a viewer" cases of AttachmentGallery.test.tsx, against ImageViewer
-/// directly. Save a copy replaces the web app's download link (docs/07, Attachments); Share on Android is left
-/// for the platform pass in Phase 7.
+/// directly. Save a copy replaces the web app's download link, and Share (new, Android only) hands a decrypted
+/// copy to the system share sheet (docs/07, Attachments; docs/12, Share).
 /// </summary>
 public class ImageViewerTests : BunitContext
 {
@@ -86,6 +86,21 @@ public class ImageViewerTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Single(app.Saver.Saved));
         Assert.Equal(images[0].FileName, app.Saver.Saved[0].SuggestedName);
+    }
+
+    [Fact]
+    public async Task Share_hands_a_decrypted_copy_to_the_share_sheet()
+    {
+        var (app, images) = await SetUpAsync(1);
+        using var owner = app;
+        SetUpDialogsJs();
+        var cut = Render<ImageViewer>(p => p.Add(v => v.Images, images).Add(v => v.Index, 0));
+
+        cut.Find($"button[aria-label='Share {images[0].FileName}']").Click();
+
+        cut.WaitForAssertion(() => Assert.Single(app.Share.Shared));
+        Assert.Equal(images[0].ContentType, app.Share.Shared[0].ContentType);
+        Assert.True(File.Exists(app.Share.Shared[0].Path));
     }
 
     [Fact]
