@@ -165,15 +165,51 @@ already finished.
 
 ## Phase 6: settings, backups, lock, help
 
-- [ ] Settings sections ([07](07-screens.md#settings)): Profile, Appearance, Side menu, Writing, Features, Labels,
+- [x] Settings sections ([07](07-screens.md#settings)): Profile, Appearance, Side menu, Writing, Features, Labels,
       Backup & data (export, restore, trash, delete all), Privacy & security (app lock, data protection).
-- [ ] The app lock: PIN set and change, biometrics per platform, lock after a delay, background cover, `FLAG_SECURE`,
+- [x] The app lock: PIN set and change, biometrics per platform, lock after a delay, background cover, `FLAG_SECURE`,
       tries limit, Lock screen, Forgot PIN → erase ([03](03-data-storage-and-security.md#app-lock)).
-- [ ] Erase all data.
-- [ ] Help with the adapted guide ([08](08-help-guide.md)).
+- [x] Erase all data.
+- [x] Help with the adapted guide ([08](08-help-guide.md)).
 
 **Acceptance**: export from the app restores in the web app (run the reference with Docker or `dotnet run`), and a web
 export restores in the app. The lock cannot be bypassed by Back, the app switcher, deep links or reopening.
+
+Status (2026-10-07): built and manually checked on the Android emulator. The Settings shell (`Settings.razor`) ports
+`SettingsPage.tsx`'s list-beside-section layout; every section renders real data (the Profile screenshot showed the
+live key fingerprint, storage use and "On this device since"). The app lock's PIN flow was exercised end to end on
+the emulator: Set a PIN → saved → `FLAG_SECURE` engaged immediately (confirmed by `adb screencap` itself going black,
+since Android refuses to capture a secure window) and again after a cold restart, proving both the settings and the
+flag survive. The Lock screen (`Lock.razor`) is reached by a check in `Routes.razor` before the `Router` component
+itself is mounted — not a route it guards — so no navigation, deep link or Back press can reach a note while locked;
+the same screen offers "Forgot your PIN?", which erases and returns to Welcome. `AppLockService` has 12 new Core
+tests (docs/11's "new tests the reference does not have" list): PIN hashing and verification, the tries counter
+surviving a fresh service instance (standing in for a restart), and the lockout's doubling from 30 s to 15 min, all
+passing. 359 Core tests and 150 UI tests pass in all.
+
+A real pre-existing gap was found and fixed on the way in: `ExportService`, `RestoreReader`, `RestoreRunner` and
+`NoteExporter` were never registered in `MauiProgram`, so Welcome's "Restore from a backup…" would have thrown at
+runtime the first time anyone used it; the Backup & data section needed the same services, so the registration gap
+is now closed for both.
+
+Three deliberate simplifications, not blocking the phase:
+
+- **Biometric unlock is stubbed off** (`AndroidAppLock.IsBiometricAvailable => false`). It needs AndroidX's
+  `BiometricPrompt`, which is not yet an approved dependency (docs/02, Dependencies) — the same open question as
+  `SkiaSharp` for photo shrinking from Phase 4. The PIN is the only way in meanwhile, which the design already
+  requires to work on its own.
+- **The menu-order editor reorders by its arrow buttons only.** Pointer drag needs its own JS interop (pointer
+  capture, per-row bounding rectangles) beyond what `gestures.js` has; the arrows are fully keyboard- and
+  screen-reader-accessible meanwhile.
+- **The background "cover the window with the brand colour" overlay was not built.** `FLAG_SECURE` already blanks
+  Android's recent-apps thumbnail to nothing, which covers the same requirement in practice; a literal falcon-mark
+  overlay view can be added in the platform pass (Phase 7) if the blank thumbnail is not considered enough.
+
+Windows and macOS key-store names (`DataProtectionSection`'s "Windows' protected storage" / "the macOS Keychain") and
+`IAppLock` for those platforms are written to the interface but untested, since only the Android head is built
+(Phase 0, Android first). UI-level bUnit coverage for the new Lock/App lock screens themselves was not added in this
+pass — only `AppLockService` (Core) is unit tested; the manual emulator run is the only check on `Lock.razor`,
+`AppLockSection.razor` and the PIN dialogs so far.
 
 ## Phase 7: platforms, packaging, QA
 

@@ -1,0 +1,28 @@
+@* Port of PreferenceSwitch in components/PreferenceSections.tsx (docs/06, Components): a switch with its label and
+   explanation, for one preference. *@
+<div class="flex items-start gap-4 py-3 first:pt-0 last:pb-0">
+    <div class="min-w-0 flex-1">
+        <p class="text-sm font-medium">@Label</p>
+        <p id="@_descId" class="mt-0.5 text-sm text-stone-600 dark:text-stone-300">@Description</p>
+    </div>
+    <Switch Label="@Label" DescribedBy="@_descId" Checked="Checked" Disabled="Disabled" CheckedChanged="CheckedChanged" />
+</div>
+
+@code {
+    private readonly string _descId = $"pref-switch-{Guid.NewGuid():N}";
+
+    /// <summary>The switch's label.</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>What it does.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    /// <summary>Whether it is on.</summary>
+    [Parameter] public bool Checked { get; set; }
+
+    /// <summary>Disables the switch.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Called with the new state.</summary>
+    [Parameter] public EventCallback<bool> CheckedChanged { get; set; }
+}

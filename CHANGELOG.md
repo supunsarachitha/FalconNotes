@@ -57,6 +57,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tests.
 - The Tags page: every tag with how many notes use it, nested under their parents, a filter and the A–Z/Most used
   orders (`TagBranch`, `Core/Text/TagTree.cs`). Settings → Labels (`LabelSettings`, `LabelRow`, `LabelColorPicker`):
-  turning labels on or off, and creating, renaming, recolouring and deleting the account's labels; not yet placed in
-  a Settings page shell (Phase 6). The side-menu calendar and labels list, and the `?label=` filter on Home, were
-  already wired in from earlier phases.
+  turning labels on or off, and creating, renaming, recolouring and deleting the account's labels. The side-menu
+  calendar and labels list, and the `?label=` filter on Home, were already wired in from earlier phases.
+- The Settings page shell (`Settings.razor`), with every section: Profile (display name, storage use, Erase all
+  data), Appearance, Side menu (order by arrows, text size — pointer drag is left for a later pass), Writing and
+  Editing, Features (without Link previews; "Shrink photos before adding"), Labels, Backup & data (`ExportService`
+  and `RestoreReader`/`RestoreRunner` are now wired into the app, which Welcome's restore flow already depended on
+  but had never been registered), and Privacy & security.
+- The app lock (docs/03): a PIN (PBKDF2-HMAC-SHA256, 210,000 iterations, a growing lockout after five wrong tries),
+  the Lock screen (shown before the router itself mounts, so nothing can navigate around it), the sidebar's Lock
+  button, the background timer (Android `Window.Stopped`/`Resumed`), and `FLAG_SECURE` while the lock is on, which
+  also blanks the app from the recent-apps thumbnail. Biometric unlock is stubbed off for now: AndroidX
+  `BiometricPrompt` is not yet an approved dependency (docs/02), the same open question as `SkiaSharp` for photo
+  shrinking.
+- Erase all data (Settings → Profile): deletes the database, attachments, database copies and cache, and forgets the
+  device key, then returns to Welcome.
+- Help: the adapted user guide (`UI/Help/Guide.cs`, docs/08), with a contents list and every section.
+
+### Fixed
+
+- `Placeholders.razor` kept `@page` routes for Todo, Habits and Tags after Phase 5 ported real pages for them, which
+  made Blazor's router throw "ambiguous routes" on start-up and left the WebView blank.

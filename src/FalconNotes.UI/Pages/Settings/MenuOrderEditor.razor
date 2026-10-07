@@ -1,0 +1,65 @@
+@* Port of components/MenuOrderEditor.tsx (docs/04, Side menu order), with its arrow buttons only: reordering by
+   pointer drag needs its own JS interop (docs/02, gestures.js) and is left for a later pass. Each change saves for
+   the device at once. Items whose feature is off stay in the list, marked, so they keep their place. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@inject AppState State
+
+<div>
+    <ol aria-label="Menu items in order" class="divide-y divide-stone-100 rounded-xl border border-stone-200 dark:divide-stone-800 dark:border-stone-800">
+        @{
+            var order = MenuOrder.Read(State.Preferences.MenuOrder);
+        }
+        @for (var index = 0; index < order.Count; index++)
+        {
+            var id = order[index];
+            var position = index;
+            var item = MenuItems.All[id];
+            var off = !item.Shown(State.Preferences);
+            <li class="flex min-h-12 items-center gap-2 bg-white px-2 first:rounded-t-xl last:rounded-b-xl dark:bg-stone-900">
+                <Icon Name="item.Icon" Class="@Classes.Join("size-5 shrink-0", off ? "text-stone-400" : "text-stone-600 dark:text-stone-300")" />
+                <span class="@Classes.Join("min-w-0 flex-1 truncate text-sm font-medium", off ? "text-stone-500 dark:text-stone-400" : "")">
+                    @item.Label
+                    @if (off)
+                    {
+                        <span class="ml-2 text-xs font-normal">Hidden: the feature is off</span>
+                    }
+                </span>
+                <IconButton Label="@($"Move {item.Label} up")" Class="size-9" Disabled="position == 0" OnClick="() => StepAsync(order, position, -1)">
+                    <Icon Name="IconName.ArrowUp" Class="size-4" />
+                </IconButton>
+                <IconButton Label="@($"Move {item.Label} down")" Class="size-9" Disabled="position == order.Count - 1" OnClick="() => StepAsync(order, position, 1)">
+                    <Icon Name="IconName.ArrowDown" Class="size-4" />
+                </IconButton>
+            </li>
+        }
+    </ol>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+        @if (State.Preferences.MenuOrder != "")
+        {
+            <Button Variant="ButtonVariant.Secondary" Class="h-9" OnClick="ResetAsync">Back to the usual order</Button>
+        }
+        <span class="text-sm text-stone-600 dark:text-stone-300">Use the arrows to move an item.</span>
+    </div>
+    <p class="sr-only" aria-live="polite">@_announcement</p>
+</div>
+
+@code {
+    private string _announcement = "";
+
+    private async Task StepAsync(IReadOnlyList<string> order, int from, int by)
+    {
+        var moved = order[from];
+        var next = MenuOrder.Move(order, from, from + by);
+        if (ReferenceEquals(next, order))
+        {
+            return;
+        }
+
+        await State.UpdatePreferencesAsync(p => p with { MenuOrder = MenuOrder.Save(next) });
+        _announcement = $"{MenuItems.All[moved].Label} moved to position {next.ToList().IndexOf(moved) + 1} of {next.Count}.";
+    }
+
+    private Task ResetAsync() => State.UpdatePreferencesAsync(p => p with { MenuOrder = "" });
+}

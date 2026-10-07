@@ -12,6 +12,21 @@ namespace FalconNotes.UI.State;
 /// <param name="state">The preferences.</param>
 public sealed class AppearanceService(IThemeSource theme, AppState state)
 {
+    /// <summary>
+    /// Each accent's 600 shade, for the swatches in Settings → Appearance (docs/06; <c>ACCENT_COLORS</c> in
+    /// <c>lib/appearance.ts</c>).
+    /// </summary>
+    public static readonly IReadOnlyDictionary<Accent, string> Swatches = new Dictionary<Accent, string>
+    {
+        [Accent.Falcon] = "#8f1d21",
+        [Accent.Ocean] = "#1d4ed8",
+        [Accent.Forest] = "#166534",
+        [Accent.Teal] = "#115e59",
+        [Accent.Plum] = "#6b21a8",
+        [Accent.Amber] = "#9a3412",
+        [Accent.Slate] = "#334155",
+    };
+
     private IJSObjectReference? _module;
 
     /// <summary>Whether the app shows dark now.</summary>

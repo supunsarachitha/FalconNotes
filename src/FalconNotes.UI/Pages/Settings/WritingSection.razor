@@ -1,0 +1,38 @@
+@* Port of WritingSection in components/PreferenceSections.tsx (docs/07, Settings: unchanged). *@
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@inject AppState State
+
+<Section Title="Titles and dates">
+    <div class="divide-y divide-stone-100 dark:divide-stone-800">
+        <PreferenceSwitch Label="Note titles"
+                           Description="Add a title field when you write. The title is saved as the note's first line, as a heading, so it also appears in searches and exports."
+                           Checked="State.Preferences.NoteTitles" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { NoteTitles = on }))" />
+        <PreferenceSwitch Label="Start titles with today's date"
+                           Description="@(State.Preferences.NoteTitles ? "New notes get today's date as their title, which you can change." : "Turn on note titles to use this.")"
+                           Checked="State.Preferences.DateInTitles" Disabled="!State.Preferences.NoteTitles"
+                           CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { DateInTitles = on }))" />
+        <PreferenceSwitch Label="Titles on quick notes"
+                           Description="@(State.Preferences.NoteTitles ? "Quick notes get a title field too." : "Turn on note titles to use this.")"
+                           Checked="State.Preferences.QuickNoteTitles" Disabled="!State.Preferences.NoteTitles"
+                           CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { QuickNoteTitles = on }))" />
+        <div class="flex flex-col gap-1.5 py-3 last:pb-0">
+            <label for="@_formatId" class="text-sm font-medium">Date format</label>
+            <select id="@_formatId" value="@State.Preferences.DateFormat" @onchange="OnFormatChanged"
+                    class="h-11 rounded-xl border border-stone-300 bg-white px-3 text-base dark:border-stone-700 dark:bg-stone-950">
+                @foreach (var format in DateFormats.All)
+                {
+                    <option value="@format">@DateFormats.Format(_today, format)</option>
+                }
+            </select>
+            <p class="text-sm text-stone-600 dark:text-stone-300">Used for dates in titles and for daily notes.</p>
+        </div>
+    </div>
+</Section>
+
+@code {
+    private readonly string _formatId = $"date-format-{Guid.NewGuid():N}";
+    private readonly DateOnly _today = DateOnly.FromDateTime(DateTime.Now);
+
+    private Task OnFormatChanged(ChangeEventArgs e) => State.UpdatePreferencesAsync(p => p with { DateFormat = e.Value?.ToString() ?? p.DateFormat });
+}
