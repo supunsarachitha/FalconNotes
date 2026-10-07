@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Key lost: the screen is shown when the device key is missing. Before, the app opened to a blank page, because the
+  service behind its two buttons was not registered in the app.
 - Welcome → Restore from a backup… now shows what the chosen file holds. Before, the button kept spinning after
   the file was chosen and the restore could not be started from there.
 - Forgot your PIN → Erase and start over now goes to Welcome. Before, the Lock screen stayed until the app was
