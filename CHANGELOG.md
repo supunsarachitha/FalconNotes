@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Turning note titles on or off now updates the notes already on screen. Before, a note could show its title twice,
+  or lose it, until the app was restarted.
 - Settings → Appearance: choosing a theme or an accent colour, and the device switching between light and dark,
   now change the app at once. Before, the appearance was set only once, before the saved settings had loaded.
 - `Placeholders.razor` kept `@page` routes for Todo, Habits and Tags after Phase 5 ported real pages for them, which
