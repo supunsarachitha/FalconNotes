@@ -90,7 +90,7 @@ else
         }
         @if (Body.Trim().Length > 0)
         {
-            <Markdown Note="Note" Content="Body" OnToggleTask="@(Note.IsArchived ? default : EventCallback.Factory.Create<int>(this, ToggleItem))" />
+            <Markdown Note="Note" Content="@Body" OnToggleTask="@(Note.IsArchived ? default : EventCallback.Factory.Create<int>(this, ToggleItem))" />
         }
         <AttachmentGallery Attachments="Note.Attachments" />
         <LabelChips Ids="Note.LabelIds" />
