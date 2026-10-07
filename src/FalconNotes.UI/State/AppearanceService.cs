@@ -28,6 +28,7 @@ public sealed class AppearanceService(IThemeSource theme, AppState state)
     };
 
     private IJSObjectReference? _module;
+    private (bool Dark, Accent Accent)? _applied;
 
     /// <summary>Whether the app shows dark now.</summary>
     public bool IsDark => state.Preferences.Theme switch
@@ -37,15 +38,25 @@ public sealed class AppearanceService(IThemeSource theme, AppState state)
         _ => theme.DeviceIsDark,
     };
 
-    /// <summary>Applies the appearance to the page and the native chrome.</summary>
+    /// <summary>
+    /// Applies the appearance to the page and the native chrome. The router calls this after every change to the
+    /// preferences or the device's theme (as <c>useAppearance</c> does in the web app), so it does nothing when the
+    /// theme and accent are the ones already shown.
+    /// </summary>
     /// <param name="js">The page's JS runtime.</param>
     /// <returns>A task that completes when it is applied.</returns>
     public async Task ApplyAsync(IJSRuntime js)
     {
+        var wanted = (Dark: IsDark, state.Preferences.Accent);
+        if (_applied == wanted)
+        {
+            return;
+        }
+
+        _applied = wanted;
         _module ??= await js.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/appearance.js");
-        var dark = IsDark;
-        await _module.InvokeVoidAsync("apply", dark, state.Preferences.Accent.ToString().ToLowerInvariant());
-        theme.ApplyChrome(dark);
+        await _module.InvokeVoidAsync("apply", wanted.Dark, wanted.Accent.ToString().ToLowerInvariant());
+        theme.ApplyChrome(wanted.Dark);
     }
 
     /// <summary>The module, for the shell's other page-level calls (insets, scrolling).</summary>
