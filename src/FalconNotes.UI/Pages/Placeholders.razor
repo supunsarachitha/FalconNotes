@@ -1,6 +1,3 @@
-@page "/todo"
-@page "/habits"
-@page "/tags"
 @page "/help"
 @page "/settings"
 @page "/settings/{Section}"
@@ -18,16 +15,9 @@
 
     private string Title => Path switch
     {
-        "/todo" => "Todo",
-        "/habits" => "Habits",
-        "/tags" => "Tags",
         "/help" => "Help",
         _ => "Settings",
     };
 
-    private string Phase => Path switch
-    {
-        "/todo" or "/habits" or "/tags" => "Phase 5",
-        _ => "Phase 6",
-    };
+    private string Phase => "Phase 6";
 }
