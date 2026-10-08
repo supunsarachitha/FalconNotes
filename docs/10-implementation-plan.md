@@ -258,7 +258,7 @@ macOS half still to do; what Android's half needed is done:
 
 QA pass on the `release/1.0.0` branch (2026-10-07, Android emulator, API 36, Debug build driven through the WebView's
 developer tools, phone and 1,280 dp landscape, light and dark, airplane mode on for the last part): the Android half
-of [11 → Manual QA](11-testing.md#manual-qa) was run item by item. Six faults were found and fixed, each in its own
+of [11 → Manual QA](11-testing.md#manual-qa) was run item by item. Seven faults were found and fixed, each in its own
 commit with a test where one could be written:
 
 - Theme and accent did not follow Settings → Appearance or the device: they were applied once, before the preferences
@@ -273,6 +273,9 @@ commit with a test where one could be written:
   card the containing block of the menu's `position: fixed` and clipped it. Found by the owner after the pass, which
   had clicked the menus by script; menus and dialogs must be checked with real taps (`adb shell input tap`) and a
   screenshot.
+- Closing the Labels dialog left an empty box on the card: its `flex` class overrode `display: none` for a closed
+  `<dialog>` (now `open:flex`). Also found by the owner. The drawer, the image viewer and a confirmation dialog were
+  then re-checked with real taps and screenshots.
 
 `MainActivity` is now single-top ([12](12-platforms.md)); the `--es route` extra is read in `OnCreate` only, so it
 applies when the command starts the app, not when the app is already running.
