@@ -1,8 +1,11 @@
+using FalconNotes.Core.Attachments;
 using FalconNotes.Core.Domain;
 using FalconNotes.Core.Notes;
+using FalconNotes.Core.Platform;
 using FalconNotes.Core.Text;
 using FalconNotes.UI.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FalconNotes.UI.Tests;
 
@@ -214,5 +217,75 @@ public class ComposerTests : BunitContext
         cut.WaitForAssertion(() => Assert.Single(js.Module.Invocations["applyEdit"]));
         var edit = Assert.IsType<TextEdit>(js.Module.Invocations["applyEdit"][0].Arguments[1]);
         Assert.Equal("**maple**", edit.Insert);
+    }
+
+    // The next three are not in Composer.test.tsx: the web app shrinks in the browser, inside its upload call. Here
+    // the composer itself asks PhotoShrinker, so the switch and the missing codec are checked where they are wired.
+
+    private static PickedFile Photo(string name, int size) =>
+        new(name, "image/png", () => Task.FromResult<Stream>(new MemoryStream(new byte[size])));
+
+    private async Task<Attachment> AttachAndPostAsync(UiTestApp app, IRenderedComponent<Composer> cut, PickedFile file, string shownAs)
+    {
+        app.Picker.Enqueue(file);
+        cut.Find("button[aria-label='Attach files']").Click();
+        cut.WaitForAssertion(() => Assert.NotNull(cut.Find($"img[alt='{shownAs}']")));
+
+        cut.Find("#composer").Input("With a photo");
+        PostButton(cut).Click();
+        cut.WaitForAssertion(() => Assert.Equal("", cut.Find("#composer").GetAttribute("value")));
+        return (await ActiveNotesAsync(app)).Single().Attachments.Single();
+    }
+
+    [Fact]
+    public async Task Shrinks_a_photo_before_adding_it_when_the_setting_is_on()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { ShrinkPhotos = true });
+        Services.AddSingleton(new PhotoShrinker(new FakeImageCodec(jpegSize: 100)));
+        SetUpEditorJs();
+        var cut = Render<Composer>();
+
+        var added = await AttachAndPostAsync(app, cut, Photo("holiday.png", 1000), "holiday.jpg");
+
+        Assert.Equal(("holiday.jpg", "image/jpeg", 100), (added.FileName, added.ContentType, added.SizeBytes));
+    }
+
+    [Fact]
+    public async Task Adds_a_photo_as_it_is_while_the_setting_is_off()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex");
+        var codec = new FakeImageCodec(jpegSize: 100);
+        Services.AddSingleton(new PhotoShrinker(codec));
+        SetUpEditorJs();
+        var cut = Render<Composer>();
+
+        var added = await AttachAndPostAsync(app, cut, Photo("holiday.png", 1000), "holiday.png");
+
+        Assert.Equal(("holiday.png", "image/png", 1000), (added.FileName, added.ContentType, added.SizeBytes));
+        Assert.Equal(0, codec.Calls);
+    }
+
+    [Fact]
+    public async Task Adds_a_photo_as_it_is_on_a_platform_with_no_image_codec()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { ShrinkPhotos = true });
+        SetUpEditorJs();
+        var cut = Render<Composer>();
+
+        var added = await AttachAndPostAsync(app, cut, Photo("holiday.png", 1000), "holiday.png");
+
+        Assert.Equal(("holiday.png", "image/png", 1000), (added.FileName, added.ContentType, added.SizeBytes));
+    }
+
+    /// <summary>Answers with a JPEG of a given size, without decoding anything.</summary>
+    private sealed class FakeImageCodec(int jpegSize) : IImageCodec
+    {
+        public int Calls { get; private set; }
+
+        public Task<EncodedImage?> EncodeJpegAsync(Stream source, Func<int, int, (int Width, int Height)> fit, int quality, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult<EncodedImage?>(new EncodedImage(new byte[jpegSize], false));
+        }
     }
 }

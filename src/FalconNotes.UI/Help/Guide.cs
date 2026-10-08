@@ -123,6 +123,10 @@ public static class Guide
             a copy.
 
             Pictures and players load as you scroll towards them, so a long timeline opens quickly however many files it has.
+
+            To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are
+            resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and
+            camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are.
             """),
 
         new("appearance", "Appearance", """

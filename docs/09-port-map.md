@@ -30,7 +30,7 @@ port with the changes in the docs · **Drop** = not in this app.
 | `lib/viewport.ts` | `UI/wwwroot/js/observe.js` + `NearViewport` component | Port |
 | `lib/links.ts` | — | Drop (link previews) |
 | `lib/media.ts` | `Core/Attachments/UploadPolicy.cs` (`CanDisplayInline`, `IsImage`) | Port |
-| `lib/shrinkPhoto.ts` | `Core/Attachments/PhotoShrinker.cs` (SkiaSharp) | Port (same rules) |
+| `lib/shrinkPhoto.ts` | `Core/Attachments/PhotoShrinker.cs` (the platform's `IImageCodec`) | Port (same rules) |
 | `lib/queries.ts` | Services + `Core/Events/ChangeFeed.cs` | Adapt (events instead of query cache) |
 | `lib/router.tsx` | Blazor `Router` / `NavigationManager` | Adapt |
 | `lib/api.ts`, `lib/apiError.ts` | — | Drop (services are called directly; errors are exceptions with user-facing messages) |

@@ -73,7 +73,8 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 - **Calendar and labels.** A month calendar in the side menu marks the days you wrote on. Coloured labels, in ten
   colours, go on notes and todo lists by hand.
 - **Attachments.** Images, video, audio and any other file, added with the system file picker. Images open in a
-  full-screen viewer, where you can save a copy or share one; audio and video play in the note.
+  full-screen viewer, where you can save a copy or share one; audio and video play in the note. Optionally, large
+  photos are shrunk before they are added, to 2,560 pixels and JPEG, without their location and camera details.
 - **Search.** Finds text in your notes and the names of attached files.
 - **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files, and restore it on any
   device.
@@ -83,7 +84,6 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 
 ### Not yet available
 
-- Shrinking photos before they are added.
 - Pasting or dragging files into a note.
 - Labels and settings in backups. Labels in a Maple Notes backup are left out when it is restored here.
 

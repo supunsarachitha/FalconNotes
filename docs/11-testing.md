@@ -117,7 +117,9 @@ in light and dark mode:
 
 - [ ] First run: Welcome, name, Start writing; Welcome → Restore a demo backup.
 - [ ] Notes: post with a title and date, Markdown, tags, a checklist ticked in place, a picture (picker; paste and drop on
-      desktop), a video that seeks, audio, a PDF that opens, Save a copy.
+      desktop), a video that seeks, audio, a PDF that opens, Save a copy. With **Shrink photos before adding** on: a
+      large camera photo taken upright comes out upright, smaller and as a `.jpg`; a PNG with transparency and a GIF
+      stay as they are.
 - [ ] Edit with double-tap; pin; labels; move to quick notes and back; copy text; archive and restore; trash, Undo,
       restore from the trash, delete forever, empty trash.
 - [ ] Search, tag (nested), label and day filters, calendar dots, Tags page in both orders with the filter.

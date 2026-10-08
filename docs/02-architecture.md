@@ -194,7 +194,8 @@ Attachments are added from the UI through Core's `AttachmentService`:
 - **Picker** (the paperclip): the native `IFilePicker` streams each file straight into the encrypted store, with
   progress. This is fast for large videos, because nothing crosses the WebView bridge.
 - **Paste and drag-and-drop** (desktop): the page reads the `File` and streams it to .NET through `IJSStreamReference`.
-- **Shrink photos** (preference on): `PhotoShrinker` (SkiaSharp) applies the reference rules before encryption: EXIF
+- **Shrink photos** (preference on): `PhotoShrinker`, with the platform's `IImageCodec` doing the pixel work
+  ([12](12-platforms.md)), applies the reference rules before encryption: EXIF
   orientation, at most 2,560 px, JPEG 85%, skipped for GIF and SVG, kept only when at least a tenth smaller, original
   kept when the image has transparency or cannot be decoded ([04](04-domain-rules.md#attachments)).
 
@@ -258,7 +259,7 @@ Only these, unless a decision is recorded here first. Every one must be on the a
 | `Microsoft.Data.Sqlite.Core` | MIT | Data access |
 | `SQLite3MC.PCLRaw.bundle` 2.4.x | MIT (bundles SQLite, public domain, and permissive embedded code: see the reference `licensing.md`) | Encrypted SQLite, native for android-arm/arm64/x86/x64, maccatalyst-arm64/x64, win-x86/x64/arm64 |
 | `Markdig` | BSD-2-Clause | Markdown rendering |
-| `SkiaSharp` (+ native assets per platform) | MIT, but see below | Shrinking photos. **Not added; decision pending (2026-10-01).** Its native library bundles code under other terms: Adobe's DNG SDK (a custom licence), the GIF decoder (MPL 1.1 / GPL / LGPL), FreeType (FTL, an advertising clause), and it lists libmicrohttpd (LGPL). The licence policy puts custom, MPL and LGPL terms under "review first". The alternative is each platform's own codec (Android `ImageDecoder` and `Bitmap.compress`, Windows `BitmapDecoder`/`BitmapEncoder`, Apple ImageIO) behind `IImageCodec`, with no third-party code. |
+| `SkiaSharp` (+ native assets per platform) | MIT, but see below | **Not added, and not needed** (2026-10-08): photos are shrunk by each platform's own codec behind `IImageCodec`, with no third-party code (Android: `AndroidImageCodec`, [12](12-platforms.md); Windows `BitmapDecoder`/`BitmapEncoder` and Apple ImageIO come with those heads). The licence question that held it back since 2026-10-01 was never settled. Its native library bundles code under other terms: Adobe's DNG SDK (a custom licence), the GIF decoder (MPL 1.1 / GPL / LGPL), FreeType (FTL, an advertising clause), and it lists libmicrohttpd (LGPL). The licence policy puts custom, MPL and LGPL terms under "review first". |
 | `CommunityToolkit.Maui` | MIT | File saver, status bar colour |
 | `Xamarin.AndroidX.Biometric` 1.1.0.30 | MIT (the binding) and Apache-2.0 (AndroidX) | Biometric unlock (`IAppLock` on Android). **Approved by the owner, 2026-10-08.** The version is pinned to the one built against the AndroidX versions MAUI 10.0.110 brings, so it adds one package and changes no other; raise it together with MAUI. Its manifest adds two permissions ([12](12-platforms.md)). |
 | Tailwind CSS 4 standalone CLI | MIT | Build-time only, generates `app.css` |

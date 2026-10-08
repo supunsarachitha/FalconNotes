@@ -89,6 +89,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when the device has a fingerprint or face enrolled (one added in the device's settings shows as soon as you come
   back to the app); the prompt then opens by itself on the Lock screen, and stands in for the PIN where Settings
   asks for it. The PIN always works too. Help describes it again.
+- **Shrink photos before adding** (Settings → Features, off by default) now works on Android. Large photos are
+  resized to at most 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, upright and
+  without their location and camera details. A photo is kept as it is when it has transparent parts, when the device
+  cannot decode it, or when shrinking would save less than a tenth; so are GIFs and animated WebP and AVIF images.
+  It uses Android's own image codecs, so the app gains no library. The switch was already in Settings but did nothing.
+  Help describes it again.
 
 ### Changed
 

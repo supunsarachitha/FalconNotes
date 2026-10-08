@@ -37,20 +37,22 @@ Removed: `links` (link previews), `encryption`, `password`, `https`, `admins`.
 
 ### Left out of 1.0.0
 
-The guide describes what the released app does (updated at the owner's request, 2026-10-07). Three things below are
+The guide describes what the released app does (updated at the owner's request, 2026-10-07). Two things below are
 in the plan but not built, so their text is left out until they are. Put each back, in the section named,
 with the feature:
 
 | Section | Text to put back | Waiting for |
 |---|---|---|
 | `writing` | "Choose the paperclip, or on a computer paste or drag files onto the box." | Paste and drag-and-drop in the composer (desktop) |
-| `pictures` | "To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are." | An `IImageCodec` (the SkiaSharp decision, [02](02-architecture.md#dependencies)) |
 | `appearance` | "drag an item by its handle, or move it with its arrows" | Pointer drag in `MenuOrderEditor` |
 
 Added in 1.0.0: `pictures` mentions the viewer's share button (Android, [12](12-platforms.md)).
 
 Put back with biometric unlock (2026-10-08): the `lock` section's sentence on fingerprint, face, Windows Hello and
 Touch ID.
+
+Put back with photo shrinking (1.2.0, 2026-10-08): the `pictures` section's last paragraph, on **Shrink photos before
+adding**.
 
 ## 1. Writing notes (`writing`)
 
@@ -99,6 +101,10 @@ and audio play in the note. Choose any other file to open it in the app you use 
 a copy.
 
 Pictures and players load as you scroll towards them, so a long timeline opens quickly however many files it has.
+
+To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are
+resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and
+camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are.
 ````
 
 Rename the Features switch to match: **Shrink photos before adding**. Its description: "Large photos are resized to

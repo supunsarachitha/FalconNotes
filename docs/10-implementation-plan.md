@@ -62,8 +62,7 @@ the release build reaches its first screen in 0.7–0.9 s. CI goes green once th
       truncation, reordering, wrong key, every chunk boundary).
 - [x] `Storage/*`: `Database`, migrations, repositories for notes, bodies, tags, labels, attachments and settings.
 - [x] `Attachments/*`: `AttachmentStore`, `UploadPolicy`, `AttachmentService`, `PhotoShrinker` (its rules; the
-      decoding is the platform's `IImageCodec`, waiting on the SkiaSharp decision in
-      [02](02-architecture.md#dependencies)).
+      decoding is the platform's `IImageCodec`: Android's since 2026-10-08, see Phase 4).
 - [x] `Notes/*`, `Labels/*`, `Settings/*`: every rule in [04](04-domain-rules.md), including lists and cursors,
       search, the calendar, tag and label counts and filters, trash and purge, daily notes, kind moves, delete all, and
       storage use.
@@ -121,8 +120,8 @@ and Mac Catalyst heads.
 
 - [x] `NoteList` with infinite scroll and reload on change; `NoteCard` with menu, double-tap, tick boxes, labels and
       removal with Undo.
-- [x] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, progress). Paste
-      and drag-and-drop, and "shrink photos", are open (below).
+- [x] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, progress,
+      "shrink photos" on Android since 2026-10-08). Paste and drag-and-drop are open (below).
 - [x] `AttachmentGallery`, `ImageViewer`, players, Open and Save a copy. Share (Android) is left for Phase 7.
 - [x] Home (Today card, pinned, feed), filters (`?tag`, `?q`, `?day`, `?label`), Archive, Trash, Quick notes.
 
@@ -143,6 +142,26 @@ Two gaps, deliberately left open rather than blocking the phase: "shrink photos"
 (SkiaSharp), pending the owner's approval of the dependency (docs/02); `Composer` calls it only if it ends up
 registered, so it degrades to adding the file unshrunk until then. Paste and drag-and-drop need their own
 `IJSStreamReference` plumbing beyond the native picker's; the native picker covers every platform meanwhile.
+
+Shrink photos on Android (2026-10-08, for 1.2.0): built on Android's own codecs rather than SkiaSharp, so it needed
+no new dependency and the licence question in [02](02-architecture.md#dependencies) no longer blocks it.
+`AndroidImageCodec` ([12](12-platforms.md), Photos) is the platform's `IImageCodec`, and `MauiProgram` registers it
+with `PhotoShrinker`; the rules, the switch in Settings → Features and the composer's call were already there. One
+rule was added to the reference's: an animated WebP or AVIF is kept as it is
+([04](04-domain-rules.md#attachments)). Help's `pictures` section has its paragraph back
+([08](08-help-guide.md)). Three bUnit tests cover the composer's side (the switch on, off, and a platform with no
+codec).
+
+Checked on the API 36 emulator in a Debug build, with eight files chosen in the system picker and the stored bytes
+read back through the WebView: a 4000 × 3000 JPEG became 2560 × 1920 (1.47 MB to 0.31 MB); the same photo with EXIF
+orientation 6 came out upright at 1920 × 2560; a 3000 × 2000 PNG and a WebP became JPEGs of about 0.26 MB; an
+800 × 600 PNG kept its size in pixels and became a smaller JPEG; none of the JPEGs has an EXIF block; a PNG with
+transparency and an animated WebP were stored byte for byte. The Android 8 path (`BitmapFactory`) gave the same
+results when forced on the same emulator.
+
+Not checked, still open: a real phone and real camera photos (HEIC, Ultra HDR, wide-gamut colour); Android 8.0 and
+8.1 themselves; a Release build with R8 and trimming. Windows and macOS need their own `IImageCodec` with those
+heads; until then the switch would do nothing there, so hide it or build the codec first.
 
 Several real bugs were caught by writing the tests, not by inspection: `TagSuggestions` and `NoteCard.SetEditing`
 mutated state without calling `StateHasChanged`, so arrow-key navigation and double-tap-to-edit would have silently
