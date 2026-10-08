@@ -79,12 +79,14 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
         }
 
         ZipArchive zip;
+        var stream = File.OpenRead(copy);
         try
         {
-            zip = new ZipArchive(File.OpenRead(copy), ZipArchiveMode.Read);
+            zip = new ZipArchive(stream, ZipArchiveMode.Read);
         }
         catch (InvalidDataException)
         {
+            stream.Dispose(); // Windows cannot delete a file that is still open
             File.Delete(copy);
             throw new UserFacingException("This is not a ZIP archive.");
         }

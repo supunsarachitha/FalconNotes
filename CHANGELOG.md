@@ -98,6 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restore: a file that is not a ZIP archive is reported as "This is not a ZIP archive." on Windows too, and its
+  temporary copy is deleted. Before, the copy stayed open, could not be deleted, and the error named the file.
 - JSON exports and the manifest end their lines with `\n` on Windows too, as the web app's do. Before, Windows wrote
   `\r\n`, and the archive differed from the web app's.
 - Closing the Labels dialog (Cancel, Save, Esc or a tap outside) no longer leaves an empty box on the note.
