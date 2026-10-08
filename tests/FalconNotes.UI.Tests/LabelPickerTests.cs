@@ -40,6 +40,23 @@ public class LabelPickerTests : BunitContext
         Assert.False(IsChecked(cut, "Urgent"));
     }
 
+    // The web app's test checks where the focus is; here dialogs.js moves it, which only a browser runs. This checks
+    // that the dialog asks for it: it can take the focus, and is marked for dialogs.js.
+    [Fact]
+    public async Task Asks_for_the_focus_itself_so_opening_it_brings_up_no_phone_keyboard()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex");
+        var note = await app.PostAsync("Quarterly report");
+        SetUpDialogsJs();
+
+        var cut = Render<LabelPicker>(p => p.Add(x => x.Note, note).Add(x => x.Open, true));
+
+        var dialog = cut.Find("dialog");
+        Assert.True(dialog.HasAttribute("data-focus-self"));
+        Assert.Equal("-1", dialog.GetAttribute("tabindex"));
+        Assert.False(cut.Find("input[aria-label='Find or create a label']").HasAttribute("autofocus"));
+    }
+
     [Fact]
     public async Task Filters_the_list_as_typed_and_offers_no_second_label_of_a_name_already_taken()
     {

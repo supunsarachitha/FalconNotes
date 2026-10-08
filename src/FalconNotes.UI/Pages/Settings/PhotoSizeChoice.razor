@@ -1,0 +1,44 @@
+@* Port of PhotoSizeChoice in components/PreferenceSections.tsx: how far photos shrink. A few sizes, like the photo
+   quality choices of messaging apps, rather than a raw ratio. *@
+@using System.Globalization
+@using FalconNotes.Core.Attachments
+@using FalconNotes.Core.Domain
+
+<fieldset class="mt-3">
+    <legend class="text-sm font-medium">Photo size</legend>
+    <div class="mt-2 grid grid-cols-3 gap-2">
+        @foreach (var size in Enum.GetValues<PhotoSize>())
+        {
+            var active = Value == size;
+            <label class="@Classes.Join(
+                              "flex cursor-pointer flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-maple-500",
+                              active
+                                  ? "border-maple-600 bg-maple-50 text-maple-700 dark:border-maple-500 dark:bg-maple-600/15 dark:text-maple-400"
+                                  : "border-stone-200 hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800")">
+                <input type="radio" name="photoSize" value="@size" checked="@active" @onchange="() => ValueChanged.InvokeAsync(size)" class="sr-only" />
+                <span class="text-sm font-medium">@size</span>
+                <span class="text-xs text-stone-500 dark:text-stone-400">@Pixels(size) px</span>
+            </label>
+        }
+    </div>
+    <p class="mt-1.5 text-sm text-stone-600 dark:text-stone-300">
+        @Hint(Value): at most @Pixels(Value) pixels on the longest side. Smaller sizes also save at a lower quality.
+    </p>
+</fieldset>
+
+@code {
+    /// <summary>The chosen size.</summary>
+    [Parameter, EditorRequired] public PhotoSize Value { get; set; }
+
+    /// <summary>Called with the newly chosen size.</summary>
+    [Parameter] public EventCallback<PhotoSize> ValueChanged { get; set; }
+
+    private static string Pixels(PhotoSize size) => PhotoShrinker.Presets[size].MaxSide.ToString("N0", CultureInfo.CurrentCulture);
+
+    private static string Hint(PhotoSize size) => size switch
+    {
+        PhotoSize.Medium => "Fine on laptops and phones",
+        PhotoSize.Small => "Smallest files, fine on phones",
+        _ => "Sharp on large screens",
+    };
+}

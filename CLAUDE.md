@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Falcon Notes is an **offline** .NET 10 MAUI Blazor Hybrid app for Android, Windows and macOS: a port of the Maple
-Notes web app 1.8.0 under its own name and mark. It has the same features and look, no server, encrypted local
+Notes web app (1.15.0 since Falcon Notes 1.2.0; first ported from 1.8.0) under its own name and mark. It has the same features and look, no server, encrypted local
 storage, and backups compatible with the web app.
 
 ## Read first

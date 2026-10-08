@@ -67,14 +67,15 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 - **Todo lists.** A Todo tab for checklists: add items, tick them off, edit them all at once as Markdown, rename, pin
   and archive lists.
 - **Quick notes.** A scratchpad tab for short notes that stay out of your timeline.
-- **Daily notes.** Optionally, today's note at the top of Home, titled with the date.
+- **Daily notes.** Optionally, today's note at the top of Home, titled with the date, starting from a template note
+  if you choose one.
 - **Habit tracker.** Optionally, a Habits tab: tick off the days you keep each habit, and follow your progress in a
   chart of weeks or months, with streaks, and in a month calendar.
 - **Calendar and labels.** A month calendar in the side menu marks the days you wrote on. Coloured labels, in ten
   colours, go on notes and todo lists by hand.
 - **Attachments.** Images, video, audio and any other file, added with the system file picker. Images open in a
   full-screen viewer, where you can save a copy or share one; audio and video play in the note. Optionally, large
-  photos are shrunk before they are added, to 2,560 pixels and JPEG, without their location and camera details.
+  photos are shrunk before they are added, to JPEG in one of three sizes, without their location and camera details.
 - **Search.** Finds text in your notes and the names of attached files.
 - **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files and each note's labels,
   and restore it on any device.
@@ -117,8 +118,8 @@ device, use Maple Notes instead of Falcon Notes, or alongside it.
   restore there, with each note's labels (Maple Notes 1.9.0 or later; older versions restore the notes without
   them). The format is specified in [05 Backup compatibility](docs/05-backup-compatibility.md) and checked by
   conformance tests against shared export vectors.
-- **The reference implementation.** Falcon Notes matches Maple Notes 1.8.0, and its backups the format of Maple Notes
-  1.9.0 to 1.15.0, which added labels. The 1.8.0 source (commit
+- **The reference implementation.** Falcon Notes matches Maple Notes 1.15.0, apart from what needs a server. It was
+  first ported from 1.8.0 and brought up to 1.15.0 in Falcon Notes 1.2.0. The 1.8.0 source (commit
   [`a28db71`](https://github.com/supunsarachitha/MapleNotes/commit/a28db714a66a4021449abb98ad3bb1a5614ff1b0)) is kept
   in `reference/maple-notes-1.8.0/` to port from. It is read-only, and is never built or shipped.
 

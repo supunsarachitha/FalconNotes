@@ -1,3 +1,4 @@
+using FalconNotes.Core.Domain;
 using FalconNotes.Core.Platform;
 
 namespace FalconNotes.Core.Attachments;
@@ -10,18 +11,26 @@ public sealed record FileToAdd(Stream Content, string FileName, string ContentTy
 
 /// <summary>
 /// Shrinks photos before they are added, when the preference is on (docs/04, Attachments). Port of
-/// <c>web/lib/shrinkPhoto.ts</c>: upright, at most 2,560 pixels on the longest side, JPEG at 85%, kept only when at
-/// least a tenth smaller. Re-encoding drops location and camera details. The pixel work is the platform's
-/// <see cref="IImageCodec"/>.
+/// <c>web/lib/shrinkPhoto.ts</c>: upright, at most the chosen size's longest side, JPEG at its quality
+/// (<see cref="Presets"/>), kept only when at least a tenth smaller. Re-encoding drops location and camera details.
+/// The pixel work is the platform's <see cref="IImageCodec"/>.
 /// </summary>
 /// <param name="codec">The platform's image codec.</param>
 public sealed class PhotoShrinker(IImageCodec codec)
 {
-    /// <summary>The longest side of a shrunk photo, in pixels.</summary>
+    /// <summary>The longest side of a shrunk photo, in pixels, at the largest size.</summary>
     public const int MaxPhotoSide = 2560;
 
-    /// <summary>The JPEG quality.</summary>
-    public const int JpegQuality = 85;
+    /// <summary>
+    /// How far each photo size shrinks: the longest side in pixels, and the JPEG quality. Like the "standard" and "HD"
+    /// choices of messaging and photo apps, smaller photos are also saved at a lower quality, where it shows least.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<PhotoSize, (int MaxSide, int Quality)> Presets = new Dictionary<PhotoSize, (int, int)>
+    {
+        [PhotoSize.Large] = (MaxPhotoSide, 85),
+        [PhotoSize.Medium] = (1920, 80),
+        [PhotoSize.Small] = (1280, 75),
+    };
 
     /// <summary>The shrunk photo is kept only when it is at most this share of the original's size.</summary>
     private const double Worthwhile = 0.9;
@@ -63,9 +72,10 @@ public sealed class PhotoShrinker(IImageCodec codec)
     /// pixels (which JPEG cannot keep, unless it was a JPEG), or would hardly get smaller.
     /// </summary>
     /// <param name="file">The file as picked; its content must be seekable to be returned unchanged after an attempt.</param>
+    /// <param name="size">How far to shrink it.</param>
     /// <param name="cancellationToken">Cancels the work.</param>
     /// <returns>The file to add.</returns>
-    public async Task<FileToAdd> ShrinkAsync(FileToAdd file, CancellationToken cancellationToken = default)
+    public async Task<FileToAdd> ShrinkAsync(FileToAdd file, PhotoSize size = PhotoSize.Large, CancellationToken cancellationToken = default)
     {
         if (!CanShrink(file.ContentType) || !file.Content.CanSeek)
         {
@@ -77,7 +87,8 @@ public sealed class PhotoShrinker(IImageCodec codec)
         EncodedImage? encoded;
         try
         {
-            encoded = await codec.EncodeJpegAsync(file.Content, (w, h) => FitWithin(w, h), JpegQuality, cancellationToken);
+            var (maxSide, quality) = Presets[size];
+            encoded = await codec.EncodeJpegAsync(file.Content, (w, h) => FitWithin(w, h, maxSide), quality, cancellationToken);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {

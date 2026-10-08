@@ -150,6 +150,9 @@
     /// <summary>Starts a day's daily note.</summary>
     [Parameter] public DailyInfo? Daily { get; set; }
 
+    /// <summary>The text a new note starts with, such as the daily-note template.</summary>
+    [Parameter] public string InitialText { get; set; } = "";
+
     private bool Editing => Note is not null;
 
     private bool WithTitle => AllowTitle && State.Preferences.NoteTitles && Daily is null;
@@ -173,7 +176,7 @@
     /// <inheritdoc />
     protected override void OnInitialized()
     {
-        var (initialTitle, initialBody) = Note is not null && WithTitle ? Titles.Split(Note.Content) : ("", Note?.Content ?? "");
+        var (initialTitle, initialBody) = Note is not null && WithTitle ? Titles.Split(Note.Content) : ("", Note?.Content ?? InitialText);
         _suggestedTitle = SuggestTitle();
         _title = initialTitle.Length > 0 ? initialTitle : _suggestedTitle;
         _text = initialBody;
@@ -306,7 +309,7 @@
             // PhotoShrinker, and its files are added as they are.
             if (State.Preferences.ShrinkPhotos && ServiceProvider.GetService<PhotoShrinker>() is { } shrinker)
             {
-                toAdd = await shrinker.ShrinkAsync(toAdd, entry.Cancel.Token);
+                toAdd = await shrinker.ShrinkAsync(toAdd, State.Preferences.PhotoSize, entry.Cancel.Token);
                 entry.Name = toAdd.FileName;
             }
 

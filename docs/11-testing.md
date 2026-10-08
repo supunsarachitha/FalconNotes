@@ -50,6 +50,13 @@ New tests the reference does not have:
 - Shrinking photos in the composer (bUnit, `ComposerTests`, with a fake codec): a photo is shrunk when the setting is
   on, added as it is when it is off, and added as it is on a platform with no `IImageCodec`. The real codec
   (`AndroidImageCodec`) can only be checked on a device or an emulator ([10](10-implementation-plan.md), Phase 4).
+- Brought over with Maple Notes 1.15.0, from its tests: the photo sizes (`PhotoShrinkerTests`, and the composer
+  passing the chosen one on); the daily-note template in a note's menu (`NoteCardTests`) and on the Today card
+  (`HomeTests`); Help in the menu (`AppShellTests`); the new preferences and their defaults (`SettingsTests`); `//host`
+  links and images (`MarkdownRendererTests`); text-reordering characters in file names (`AttachmentServiceTests`).
+  New here: `FeaturesSectionTests` (the web app tests these inside its whole Settings page), including the Help link
+  at the foot of Settings; and that the Labels dialog asks for the focus itself (`LabelPickerTests`), since moving it
+  is `dialogs.js`'s work and only runs in a browser.
 - Labels in backups: where a note's labels are read from in each format, and what is not a label
   (`RestoreConformanceTests`); at most 20 labels on a restored note and the limit of 100 (`RestoreRunnerTests`); the
   restore flow passes the manifest's colours on and says "Added {n} labels." (bUnit, `WelcomeTests`).

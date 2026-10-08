@@ -24,7 +24,7 @@ public static class MenuItems
         new MenuItemInfo("tags", "Tags", "/tags", IconName.Hash, p => p.Tags),
         new MenuItemInfo("archive", "Archive", "/archive", IconName.Archive, p => p.Archive),
         new MenuItemInfo("settings", "Settings", "/settings", IconName.Settings, _ => true),
-        new MenuItemInfo("help", "Help", "/help", IconName.CircleHelp, _ => true),
+        new MenuItemInfo("help", "Help", "/help", IconName.CircleHelp, p => p.HelpMenu),
     }.ToDictionary(item => item.Id);
 
     /// <summary>

@@ -153,7 +153,7 @@ component: `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `strok
 round caps and joins, `aria-hidden="true"`. Copy the path data of exactly these icons from the Lucide version the
 reference uses (`lucide-react` in `package.json`):
 
-`AlertCircle Archive ArchiveRestore ArrowDown ArrowUp Bold CalendarCheck CalendarDays Check ChevronLeft ChevronRight
+`AlertCircle Archive ArchiveRestore ArrowDown ArrowUp Bold CalendarCheck CalendarDays CalendarX Check ChevronLeft ChevronRight
 CircleHelp CircleUserRound Code Copy DatabaseBackup Download FileText GripVertical Hash Heading2 Home Italic Link2 List
 ListChecks ListTodo Lock LogOut Menu Monitor Moon MoreHorizontal Palette PanelLeft Paperclip Pencil PenLine Pin PinOff
 Play Plus Quote RotateCcw Search Settings ShieldCheck Sun Tag ToggleRight Trash2 TriangleAlert Upload X Zap`

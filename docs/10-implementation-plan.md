@@ -374,8 +374,36 @@ with the switch on (no prompt, no button, the PIN opens the app). The signed fil
 versionCode 4, still version 1.1.0, so that an upload cannot collide with versionCode 3 if that was already sent to
 Google Play.
 
-Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4) and labels in backups (see
-Phase 2), on the `release-1.2.0` branch.
+Brought up to Maple Notes 1.15.0 (2026-10-08, for 1.2.0, at the owner's request): everything the web app gained
+between 1.8.0 and 1.15.0 that is not about its server or its accounts, ported from its repository at `main` (commit
+`3343d10`), with its tests. Settings now says "Based on Maple Notes 1.15.0" (D7, D10 in
+[01](01-scope-and-decisions.md)).
+
+- **Photo size** (web 1.10): Large, Medium or Small under "Shrink photos before adding" (`PhotoShrinker.Presets`,
+  `PhotoSizeChoice`).
+- **Daily-note template** (web 1.15): a note's ⋯ menu makes it the template, the Today card starts with its text, and
+  Settings → Features shows which note it is (`DailyNotes.GetTemplateAsync`, `DailyTemplateSetting`).
+- **Help in the menu** (web 1.9): a switch that hides Help from the side menu. One adaptation: the web app's guide
+  keeps an address that can be typed, so here a **Help** link stands at the foot of Settings while it is hidden.
+- **Labels…** no longer puts the cursor in its field, so the phone's keyboard stays down (web 1.8.1).
+- From the web app's security audit (web 1.11): file names lose the invisible characters that reorder text; `//host`
+  links are other sites, not pages of the app; a note shows only the app's own files as images, and the description
+  of any other; the write-ahead log is cut back after each checkpoint.
+
+Left out, as not applying to an app with no server: two-factor sign-in, session length, offline reading and writing,
+the Online/Offline badge, install as an app, the end-to-end encryption fixes and the link-preview hardening. Already
+here before: labels in backups and the restore's size limits (Phase 2), a trash purge that cannot delete a note
+restored meanwhile (one statement with its condition), and attachments served as `no-store`.
+
+Checked on the API 36 emulator in a Debug build, with real taps: the three photo sizes show and Small is kept; a
+4000 × 3000 JPEG then came out 1280 × 960 (1.47 MB to 73 KB); a quick note was made the template from its menu, the
+Today card started with its text without its title, and posting it made the day's note; Labels… opened with the
+focus on the dialog and no keyboard; with Help out of the menu, the link at the foot of Settings opened the guide,
+which shows "Based on Maple Notes 1.15.0". Not checked: a real phone, a Release build, and the two Markdown rules
+and the file-name rule on a device (they are Core tests only).
+
+Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4), labels in backups (see
+Phase 2) and the rest of Maple Notes 1.15.0 (above), on the `release-1.2.0` branch.
 The version numbers are set, but the signed AAB and APK have not been built or checked yet. Before building from
 clean, move the 1.1.0 output out of `src/FalconNotes.App/bin/Release/` as was done for 1.0.1, and repeat the
 shrinking check from Phase 4 on the release APK, since R8 and trimming have not run over the new code.

@@ -67,6 +67,19 @@ public enum WeekStart
     Saturday,
 }
 
+/// <summary>How far photos shrink before they are added; each is a longest side and a JPEG quality (<c>PhotoShrinker.Presets</c>).</summary>
+public enum PhotoSize
+{
+    /// <summary>At most 2,560 pixels, quality 85%: sharp on large screens. The default, and the only size before 1.2.0.</summary>
+    Large,
+
+    /// <summary>At most 1,920 pixels, quality 80%.</summary>
+    Medium,
+
+    /// <summary>At most 1,280 pixels, quality 75%: the smallest files.</summary>
+    Small,
+}
+
 /// <summary>
 /// The user's writing, feature and appearance choices: the web app's <c>Preferences</c> without link previews
 /// (docs/04, Preferences). Stored as camelCase JSON in <c>Settings['preferences']</c>.
@@ -94,6 +107,12 @@ public sealed record Preferences
     /// <summary>Show today's daily note at the top of Home.</summary>
     public bool DailyNotes { get; init; }
 
+    /// <summary>
+    /// The ID of the note whose text starts each new daily note (lower-case, with hyphens), or empty (the default) for
+    /// none. Only the ID is kept here: the template is an ordinary note.
+    /// </summary>
+    public string DailyNoteTemplate { get; init; } = "";
+
     /// <summary>Show a month calendar in the side menu.</summary>
     public bool Calendar { get; init; } = true;
 
@@ -106,8 +125,14 @@ public sealed record Preferences
     /// <summary>Show the Tags page.</summary>
     public bool Tags { get; init; } = true;
 
-    /// <summary>Shrink photos before adding them: at most 2,560 px on the longest side, as JPEG.</summary>
+    /// <summary>Show Help in the side menu. Off, the guide is still opened from the foot of Settings. On by default.</summary>
+    public bool HelpMenu { get; init; } = true;
+
+    /// <summary>Shrink photos before adding them, as JPEG. The original is not kept; off by default.</summary>
     public bool ShrinkPhotos { get; init; }
+
+    /// <summary>With <see cref="ShrinkPhotos"/> on, how far.</summary>
+    public PhotoSize PhotoSize { get; init; } = PhotoSize.Large;
 
     /// <summary>Double-tap (or double-click) a note to edit it.</summary>
     public bool DoubleTapToEdit { get; init; }

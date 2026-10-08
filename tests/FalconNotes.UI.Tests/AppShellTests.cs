@@ -36,6 +36,18 @@ public class AppShellTests : BunitContext
     }
 
     [Fact]
+    public async Task Shows_help_in_the_menu_unless_it_is_turned_off()
+    {
+        using var app = await StartAsync();
+        var cut = Render<AppShell>(p => p.Add(s => s.Body, Content));
+        Assert.Contains("Help", Labels(cut.Find("nav[aria-label=Main]").QuerySelectorAll("a")));
+
+        await app.State.UpdatePreferencesAsync(p => p with { HelpMenu = false });
+
+        cut.WaitForAssertion(() => Assert.DoesNotContain("Help", Labels(cut.Find("nav[aria-label=Main]").QuerySelectorAll("a"))));
+    }
+
+    [Fact]
     public async Task Shows_falcon_notes_never_maple_notes_and_sizes_the_menu_as_chosen()
     {
         using var app = await StartAsync(new Preferences { MenuTextSize = MenuTextSize.Large });

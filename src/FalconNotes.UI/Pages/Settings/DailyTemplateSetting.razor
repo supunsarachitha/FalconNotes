@@ -1,0 +1,81 @@
+@* Port of DailyTemplateSetting in components/PreferenceSections.tsx: which note new daily notes start with, if any. A
+   note becomes the template from its ⋯ menu. The web app's "could not be loaded" case is gone: the note is read from
+   this device. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@inject DailyNotes DailyNotes
+@inject AppState State
+
+<div class="flex items-start justify-between gap-4 py-3">
+    <div class="min-w-0">
+        <p class="text-sm font-medium">Daily-note template</p>
+        <p class="text-sm text-stone-600 dark:text-stone-300">
+            @if (TemplateId == "")
+            {
+                <text>New daily notes start empty. To start them with a note's text, choose “Use as daily-note template” from that note's ⋯ menu.</text>
+            }
+            else if (_loadedFor != TemplateId)
+            {
+                <text>Loading…</text>
+            }
+            else if (_note is not null)
+            {
+                <text>New daily notes start with the text of <span class="font-medium">“@Name(_note)”</span>.</text>
+            }
+            else
+            {
+                <text>The template note was deleted or is in the trash, so new daily notes start empty.</text>
+            }
+        </p>
+    </div>
+    @if (TemplateId != "")
+    {
+        <button type="button" @onclick="OnClear"
+                class="shrink-0 text-sm font-medium text-maple-700 underline-offset-2 hover:underline dark:text-maple-400">
+            Stop using
+        </button>
+    }
+</div>
+
+@code {
+    private Note? _note;
+    private string? _loadedFor;
+
+    /// <summary>The template note's ID from the preferences; empty for none.</summary>
+    [Parameter, EditorRequired] public string TemplateId { get; set; } = "";
+
+    /// <summary>Called when "Stop using" is chosen.</summary>
+    [Parameter] public EventCallback OnClear { get; set; }
+
+    /// <inheritdoc />
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedFor == TemplateId)
+        {
+            return;
+        }
+
+        var id = TemplateId;
+        var note = id == "" ? null : await DailyNotes.GetTemplateAsync(State.Preferences);
+        if (id == TemplateId)
+        {
+            (_note, _loadedFor) = (note, id);
+        }
+    }
+
+    /// <summary>The note's title, else its first line (at most 60 characters), else "an empty note".</summary>
+    private static string Name(Note note)
+    {
+        var title = Titles.Split(note.Content).Title;
+        if (title.Length > 0)
+        {
+            return title;
+        }
+
+        var line = note.Content.Split('\n').FirstOrDefault(candidate => candidate.Trim().Length > 0) ?? "";
+        line = line.Length > 60 ? $"{line[..60]}…" : line.Trim();
+        return line.Length > 0 ? line : "an empty note";
+    }
+}

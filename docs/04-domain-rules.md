@@ -139,7 +139,11 @@ Port `web/components/Markdown.tsx` with **Markdig**:
   text and never becomes markup.
 - **Links**: keep `href` only for `http:`, `https:`, `mailto:`, `xmpp:`, `irc:`, `ircs:` and relative URLs; anything else
   (`javascript:`, `data:`, `file:`, …) becomes an empty `href`. This is react-markdown's default `urlTransform`.
-  Relative links starting with `/` navigate inside the app. Others open in the system browser.
+  Relative links starting with `/` navigate inside the app. Others open in the system browser, and so do `//host/…`
+  and `/\host`, which a browser reads as another site (the web app since 1.11).
+- **Images**: only the app's own attached files (`/_media/{id}`, with an optional `?v=`) are shown, with
+  `loading="lazy"`. Any other image shows its description as text, or nothing when it has none, so nothing is asked
+  for just by viewing a note (the web app since 1.11).
 - **Tags** become links, as in [Tags](#tags), but never inside code or existing links. Add `class="tag"`.
 - **Task lists**: render each checkbox enabled, with `data-task="{offset}"`, where offset is where the list item's
   marker starts in the rendered text, and `aria-label` set to the item's text without nested lists. Clicking calls
@@ -215,6 +219,12 @@ Port `web/lib/habits.ts` exactly. Day arithmetic uses day numbers (days since 19
 - The daily date is cleared when the note moves to another kind or goes to the trash. Restored from the trash, it is an
   ordinary note.
 - Home's pinned and feed lists hide today's note while the Today card shows it.
+- **Template** (the web app since 1.15): with *Daily notes* on, any note that is not itself a daily note can be the
+  template, from its ⋯ menu: "Use as daily-note template" ("New daily notes start with this note's text.") and "Stop
+  using as daily template" ("Daily notes start empty again."). Only its ID is kept, in `dailyNoteTemplate`. The Today
+  composer then starts with the template's text without its title (`Titles.Split(content).Body`); its files are not
+  copied. A template that was deleted or is in the trash counts as none. The template is read once, when the composer
+  appears.
 
 ## Pin, archive, trash, delete
 
@@ -267,6 +277,8 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `noteTitles` | false | `archive` | true |
 | `dateInTitles` | false | `tags` | true |
 | `quickNoteTitles` | false | `shrinkPhotos` | false |
+| `dailyNoteTemplate` | `""` (a note's ID, or none) | `photoSize` | `Large` (Large, Medium, Small) |
+| `helpMenu` | true | | |
 | `dateFormat` | `yyyy-MM-dd` | `doubleTapToEdit` | false |
 | `todoLists` | true | `tagSuggestions` | false |
 | `quickNotes` | true | `labels` | false |
@@ -308,8 +320,10 @@ on `/settings/*` and `/trash`.
 ## Attachments
 
 - **File names**: port `UploadPolicy.SanitizeFileName` (`server/Features/Attachments/UploadPolicy.cs`). Take the last path
-  segment, drop control characters and `"<>|:*?/`, trim spaces and dots, fall back to "file", and cap at 200
-  characters, keeping an extension of up to 20.
+  segment, drop control characters, `"<>|:*?/` and the invisible characters that reorder text (U+061C, U+200E,
+  U+200F, U+202A–U+202E, U+2066–U+2069, U+2028, U+2029: they can disguise `invoice[U+202E]fdp.exe` as
+  `invoiceexe.pdf`; the web app since 1.11), trim spaces and dots, fall back to "file", and cap at 200 characters,
+  keeping an extension of up to 20.
 - **Content type**: the type the picker or the file reports, lower case, if valid and not `application/octet-stream`.
   Otherwise guess from the extension, using the table in `web/import/parse.ts` (`TYPES`) plus common office and
   archive types. Unknown: `application/octet-stream`.
@@ -327,8 +341,10 @@ on `/settings/*` and `/trash`.
 - **Size**: no limit except 2 GiB per file and free space. Show "Not enough space on this device." when a write fails
   for lack of space.
 - **Shrink photos** (`web/lib/shrinkPhoto.ts`), when on: only `image/jpeg, png, webp, avif, bmp, heic, heif`. Decode
-  upright (EXIF orientation), scale so the longest side is at most 2,560 px (never enlarge), and re-encode as JPEG at
-  85%, named `{name}.jpg`. Keep the original when it cannot be decoded, has transparent pixels (and is not a JPEG), or
+  upright (EXIF orientation), scale so the longest side is at most the chosen size's (never enlarge), and re-encode
+  as JPEG at its quality, named `{name}.jpg`. The sizes (`photoSize`, the web app since 1.10): **Large** 2,560 px at
+  85% (the default, and the only size before Falcon Notes 1.2.0), **Medium** 1,920 px at 80%, **Small** 1,280 px at
+  75%. Keep the original when it cannot be decoded, has transparent pixels (and is not a JPEG), or
   the result is not at least 10% smaller. The shrunk photo has no location or camera details. An animated WebP or
   AVIF is kept as it is too, like a GIF: the reference would save its first frame as a JPEG and lose the animation
   (a deviation, 2026-10-08).

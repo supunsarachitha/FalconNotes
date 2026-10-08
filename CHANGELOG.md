@@ -101,6 +101,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   created in the colour it had. One that cannot be created, for example past the limit of 100, is reported and the
   notes arrive without it. The summary adds "Added {n} labels." Older versions of either app restore these backups as
   before, without the labels.
+- **Photo size** (Settings → Features, with Shrink photos before adding on): choose how far photos shrink. **Large**
+  (2560 pixels on the longest side, JPEG quality 85%) is the size photos were shrunk to before, and stays the default;
+  **Medium** (1920 pixels, 80%) and **Small** (1280 pixels, 75%) save much more space.
+- **Daily-note template:** with daily notes on, any note can be chosen from its ⋯ menu as the template, and each new
+  day's note starts with its text (without its title). Settings → Features shows which note it is and can stop using
+  it.
+- **Help in the menu** (Settings → Features, on by default): turn it off to hide Help from the side menu. The guide is
+  then opened from a Help link at the foot of Settings.
 
 ### Changed
 
@@ -118,6 +126,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Android app now asks for the `USE_BIOMETRIC` and `USE_FINGERPRINT` permissions, for fingerprint or face unlock.
   They are granted at install with no prompt. It still has no internet permission. The README, the website and the
   privacy policy said the app asks for no permissions, and now name this one.
+- Falcon Notes now follows Maple Notes 1.15.0 (it followed 1.8.0), apart from what needs a server; Settings and Help
+  say "Based on Maple Notes 1.15.0". Help describes the daily-note template, the photo sizes and Help in the menu.
+- Opening **Labels…** from a note's ⋯ menu no longer puts the cursor in the find-or-create field, so the keyboard
+  stays down until you tap the field.
+- A note shows only its own attached files as images; any other image in its Markdown shows its description.
+- The database's write-ahead log is cut back after each checkpoint.
 - Settings → Labels, Settings → Backup & data and Help no longer say that labels are not part of exports.
 - The README, the website and the privacy policy say that a backup holds each note's labels.
 - A note file over 4 MB inside a backup is refused before it is read, and a manifest over 64 MB is treated as
@@ -136,6 +150,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A file whose name holds invisible text-reordering characters, which can make `invoice…exe` read as a PDF, is added
+  under its name without them.
+- A link written as `//host/…` in a note opens as another site, not as a page of the app.
 - Android 14 and earlier: the app draws behind the status and navigation bars, as it does on Android 15 and later.
   Before, it showed a purple status bar and a black navigation bar there.
 - The picture viewer's buttons no longer sit under the status bar on Android.

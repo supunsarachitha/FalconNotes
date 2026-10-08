@@ -154,7 +154,8 @@ the system Back button goes back in the WebView's history and leaves the app onl
 - `Microsoft.Data.Sqlite.Core` with `SQLite3MC.PCLRaw.bundle`. No EF Core and no ORM (D9).
 - One `Database` class opens connections: the connection string from
   [03-data-storage-and-security.md](03-data-storage-and-security.md#database), then the pragmas `journal_mode=WAL`,
-  `synchronous=NORMAL`, `foreign_keys=ON`, `secure_delete=ON`, `temp_store=MEMORY`.
+  `synchronous=NORMAL`, `foreign_keys=ON`, `secure_delete=ON`, `journal_size_limit=0` (the write-ahead log is cut back
+  after each checkpoint, so old pages do not linger in it; the web app since 1.11), `temp_store=MEMORY`.
 - Repositories hold the SQL as constants, always use parameters, and map rows by hand. Run multi-statement changes
   in a transaction through `Database.InTransactionAsync(Func<SqliteConnection, SqliteTransaction, Task>)`.
 - Migrations are numbered C# methods. `PRAGMA user_version` records the last one applied. Migration 1 creates the

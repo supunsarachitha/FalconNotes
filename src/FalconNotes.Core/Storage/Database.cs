@@ -37,6 +37,7 @@ public sealed class Database
         "PRAGMA synchronous = NORMAL",
         "PRAGMA foreign_keys = ON",
         "PRAGMA secure_delete = ON",
+        "PRAGMA journal_size_limit = 0", // the write-ahead log is cut back after each checkpoint, so old pages do not linger in it
         "PRAGMA temp_store = MEMORY",
     ];
 

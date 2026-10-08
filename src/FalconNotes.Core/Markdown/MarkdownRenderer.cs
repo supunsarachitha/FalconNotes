@@ -14,7 +14,8 @@ namespace FalconNotes.Core.Markdown;
 /// <summary>
 /// Renders note Markdown to HTML as the web app's <c>Markdown.tsx</c> does (docs/04, Markdown rendering): GitHub
 /// flavour (tables, task lists, strikethrough, autolinks, footnotes), raw HTML shown as text, links limited to safe
-/// protocols, <c>#tags</c> as links to their notes, and task checkboxes that know where their item starts.
+/// protocols, images limited to the app's own files, <c>#tags</c> as links to their notes, and task checkboxes that
+/// know where their item starts.
 /// </summary>
 public sealed partial class MarkdownRenderer
 {
@@ -66,9 +67,12 @@ public sealed partial class MarkdownRenderer
         {
             switch (node)
             {
+                case LinkInline { IsImage: true } image:
+                    ShowOwnFileOrDescription(image);
+                    break;
                 case LinkInline link:
                     link.Url = SafeUrl(link.Url);
-                    if (!link.IsImage && link.Url is { } url && !url.StartsWith('/'))
+                    if (link.Url is { } url && !IsAppPath(url))
                     {
                         OpenElsewhere(link);
                     }
@@ -119,6 +123,37 @@ public sealed partial class MarkdownRenderer
                || SafeProtocol().IsMatch(url[..colon])
             ? url
             : "";
+    }
+
+    /// <summary>
+    /// An address in the app itself: a path, but not <c>//host/…</c> or <c>/\host</c>, which a browser reads as
+    /// another site.
+    /// </summary>
+    /// <param name="url">The URL.</param>
+    /// <returns>Whether it is a page of the app.</returns>
+    public static bool IsAppPath(string url) => url.StartsWith('/') && !(url.Length > 1 && url[1] is '/' or '\\');
+
+    /// <summary>
+    /// The app's own attached files are the only images a note shows, so nothing else is asked for just by viewing a
+    /// note. Any other image shows its description instead, or nothing when it has none.
+    /// </summary>
+    private static void ShowOwnFileOrDescription(LinkInline image)
+    {
+        if (image.Url is { } url && OwnFile().IsMatch(url))
+        {
+            image.GetAttributes().AddPropertyIfNotExist("loading", "lazy");
+            return;
+        }
+
+        var description = string.Concat(image.Descendants<LiteralInline>().Select(literal => literal.Content.ToString()));
+        if (description.Length > 0)
+        {
+            image.ReplaceBy(new LiteralInline(description));
+        }
+        else
+        {
+            image.Remove();
+        }
     }
 
     private static void OpenElsewhere(Inline link)
@@ -202,6 +237,10 @@ public sealed partial class MarkdownRenderer
 
     [GeneratedRegex("^(https?|ircs?|mailto|xmpp)$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex SafeProtocol();
+
+    // The media handler's address for an attachment (MediaUrl in the UI project; docs/02, Serving attachments).
+    [GeneratedRegex(@"^/_media/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?[\w=&.-]*)?$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+    private static partial Regex OwnFile();
 
     /// <summary>
     /// Renders task checkboxes enabled (or disabled when the note cannot be changed), with <c>data-task</c> set to where

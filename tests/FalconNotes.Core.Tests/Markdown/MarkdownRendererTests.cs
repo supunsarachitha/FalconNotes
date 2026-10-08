@@ -91,6 +91,30 @@ public partial class MarkdownRendererTests
         Assert.DoesNotMatch(new Regex("(href|src)=\"(javascript|data|file):", RegexOptions.IgnoreCase), html);
     }
 
+    [Fact]
+    public void Treats_double_slash_links_as_other_sites_not_as_pages_of_the_app()
+    {
+        var html = Render("[trash](//phish.example/login) [back](/\\phish.example) [tags](/tags)");
+
+        Assert.Contains("<a href=\"//phish.example/login\" target=\"_blank\"", html, StringComparison.Ordinal);
+        Assert.Matches(new Regex("<a href=\"/[^\"]*phish.example\" target=\"_blank\""), html);
+        Assert.Contains("<a href=\"/tags\">tags</a>", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Shows_only_the_apps_own_files_as_images()
+    {
+        const string id = "0192f3a3-1111-7222-8333-444455556666";
+
+        var html = Render($"![photo](/_media/{id}?v=2) ![export](/settings/data) ![pixel](https://tracker.example/p.gif) ![](https://tracker.example/q.gif)");
+
+        var image = Assert.Single(new Regex("<img[^>]*>").Matches(html));
+        Assert.Contains($"src=\"/_media/{id}?v=2\"", image.Value, StringComparison.Ordinal);
+        Assert.Contains("loading=\"lazy\"", image.Value, StringComparison.Ordinal);
+        Assert.Contains("export pixel", html, StringComparison.Ordinal); // the others show their description instead
+        Assert.DoesNotContain("tracker.example", html, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("https://example.com", "https://example.com")]
     [InlineData("MAILTO:me@example.com", "MAILTO:me@example.com")]

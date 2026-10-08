@@ -1,5 +1,6 @@
 @* Port of TodayCard in pages/HomePage.tsx: with daily notes on, today's note, or a composer that starts it with the
-   first words written. Rolls over at midnight while the app is open. *@
+   first words written. With a template, the composer starts with the template's text. Rolls over at midnight while
+   the app is open. *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Events
 @using FalconNotes.Core.Notes
@@ -7,6 +8,7 @@
 @using FalconNotes.UI.State
 @implements IDisposable
 @inject NoteService Notes
+@inject DailyNotes DailyNotes
 @inject AppState State
 @inject ChangeFeed Feed
 @inject TimeProvider Time
@@ -23,13 +25,14 @@
     }
     else
     {
-        <Composer Daily="new Composer.DailyInfo(_date, Title)" Placeholder="Write about your day…" />
+        <Composer @key="_date" Daily="new Composer.DailyInfo(_date, Title)" InitialText="@_templateText" Placeholder="Write about your day…" />
     }
 </section>
 
 @code {
     private DateOnly _date;
     private Note? _note;
+    private string _templateText = "";
     private bool _loading = true;
     private ITimer? _timer;
 
@@ -55,6 +58,11 @@
         _loading = true;
         StateHasChanged();
         _note = await Notes.GetDailyAsync(_date);
+
+        // Read before the composer shows, which takes its starting text only once.
+        _templateText = _note is null && await DailyNotes.GetTemplateAsync(State.Preferences) is { } template
+            ? DailyNotes.TemplateText(template.Content)
+            : "";
         _loading = false;
         StateHasChanged();
         await OnNoteChanged.InvokeAsync(_note?.Id);

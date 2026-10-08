@@ -251,6 +251,20 @@ public class ComposerTests : BunitContext
     }
 
     [Fact]
+    public async Task Shrinks_a_photo_to_the_chosen_size()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { ShrinkPhotos = true, PhotoSize = PhotoSize.Small });
+        var codec = new FakeImageCodec(jpegSize: 100);
+        Services.AddSingleton(new PhotoShrinker(codec));
+        SetUpEditorJs();
+        var cut = Render<Composer>();
+
+        await AttachAndPostAsync(app, cut, Photo("holiday.png", 1000), "holiday.jpg");
+
+        Assert.Equal(((1280, 960), 75), (codec.Drawn, codec.Quality));
+    }
+
+    [Fact]
     public async Task Adds_a_photo_as_it_is_while_the_setting_is_off()
     {
         using var app = await UiTestApp.StartAsync(Services, "Alex");
@@ -282,9 +296,15 @@ public class ComposerTests : BunitContext
     {
         public int Calls { get; private set; }
 
+        /// <summary>The size asked for, for a 4000 × 3000 photo.</summary>
+        public (int, int) Drawn { get; private set; }
+
+        public int Quality { get; private set; }
+
         public Task<EncodedImage?> EncodeJpegAsync(Stream source, Func<int, int, (int Width, int Height)> fit, int quality, CancellationToken cancellationToken)
         {
             Calls++;
+            (Drawn, Quality) = (fit(4000, 3000), quality);
             return Task.FromResult<EncodedImage?>(new EncodedImage(new byte[jpegSize], false));
         }
     }

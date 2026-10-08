@@ -36,8 +36,13 @@ Never mention passwords, encryption modes, recovery keys, sessions, administrato
 `pages/HomePage.tsx`, `components/Composer.tsx`, `components/NoteList.tsx`, `components/NoteCard.tsx`. Unchanged apart from
 these:
 
-- **Note menu**: unchanged (Pin, Edit, Labels…, Move to Home / quick notes, Copy text, Archive/Restore, Move to trash /
-  Delete…). Copy text uses `IClipboard`: "Copied to the clipboard." / "Copying is not allowed here."
+- **Note menu**: unchanged (Pin, Edit, Labels…, Move to Home / quick notes, Use as daily-note template / Stop using as
+  daily template, Copy text, Archive/Restore, Move to trash / Delete…). Copy text uses `IClipboard`: "Copied to the
+  clipboard." / "Copying is not allowed here." The template item is the web app's since 1.15
+  ([04](04-domain-rules.md#daily-notes)).
+- **Labels…** opens its dialog with the focus on the dialog itself, not on the find-or-create field, so a phone's
+  keyboard stays down until the field is tapped (the web app since 1.8.1). The dialog has `tabindex="-1"` and
+  `data-focus-self`, which `dialogs.js` acts on after `showModal()`.
 - **Link previews** are gone.
 - **Filtered views** (`?tag`, `?q`, `?day`, `?label`) and their empty states are unchanged.
 
@@ -80,12 +85,14 @@ storage.
 | `appearance` | Appearance | unchanged | `AppearanceSection` |
 | `menu` | Side menu | unchanged | `MenuSection` |
 | `writing` | Writing | unchanged | `WritingSection`, `EditingSection` |
-| `features` | Features | unchanged | `FeaturesSection` **without Link previews**; "Shrink photos before uploading" becomes **Shrink photos before adding** ([08](08-help-guide.md#11-pictures-video-and-files-pictures)) |
+| `features` | Features | unchanged | `FeaturesSection` as in web 1.15.0, **without Link previews**; "Shrink photos before uploading" becomes **Shrink photos before adding** ([08](08-help-guide.md#11-pictures-video-and-files-pictures)), with the **Photo size** choice under it while it is on; the **Daily-note template** line under Daily notes while they are on, without the web app's "could not be loaded" case; **Help in the menu**, whose description ends "the guide is then opened from the foot of Settings." where the web app says "the guide stays at /help." |
 | `labels` | Labels | unchanged | `LabelSettings`. The note about end-to-end encryption is gone. The line under the list ends "Exports keep each note's labels, and restoring one brings them back.", as in the web app since 1.9.0 (2026-10-08; before that, "Exports do not include labels yet."). |
 | `data` | Backup & data | "Export, restore, the trash and starting over." | Backup & restore, Trash, Delete all notes and files |
 | `security` | Privacy & security | "App lock, and how your notes are protected." | App lock, Data protection |
 
-The foot of the list shows "Falcon Notes {version}". On a second line in smaller text: "Based on Maple Notes 1.8.0".
+The foot of the list shows "Falcon Notes {version}". On a second line in smaller text: "Based on Maple Notes 1.15.0"
+(1.8.0 until Falcon Notes 1.1.0). With **Help in the menu** off, a **Help** link to `/help` stands above them, in the
+accent colour: the web app's guide keeps an address that can be typed, and an app has none.
 
 ### Settings → Profile
 

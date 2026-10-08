@@ -3,6 +3,9 @@
 @* Port of pages/SettingsPage.tsx (docs/07, Settings): the sections' list, each with its own address. Wide screens
    show the list beside the open section; phones show the list, then each section on its own page with a way back. *@
 @using FalconNotes.UI.Components.Ui
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject AppState State
 
 <div class="flex flex-col gap-6 md:grid md:grid-cols-[13.5rem_minmax(0,1fr)] md:items-start md:gap-8">
     <div class="@Classes.Join("flex flex-col gap-3 md:sticky md:top-8", Current is not null ? "hidden md:flex" : "")">
@@ -35,6 +38,14 @@
                 }
             </ul>
         </nav>
+        @if (!State.Preferences.HelpMenu)
+        {
+            @* Not in the web app, where the guide's address can be typed: with Help hidden from the side menu, this is
+               the way to it (docs/07, Settings). *@
+            <p class="mt-6 text-center">
+                <a href="/help" class="text-sm font-medium text-maple-700 underline-offset-2 hover:underline dark:text-maple-400">Help</a>
+            </p>
+        }
         <VersionNote />
     </div>
 
@@ -112,4 +123,13 @@
     private SettingsSection? Current => Sections.FirstOrDefault(s => s.Id == SectionId);
 
     private SettingsSection Shown => Current ?? Sections[0];
+
+    // The list's foot follows "Help in the menu", which is switched in a section shown beside it on wide screens.
+    /// <inheritdoc />
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    /// <inheritdoc />
+    public void Dispose() => State.Changed -= OnStateChanged;
 }

@@ -30,6 +30,9 @@ public enum IconName
     /// <summary>Lucide <c>calendar-days</c>.</summary>
     CalendarDays,
 
+    /// <summary>Lucide <c>calendar-x</c>.</summary>
+    CalendarX,
+
     /// <summary>Lucide <c>check</c>.</summary>
     Check,
 

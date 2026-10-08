@@ -24,7 +24,7 @@ port with the changes in the docs · **Drop** = not in this app.
 | `lib/labels.ts` | `UI/Components/LabelStyles.cs` + `Core/Labels/LabelRules.cs` (`HasLabelNamed`, `NextColor`) | Port |
 | `lib/appearance.ts` | `UI/State/AppearanceService.cs` + `UI/wwwroot/js/appearance.js` | Adapt ([06](06-design-system.md#light-and-dark)) |
 | `lib/preferences.ts` | `Core/Preferences/PreferencesService.cs` (defaults, optimistic save) + `UI/State/AppState.cs` | Port |
-| `lib/daily.ts` | `Core/Notes/DailyNotes.cs` + `UI` today timer | Port |
+| `lib/daily.ts` | `Core/Notes/DailyNotes.cs` + `UI` today timer | Port, with the template of web 1.15 (`templateText`, `useDailyTemplate`) |
 | `lib/noteEditor.ts` | `UI/State/NoteEditor<T>.cs` | Port |
 | `lib/doubleTap.ts` | `UI/wwwroot/js/gestures.js` | Port |
 | `lib/viewport.ts` | `UI/wwwroot/js/observe.js` + `NearViewport` component | Port |
@@ -71,10 +71,10 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `components/TodoCard.tsx` | `UI/Components/TodoCard.razor`, `ItemsEditor.razor` |
 | `components/HabitRow.tsx`, `HabitChart.tsx`, `HabitCalendar.tsx` | `UI/Components/Habits/*.razor` |
 | `components/Calendar.tsx` | `UI/Components/Calendar.razor` |
-| `components/PreferenceSections.tsx` | `UI/Pages/Settings/{Appearance,Menu,Writing,Editing,Features}Section.razor` (Adapt: no link previews) |
+| `components/PreferenceSections.tsx` | `UI/Pages/Settings/{Appearance,Menu,Writing,Editing,Features}Section.razor` (Adapt: no link previews), and from web 1.15.0 `PhotoSizeChoice.razor` and `DailyTemplateSetting.razor` |
 | `components/MenuOrderEditor.tsx` | `UI/Pages/Settings/MenuOrderEditor.razor` + `gestures.js` |
 | `components/ExportSection.tsx`, `RestorePanel.tsx` | `UI/Pages/Settings/BackupSection.razor`, `RestorePanel.razor` (Adapt) |
-| `components/VersionNote.tsx` | `UI/Components/VersionNote.razor` (Adapt: app version, "based on 1.8.0") |
+| `components/VersionNote.tsx` | `UI/Components/VersionNote.razor` (Adapt: app version, "Based on Maple Notes 1.15.0") |
 | `components/EncryptionSection.tsx`, `EndToEndSetupDialog.tsx`, `PasswordDialog.tsx`, `RecoveryKit.tsx`, `RecoveryKitDialog.tsx`, `LinkPreviews.tsx` | Drop |
 | `pages/HomePage.tsx` | `UI/Pages/Home.razor`, `Archive.razor`, `FilterHeader.razor`, `TodayCard.razor` |
 | `pages/TodoPage.tsx` | `UI/Pages/Todo.razor`, `UI/Components/FeatureOff.razor` |

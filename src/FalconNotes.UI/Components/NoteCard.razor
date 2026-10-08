@@ -69,6 +69,12 @@ else
                                 <MenuItem IconName="IconName.Zap" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Quick), "Moved to quick notes."))">Move to quick notes</MenuItem>
                             }
                         }
+                        @if (CanBeTemplate || IsTemplate)
+                        {
+                            <MenuItem IconName="@(IsTemplate ? IconName.CalendarX : IconName.CalendarCheck)" OnSelect="ToggleTemplateAsync">
+                                @(IsTemplate ? "Stop using as daily template" : "Use as daily-note template")
+                            </MenuItem>
+                        }
                         <MenuItem IconName="IconName.Copy" OnSelect="CopyTextAsync">Copy text</MenuItem>
                         @if (State.Preferences.Archive || Note.IsArchived)
                         {
@@ -124,6 +130,11 @@ else
 
     private bool TapToEdit => State.Preferences.DoubleTapToEdit && !Note.IsArchived;
 
+    private bool IsTemplate => Note.Id.ToString("D") == State.Preferences.DailyNoteTemplate;
+
+    // A daily note cannot be the template of the others.
+    private bool CanBeTemplate => State.Preferences.DailyNotes && Note.DailyDate is null;
+
     private bool Edited => (Note.UpdatedAtUtc - Note.CreatedAtUtc) > TimeSpan.FromMinutes(1);
 
     private bool AllowTitleWhenEditing => Note.Kind == NoteKind.Note || (Note.Kind == NoteKind.Quick && State.Preferences.QuickNoteTitles);
@@ -175,6 +186,18 @@ else
         _editing = value;
         _bound = false; // the article is gone while editing; re-bind if it comes back
         StateHasChanged();
+    }
+
+    private async Task ToggleTemplateAsync()
+    {
+        var wanted = IsTemplate ? "" : Note.Id.ToString("D");
+        await State.UpdatePreferencesAsync(p => p with { DailyNoteTemplate = wanted });
+
+        // A failed save has put the old choice back and said so.
+        if (State.Preferences.DailyNoteTemplate == wanted)
+        {
+            Toasts.Info(wanted.Length == 0 ? "Daily notes start empty again." : "New daily notes start with this note's text.");
+        }
     }
 
     private async Task ChangeAsync(NotePatch patch, string message)

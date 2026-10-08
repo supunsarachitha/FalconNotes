@@ -18,6 +18,7 @@ internal static class IconPaths
         [IconName.Bold] = "<path d=\"M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8\" />",
         [IconName.CalendarCheck] = "<path d=\"M8 2v3\" /><path d=\"M16 2v3\" /><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" /><path d=\"M3 9h18\" /><path d=\"m9 15 2 2 4-4\" />",
         [IconName.CalendarDays] = "<path d=\"M8 2v3\" /><path d=\"M16 2v3\" /><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" /><path d=\"M3 9h18\" /><path d=\"M8 13h.01\" /><path d=\"M12 13h.01\" /><path d=\"M16 13h.01\" /><path d=\"M8 17h.01\" /><path d=\"M12 17h.01\" /><path d=\"M16 17h.01\" />",
+        [IconName.CalendarX] = "<path d=\"M8 2v3\" /><path d=\"M16 2v3\" /><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" /><path d=\"M3 9h18\" /><path d=\"m14 13-4 4\" /><path d=\"m10 13 4 4\" />",
         [IconName.Check] = "<path d=\"M20 6 9 17l-5-5\" />",
         [IconName.ChevronLeft] = "<path d=\"m15 18-6-6 6-6\" />",
         [IconName.ChevronRight] = "<path d=\"m9 18 6-6-6-6\" />",
