@@ -79,6 +79,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   builds with against the licence policy and regenerates `THIRD-PARTY-NOTICES.md` from the exact dependency
   versions; it also added the Lucide icon licence that file had been missing. `WindowSoftInputMode = AdjustResize`
   on `MainActivity`, so the composer and dialogs stay above the keyboard.
+- Android release signing: a Release build is signed with the keystore named in the git-ignored
+  `src/FalconNotes.App/signing.local.props`, and `dotnet publish` makes a signed AAB for Google Play and a signed
+  APK for direct installs.
 
 ### Changed
 

@@ -284,6 +284,17 @@ Not checked in this pass, still open: TalkBack; a real phone; the daily note's m
 changed; an export restored in the Maple Notes web app itself (the conformance vectors pass); Windows and macOS.
 Biometric unlock and photo shrinking remain stubbed, as recorded under Phase 6.
 
+Android release build, signed (2026-10-07): release signing is set up as in the owner's other Android app. The
+project imports a git-ignored `src/FalconNotes.App/signing.local.props` (template next to it) and signs Release
+builds with the keystore it names; `dotnet publish src/FalconNotes.App -c Release -f net10.0-android` makes
+`dev.falconnotes.app-Signed.aab` and `-Signed.apk` in `bin/Release/net10.0-android/publish/`. Both were checked:
+signed with the owner's upload key (`jarsigner -verify`, `apksigner verify --print-certs`), version 1.0.0
+(versionCode 1), `minSdkVersion` 26, `targetSdkVersion` 36, arm64-v8a and x86_64, no `INTERNET` permission and not
+debuggable. The APK was installed on the `Medium_Phone_API_36.1` emulator: Welcome, Start writing, a note posted,
+and the note still there after a restart (so the encrypted database works in the trimmed build). That is a smoke
+test, not the QA checklist on the release build, and nothing was uploaded anywhere. The Windows and macOS halves of
+the release-builds box are still open, so it stays unticked.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._

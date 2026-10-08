@@ -21,7 +21,7 @@ Phase 0 spikes here.
 | Single instance | `LaunchMode.SingleTop` on the only activity: a second launch returns to the open window. A second activity would share the first one's services and its page would not respond (found in the 1.0.0 QA pass). |
 | Share (viewer) | `Share.RequestAsync(new ShareFileRequest)` with the cached decrypted copy |
 | Media | Attachments are served through `WebResourceRequested` with a hand-built `WebResourceResponse` ([02](02-architecture.md#serving-attachments-to-the-webview)); no `INTERNET` permission is needed. |
-| Release | Signed AAB for the Play Store, signed APK for direct installs. R8/trimming: `TrimMode=partial` (raw ADO.NET is trim-friendly; no EF Core). Test the release build, not just debug. |
+| Release | Signed AAB for the Play Store, signed APK for direct installs: `dotnet publish src/FalconNotes.App -c Release -f net10.0-android` makes both. The keystore's path, alias and passwords come from `src/FalconNotes.App/signing.local.props`, which is git-ignored (template: `signing.local.props.example`); without it the build is signed with the debug key. R8/trimming: `TrimMode=partial` (raw ADO.NET is trim-friendly; no EF Core). Test the release build, not just debug. |
 | Tablets | Landscape tablets at 1,024 dp or more get the sidebar layout automatically |
 
 ## Windows
