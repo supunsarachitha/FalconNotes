@@ -98,6 +98,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The README describes the app as built, with screenshots, instead of the plan.
 - The README and the website link to the Maple Notes website and its live demo, and say what Maple Notes adds. They no longer say the web app's backups have no labels: since Maple Notes 1.9.0 they do, and Falcon Notes
   leaves them out on restore.
+- The README is reorganised: a contents list, a section on how Falcon Notes relates to Maple Notes, and the limits
+  as a list. It no longer describes how the repository was set up or points to the prompts used to build it.
+
+### Removed
+
+- `KICKOFF-PROMPT.md`, the prompts used to start each phase of the build, and the Android project template's
+  `AboutResources.txt` in the storage benchmark. Neither was used by anything.
+- The generated stylesheet `src/FalconNotes.UI/wwwroot/css/app.css` is no longer in the repository. It was already
+  git-ignored and is built by Tailwind on every build.
 
 ### Fixed
 
@@ -121,3 +130,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now change the app at once. Before, the appearance was set only once, before the saved settings had loaded.
 - `Placeholders.razor` kept `@page` routes for Todo, Habits and Tags after Phase 5 ported real pages for them, which
   made Blazor's router throw "ambiguous routes" on start-up and left the WebView blank.
+- The Core and UI tests no longer fail at random, which had failed CI on Linux and Windows. Tests running side by
+  side emptied each other's database connection pools; they now run one at a time (docs/11). And four tests listed a
+  note's files in the order of IDs made within one millisecond, which is random; the files now get distinct times.

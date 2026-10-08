@@ -63,9 +63,16 @@ public sealed class TestApp : IDisposable
         return app;
     }
 
-    /// <summary>Adds a small file, not yet attached.</summary>
-    public Task<Domain.Attachment> AddFileAsync(string name = "photo.png", int size = 100, string? type = null) =>
-        Attachments.AddAsync(new MemoryStream(Enumerable.Range(0, size).Select(i => (byte)i).ToArray()), name, type);
+    /// <summary>
+    /// Adds a small file, not yet attached, and moves the clock on one tick. Files added one after another then have
+    /// distinct times, as on a real clock, and a note lists them in that order instead of by their random IDs.
+    /// </summary>
+    public async Task<Domain.Attachment> AddFileAsync(string name = "photo.png", int size = 100, string? type = null)
+    {
+        var added = await Attachments.AddAsync(new MemoryStream(Enumerable.Range(0, size).Select(i => (byte)i).ToArray()), name, type);
+        Clock.Advance(TimeSpan.FromTicks(1));
+        return added;
+    }
 
     public void Dispose()
     {

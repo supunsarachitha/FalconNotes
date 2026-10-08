@@ -37,6 +37,7 @@ public partial class DemoBackupTests
     {
         using var app = await TestApp.StartAsync();
         app.Clock.Now = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        app.Clock.Step = TimeSpan.FromTicks(1); // a note's files are stored one after another and are listed oldest first
         var original = Demo(name);
         using var plan = await RestoreConformanceTests.NewReader(app).ReadAsync([RestoreConformanceTests.Source(name, original)]);
         await RestoreConformanceTests.NewRunner(app).RunAsync(plan.Items);
