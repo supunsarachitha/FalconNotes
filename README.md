@@ -17,15 +17,19 @@
 
 <p align="center">
   <a href="https://supunsarachitha.github.io/FalconNotes/"><b>Website</b></a> ·
-  <a href="https://supunsarachitha.github.io/FalconNotes/privacy.html"><b>Privacy policy</b></a>
+  <a href="https://supunsarachitha.github.io/FalconNotes/privacy.html"><b>Privacy policy</b></a> ·
+  <a href="https://supunsarachitha.github.io/MapleNotes/"><b>Maple Notes web app</b></a>
 </p>
 
 ![Home on a tablet](docs/screenshots/home.png)
 
-Falcon Notes is the offline companion of the [Maple Notes](https://github.com/supunsarachitha/MapleNotes) web app, with
-the same features and look as its version 1.8.0, under its own name and mark. It runs without a server: notes stay on
-the device, encrypted. Backups are the web app's export ZIPs, so notes move freely between this app, other devices
-and any Maple Notes server.
+Falcon Notes is the offline companion of the [Maple Notes](https://supunsarachitha.github.io/MapleNotes/) web app
+([source](https://github.com/supunsarachitha/MapleNotes)), with the same features and look as its version 1.8.0, under
+its own name and mark. It runs without a server: notes stay on the device, encrypted. Backups are the web app's export
+ZIPs, so notes move freely between this app, other devices and any Maple Notes server.
+
+To have your notes on every device, use Maple Notes instead or as well: it is self-hosted, in one Docker container,
+with accounts and optional end-to-end encryption, and has a [live demo](https://maplenotes.onrender.com/).
 
 Built with .NET 10 MAUI Blazor Hybrid. **Version 1.0.0 is for Android 8.0 and later**, on phones and tablets. Windows
 and macOS are planned ([12 Platforms](docs/12-platforms.md)).
@@ -64,7 +68,8 @@ and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 - **Help built in.** A user guide in the app explains every feature.
 
 Not in 1.0.0 yet: fingerprint or face unlock, shrinking photos before they are added, and pasting or dragging files
-into a note. Labels and settings are not part of backups, as in the web app.
+into a note. Labels and settings are not part of backups, and labels in a Maple Notes backup are left out when it is
+restored here.
 
 ## Privacy and security
 
