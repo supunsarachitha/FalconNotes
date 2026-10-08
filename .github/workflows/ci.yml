@@ -39,6 +39,7 @@ jobs:
         if: runner.os == 'macOS'
         env:
           FALCON_PERF: "1"
+          FALCON_PERF_SLACK: "1.5" # a shared VM; docs/11 (Performance budgets)
           FALCON_PERF_REPORT: ${{ runner.temp }}/performance.txt
         run: |
           dotnet test tests/FalconNotes.Core.Tests -c Release -- --filter-trait "Category=Performance"

@@ -79,7 +79,9 @@ gives files new IDs, as the web app's restore does (found in Phase 2).
 
 Measured on the 50,000-note database from the benchmark generator (`benchmarks/storage/Shared/Bench.cs` `Generate`,
 ported as `tests/FalconNotes.Core.Tests/Performance/LargeDatabase.cs`). A `[Trait("Category", "Performance")]` test runs
-them on the CI Mac, and locally with `FALCON_PERF=1` (`FALCON_PERF_REPORT=path` writes the timings to a file). Phase 7 repeats them by hand on the slowest Android
+them on the CI Mac, and locally with `FALCON_PERF=1` (`FALCON_PERF_REPORT=path` writes the timings to a file). The CI Mac
+is a shared virtual machine whose speed varies by up to 2× between runs, so CI sets `FALCON_PERF_SLACK=1.5` and holds it
+to 1.5× these budgets; locally they apply as written. Phase 7 repeats them by hand on the slowest Android
 phone supported, against 4× these budgets:
 
 | Operation | Budget (Mac, release build) |

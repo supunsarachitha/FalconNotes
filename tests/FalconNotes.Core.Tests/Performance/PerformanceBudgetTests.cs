@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using FalconNotes.Core.Backup.Restore;
 using FalconNotes.Core.Domain;
 using FalconNotes.Core.Notes;
@@ -9,7 +10,8 @@ namespace FalconNotes.Core.Tests.Performance;
 /// <summary>
 /// The budgets of docs/11 (Performance budgets) on a 50,000-note database. Run with <c>FALCON_PERF=1</c> (the CI Mac
 /// does): they take a while to set up and depend on the machine. Times are medians of ten runs after a warm-up;
-/// <c>FALCON_PERF_REPORT=path</c> also writes them to a file.
+/// <c>FALCON_PERF_REPORT=path</c> also writes them to a file. <c>FALCON_PERF_SLACK=1.5</c> multiplies the budgets: the CI
+/// Mac is a shared virtual machine whose speed varies between runs.
 /// </summary>
 [Trait("Category", "Performance")]
 public sealed class PerformanceBudgetTests(ITestOutputHelper output)
@@ -31,6 +33,9 @@ public sealed class PerformanceBudgetTests(ITestOutputHelper output)
         var today = DateOnly.FromDateTime(app.Clock.Now.UtcDateTime);
         var monthStart = new DateOnly(today.Year, today.Month, 1);
 
+        var slack = double.TryParse(Environment.GetEnvironmentVariable("FALCON_PERF_SLACK"), NumberStyles.Float, CultureInfo.InvariantCulture, out var factor)
+            ? factor
+            : 1.0;
         var failures = new List<string>();
         var report = new List<string> { $"{NoteCount:N0} notes, generated in {fill.Elapsed.TotalSeconds:F1} s" };
         async Task Measure(string name, double budgetMs, Func<Task> operation)
@@ -47,7 +52,7 @@ public sealed class PerformanceBudgetTests(ITestOutputHelper output)
             var median = times.Order().ElementAt(times.Count / 2);
             output.WriteLine($"{name,-40} {median,8:F2} ms   (budget {budgetMs} ms)");
             report.Add($"{name,-40} {median,8:F2} ms   (budget {budgetMs} ms)");
-            if (median > budgetMs)
+            if (median > budgetMs * slack)
             {
                 failures.Add($"{name}: {median:F1} ms > {budgetMs} ms");
             }
@@ -84,7 +89,7 @@ public sealed class PerformanceBudgetTests(ITestOutputHelper output)
             var seconds = watch.Elapsed.TotalSeconds;
             Assert.Equal(10_000, restored.Restored);
             report.Add($"{"Restore of 10,000 notes without files",-40} {seconds * 1000,8:F0} ms   (budget 5000 ms)");
-            if (seconds > 5)
+            if (seconds > 5 * slack)
             {
                 failures.Add($"Restore of 10,000 notes: {seconds:F1} s > 5 s");
             }
