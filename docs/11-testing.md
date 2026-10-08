@@ -19,6 +19,11 @@ for the whole process, and `SqliteConnection.ClearAllPools()`, which the test su
 and upgrade steps call to let go of the database files, can close a connection that another test is opening. Run in
 parallel, about one run in ten failed at random with `ObjectDisposedException: SQLitePCL.sqlite3`.
 
+A fixed clock gives rows made one after another the same time, and their order then falls back to their IDs. Version 7
+IDs made within one millisecond are in random order, so a test that checks the order of a note's files must give them
+distinct times: `TestApp.AddFileAsync` moves the clock on one tick, and a restore test sets `Clock.Step`. A machine
+fast enough to make two IDs in a millisecond (the Linux and Windows CI machines) otherwise fails now and then.
+
 ## Porting the reference tests
 
 | Reference tests | Port to | What they protect |

@@ -131,4 +131,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Placeholders.razor` kept `@page` routes for Todo, Habits and Tags after Phase 5 ported real pages for them, which
   made Blazor's router throw "ambiguous routes" on start-up and left the WebView blank.
 - The Core and UI tests no longer fail at random, which had failed CI on Linux and Windows. Tests running side by
-  side emptied each other's database connection pools; they now run one at a time (docs/11).
+  side emptied each other's database connection pools; they now run one at a time (docs/11). And four tests listed a
+  note's files in the order of IDs made within one millisecond, which is random; the files now get distinct times.
