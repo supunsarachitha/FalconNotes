@@ -77,5 +77,6 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnActivityResult(requestCode, resultCode, data);
         AndroidFileSaver.OnActivityResult(requestCode, resultCode, data);
+        AndroidBackupFolders.OnActivityResult(requestCode, resultCode, data);
     }
 }

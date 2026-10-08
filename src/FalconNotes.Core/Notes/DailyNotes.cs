@@ -4,11 +4,33 @@ using FalconNotes.Core.Text;
 namespace FalconNotes.Core.Notes;
 
 /// <summary>
-/// Saving the Today card (docs/04, Daily notes). Port of <c>saveDailyNote</c> in <c>web/lib/daily.ts</c>.
+/// Saving the Today card and its template (docs/04, Daily notes). Port of <c>saveDailyNote</c>, <c>templateText</c> and
+/// <c>useDailyTemplate</c> in <c>web/lib/daily.ts</c>.
 /// </summary>
 /// <param name="notes">The note service.</param>
 public sealed class DailyNotes(NoteService notes)
 {
+    /// <summary>The text a template note gives a new daily note: everything but its title, since the daily note has the date.</summary>
+    /// <param name="content">The template note's text.</param>
+    /// <returns>The text to start with.</returns>
+    public static string TemplateText(string content) => Titles.Split(content).Body;
+
+    /// <summary>
+    /// The daily-note template, when one is chosen: an ordinary note, whose text starts each new daily note. A template
+    /// that was deleted, or is in the trash, counts as none.
+    /// </summary>
+    /// <param name="preferences">The preferences, which hold the template's ID.</param>
+    /// <returns>The template note, or null.</returns>
+    public async Task<Note?> GetTemplateAsync(Preferences preferences)
+    {
+        if (!preferences.DailyNotes || !Guid.TryParseExact(preferences.DailyNoteTemplate, "D", out var id))
+        {
+            return null;
+        }
+
+        return await notes.GetAsync(id) is { TrashedAtUtc: null } note ? note : null;
+    }
+
     /// <summary>
     /// Saves a day's first words as its daily note, titled with the date. If the day's note appeared meanwhile (a
     /// restore can add one), the words are added to it instead: its text, trimmed at the end, a blank line, then theirs,

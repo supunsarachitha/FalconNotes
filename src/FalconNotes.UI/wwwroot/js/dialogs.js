@@ -7,6 +7,9 @@ export function showModal(dialog, dotnet) {
   if (!dialog || dialog.open) return;
   openers.set(dialog, document.activeElement);
   dialog.showModal();
+  // A dialog that asks for it takes the focus itself, not its first field, so opening it does not bring up a phone's
+  // keyboard.
+  if (dialog.hasAttribute("data-focus-self")) dialog.focus();
   dialog.oncancel = (event) => {
     event.preventDefault();
     dotnet.invokeMethodAsync("Cancel");

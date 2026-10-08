@@ -7,7 +7,7 @@ namespace FalconNotes.UI.Help;
 public sealed record GuideSection(string Id, string Title, string Body);
 
 /// <summary>
-/// The in-app user guide, adapted from <c>reference/maple-notes-1.8.0/src/maple-web/src/help/guide.ts</c> (docs/08).
+/// The in-app user guide, adapted from the web app's <c>src/maple-web/src/help/guide.ts</c> (docs/08).
 /// Sections marked "as in web" there are copied unchanged; the others are rewritten for an offline, single-device app
 /// with no sign-in, server or link previews. The guide names the app "Falcon Notes" itself; its mentions of the Maple
 /// Notes web app stay as written, unlike ported screen text.
@@ -93,6 +93,12 @@ public static class Guide
         new("daily", "Daily notes", """
             Turn on **Daily notes** in [Settings → Features](/settings/features) to get a **Today** card at the top of Home, titled with today's
             date. Write in it and it becomes today's note; days you skip leave no empty notes.
+
+            **A template** gives each new day's note the same start, such as headings or a checklist. Write it as an ordinary note,
+            then choose **Use as daily-note template** from its **⋯** menu. Today's card then starts with its text, ready to fill in;
+            the template's title, if it has one, is left out, and its files are not copied. Edit the note to change the template.
+            A quick note or an archived note works well for it, as it stays out of your timeline. To stop, choose **Stop using as
+            daily template** from its menu, or **Stop using** under Daily notes in [Settings → Features](/settings/features).
             """),
 
         new("calendar", "The calendar", """
@@ -125,8 +131,10 @@ public static class Guide
             Pictures and players load as you scroll towards them, so a long timeline opens quickly however many files it has.
 
             To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are
-            resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and
-            camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are.
+            resized and saved as JPEG, and their location and camera details are left out. Then choose a **Photo size**: **Large**
+            (2560 pixels on the longest side) stays sharp on big screens and is often a tenth of the original; **Medium** (1920
+            pixels) and **Small** (1280 pixels) are smaller still, and saved at a lower quality, which suits photos you mostly
+            look at on a phone. The full-size original is not kept, and photos you added earlier stay as they are.
             """),
 
         new("appearance", "Appearance", """
@@ -139,8 +147,9 @@ public static class Guide
 
         new("features", "Choosing your features", """
             Everything beyond plain notes can be switched on or off in [Settings → Features](/settings/features): todo
-            lists, quick notes, the habit tracker, the Tags page, the archive, daily notes, the calendar, labels and the trash.
-            Turning something off only hides it; nothing is deleted, and it all comes back when you turn it on again.
+            lists, quick notes, the habit tracker, the Tags page, the archive, Help in the side menu, daily notes, the calendar,
+            labels and the trash. Turning something off only hides it; nothing is deleted, and it all comes back when you turn it
+            on again. With Help hidden from the menu, this guide is opened from the foot of [Settings](/settings).
             """),
 
         new("trash", "The trash", """
@@ -190,6 +199,11 @@ public static class Guide
             **Export** saves your notes as a ZIP file of Markdown, plain text or JSON, with your files, in folders by year, month or
             day. Keep it somewhere safe, such as a USB drive or a cloud folder you trust. Exports are not encrypted, so store them
             with care.
+
+            So that you need not remember, turn on **Back up automatically** in the same place and choose a folder. Falcon Notes
+            then saves a backup of everything there every day, week or month, keeps the newest few and deletes the older ones. It
+            does this when it is open, so open it now and then. These backups are not encrypted either, so choose a folder only
+            you can open. A folder on this device is lost with the device, so copy the backups somewhere else from time to time.
 
             **Restore** brings notes back from such a file. It also works with exports from the Maple Notes web app and its
             servers, and their restore works with yours. Notes keep their dates, pins, archive state, labels and files, and

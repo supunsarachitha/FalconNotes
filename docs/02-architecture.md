@@ -58,7 +58,7 @@ LICENSE                        PolyForm Noncommercial 1.0.0
 docs/                          this specification
 fixtures/                      export-vectors.json, demo backups, the falcon mark, the web app's leaf
 benchmarks/storage/            the storage benchmark (doc 13)
-reference/maple-notes-1.8.0/   the web app, read-only (never built, never shipped, never edited)
+reference/maple-notes-1.8.0/   the web app's 1.8.0 documents and screenshots, read-only (its source is on GitHub)
 src/
   FalconNotes.Core/
     Domain/          Note, NoteKind, Attachment, Label, LabelColor, Preferences, Profile, NoteState …
@@ -70,10 +70,11 @@ src/
     Notes/           NoteService, SearchService, CalendarService, TagService
     Labels/          LabelService
     Settings/        PreferencesService, ProfileService (not Preferences/: that name is the record's)
-    Backup/Export/   NoteExporter, NoteFormatter, ExportNaming, ExportModels (ported from the server)
+    Backup/Export/   NoteExporter, NoteFormatter, ExportNaming, ExportModels (ported from the server);
+                     ExportService, AutoExportService and AutoExportSettings (this app's)
     Backup/Restore/  RestoreReader (port of parse.ts), RestoreRunner (port of importer.ts)
     Maintenance/     StartupTasks, TrashPurge, AttachmentCleanup, TempFiles, DatabaseBackups
-    Platform/        IFileSaver, IFilePicker, IFileOpener, IClipboard, IAppLock, IThemeSource, IAppInfo
+    Platform/        IFileSaver, IFilePicker, IFileOpener, IClipboard, IAppLock, IThemeSource, IAppInfo, IBackupFolders
     Events/          ChangeFeed (NotesChanged, LabelsChanged, PreferencesChanged, ProfileChanged)
   FalconNotes.UI/
     Layout/          AppShell, Sidebar, Drawer, MainLayout
@@ -128,7 +129,9 @@ tests/
       transaction each.
    4. Run maintenance, without blocking the first screen: purge trash older than 30 days, remove abandoned uploads
       (older than 24 h, `NoteId` null) and orphan files (older than 1 h), and delete `cache/open/` (decrypted temporary
-      copies). Repeat the purges hourly while the app runs, as the server did.
+      copies). Repeat the purges hourly while the app runs, as the server did. After each pass, make an automatic
+      backup if one is due ([05](05-backup-compatibility.md#automatic-backups)); after, so that the start's clean-up
+      of `cache/export/` never meets the archive being written there.
    5. Load the profile and preferences into `AppState`, then apply the theme.
 3. Route: no profile yet → **Welcome**; app lock on → **Lock**; otherwise **Home**.
 4. Lock again after the app has been in the background for the chosen time ([03](03-data-storage-and-security.md#app-lock)).
@@ -154,7 +157,8 @@ the system Back button goes back in the WebView's history and leaves the app onl
 - `Microsoft.Data.Sqlite.Core` with `SQLite3MC.PCLRaw.bundle`. No EF Core and no ORM (D9).
 - One `Database` class opens connections: the connection string from
   [03-data-storage-and-security.md](03-data-storage-and-security.md#database), then the pragmas `journal_mode=WAL`,
-  `synchronous=NORMAL`, `foreign_keys=ON`, `secure_delete=ON`, `temp_store=MEMORY`.
+  `synchronous=NORMAL`, `foreign_keys=ON`, `secure_delete=ON`, `journal_size_limit=0` (the write-ahead log is cut back
+  after each checkpoint, so old pages do not linger in it; the web app since 1.11), `temp_store=MEMORY`.
 - Repositories hold the SQL as constants, always use parameters, and map rows by hand. Run multi-statement changes
   in a transaction through `Database.InTransactionAsync(Func<SqliteConnection, SqliteTransaction, Task>)`.
 - Migrations are numbered C# methods. `PRAGMA user_version` records the last one applied. Migration 1 creates the
@@ -244,20 +248,27 @@ Core defines the interfaces; the App implements them per platform; tests use fak
 | `IThemeSource` (device theme and changes) | `Application.RequestedTheme` + `RequestedThemeChanged` | same | same |
 | `IAppInfo` (version) | `AppInfo.VersionString` | same | same |
 | `IAppDirectories` (data and cache folders) | `FileSystem.AppDataDirectory`, `FileSystem.CacheDirectory` | same | same |
+| `IImageCodec` (shrink photos) | `AndroidImageCodec`: `ImageDecoder` and `Bitmap.compress`, `BitmapFactory` on Android 8 | `BitmapDecoder`/`BitmapEncoder`, with that head | ImageIO, with that head |
+| `IShare` (the viewer's share button) | `Share.RequestAsync` with the cached copy | with that head | with that head |
+| `IWindowInsets` (the system bars' insets) | `AndroidWindowInsets`, from the decor view | not needed | not needed |
+| `IBackupFolders` (the folder for automatic backups) | `AndroidBackupFolders`: `ACTION_OPEN_DOCUMENT_TREE` with a persisted grant, then `DocumentsContract` | a folder picker and plain files, with that head | a folder picker and a security-scoped bookmark, with that head |
+
+A platform that has no `IImageCodec` yet registers no `PhotoShrinker`, and the composer then adds photos as they are.
+A platform that has no `IBackupFolders` yet registers none, and Settings then does not offer automatic backups.
 
 See [12-platforms.md](12-platforms.md) for the platform details.
 
 ## Dependencies
 
 Only these, unless a decision is recorded here first. Every one must be on the allowed list in
-`reference/maple-notes-1.8.0/docs/licensing.md` (MIT, Apache-2.0, BSD, ISC, …) and be listed in
+[licensing.md](licensing.md) (MIT, Apache-2.0, BSD, ISC, …) and be listed in
 `THIRD-PARTY-NOTICES.md`.
 
 | Package | Licence | Use |
 |---|---|---|
 | .NET MAUI, Blazor (`Microsoft.AspNetCore.Components.WebView.Maui`) | MIT | App framework |
 | `Microsoft.Data.Sqlite.Core` | MIT | Data access |
-| `SQLite3MC.PCLRaw.bundle` 2.4.x | MIT (bundles SQLite, public domain, and permissive embedded code: see the reference `licensing.md`) | Encrypted SQLite, native for android-arm/arm64/x86/x64, maccatalyst-arm64/x64, win-x86/x64/arm64 |
+| `SQLite3MC.PCLRaw.bundle` 2.4.x | MIT (bundles SQLite, public domain, and permissive embedded code: see [licensing.md](licensing.md)) | Encrypted SQLite, native for android-arm/arm64/x86/x64, maccatalyst-arm64/x64, win-x86/x64/arm64 |
 | `Markdig` | BSD-2-Clause | Markdown rendering |
 | `SkiaSharp` (+ native assets per platform) | MIT, but see below | **Not added, and not needed** (2026-10-08): photos are shrunk by each platform's own codec behind `IImageCodec`, with no third-party code (Android: `AndroidImageCodec`, [12](12-platforms.md); Windows `BitmapDecoder`/`BitmapEncoder` and Apple ImageIO come with those heads). The licence question that held it back since 2026-10-01 was never settled. Its native library bundles code under other terms: Adobe's DNG SDK (a custom licence), the GIF decoder (MPL 1.1 / GPL / LGPL), FreeType (FTL, an advertising clause), and it lists libmicrohttpd (LGPL). The licence policy puts custom, MPL and LGPL terms under "review first". |
 | `CommunityToolkit.Maui` | MIT | File saver, status bar colour |
@@ -267,12 +278,12 @@ Only these, unless a decision is recorded here first. Every one must be on the a
 | `Microsoft.Extensions.Logging.Abstractions` | MIT | Logging interfaces in Core (already part of MAUI) |
 | Tests: `xunit.v3`, `bunit` | Apache-2.0, MIT | Tests only |
 
-Not allowed: anything in the reference's "Not allowed" list, and the "known traps" there (FluentAssertions 8+,
+Not allowed: anything in the "Not allowed" list of [licensing.md](licensing.md), and the "known traps" there (FluentAssertions 8+,
 MediatR 13+, AutoMapper 15+, ImageSharp, commercial SQLCipher builds).
 
 ## Styling pipeline
 
-- `FalconNotes.UI/Styles/app.css` starts as a copy of `reference/maple-notes-1.8.0/src/maple-web/src/index.css`: the
+- `FalconNotes.UI/Styles/app.css` started as a copy of the web app's `src/maple-web/src/index.css`: the
   same `@theme` tokens, accent overrides, `dark` variant, `.markdown` rules and `.note-card`. Add new rules at the end,
   in the same style.
 - An MSBuild target runs the Tailwind 4 standalone CLI before build:

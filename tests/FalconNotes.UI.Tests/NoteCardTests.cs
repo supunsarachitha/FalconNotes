@@ -155,6 +155,49 @@ public class NoteCardTests : BunitContext
     }
 
     [Fact]
+    public async Task Makes_a_note_the_daily_template_from_its_menu_and_stops_using_it_the_same_way()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { DailyNotes = true });
+        SetUpGesturesJs(out _);
+        SetUpDialogsJs();
+        var note = await app.PostAsync("# Daily template\n\n## Plan");
+        var cut = Render<NoteCard>(p => p.Add(c => c.Note, note));
+
+        OpenMenu(cut);
+        MenuItem(cut, "Use as daily-note template").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains(app.Toasts.Current, t => t.Message == "New daily notes start with this note's text."));
+        Assert.Equal(note.Id.ToString("D"), app.State.Preferences.DailyNoteTemplate);
+        Assert.Equal(note.Id.ToString("D"), (await app.Core.Preferences.GetAsync()).DailyNoteTemplate);
+
+        OpenMenu(cut);
+        MenuItem(cut, "Stop using as daily template").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains(app.Toasts.Current, t => t.Message == "Daily notes start empty again."));
+        Assert.Equal("", app.State.Preferences.DailyNoteTemplate);
+    }
+
+    [Fact]
+    public async Task Offers_the_daily_template_only_with_daily_notes_on_and_not_for_daily_notes_themselves()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex");
+        SetUpGesturesJs(out _);
+        SetUpDialogsJs();
+        var note = await app.PostAsync("hello");
+        var off = Render<NoteCard>(p => p.Add(c => c.Note, note));
+        OpenMenu(off);
+        MenuItem(off, "Copy text");
+        Assert.DoesNotContain(off.FindAll("button[role=menuitem]"), b => b.TextContent.Contains("daily", StringComparison.Ordinal));
+
+        await app.State.UpdatePreferencesAsync(p => p with { DailyNotes = true });
+        var daily = await app.Core.Notes.CreateAsync("# Today\n\nwords", dailyDate: new DateOnly(2026, 9, 28));
+        var today = Render<NoteCard>(p => p.Add(c => c.Note, daily));
+        OpenMenu(today);
+        MenuItem(today, "Copy text");
+        Assert.DoesNotContain(today.FindAll("button[role=menuitem]"), b => b.TextContent.Contains("daily", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Copy_text_copies_the_current_content_to_the_clipboard()
     {
         using var app = await UiTestApp.StartAsync(Services, "Alex");

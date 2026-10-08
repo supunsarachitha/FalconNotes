@@ -1,3 +1,4 @@
+using FalconNotes.Core.Backup.Export;
 using FalconNotes.Core.Domain;
 using FalconNotes.Core.Notes;
 using FalconNotes.Core.Platform;
@@ -14,13 +15,17 @@ public sealed record MaintenanceResult(DeletedCount Trash, AttachmentCleanupResu
 /// <summary>
 /// Step 2.4 of the start-up sequence (docs/02), repeated hourly while the app runs: purge the trash after 30 days,
 /// remove abandoned and orphan attachment files, and delete the temporary folders in the cache (decrypted copies made
-/// by Open, exports being written, restores being read). Never blocks the first screen.
+/// by Open, exports being written, restores being read). Never blocks the first screen. After each pass, an automatic
+/// backup is made when one is due (docs/05, Automatic backups): after, so that the start's clean-up of the cache
+/// never meets the archive being written there.
 /// </summary>
 /// <param name="notes">Purges the trash.</param>
 /// <param name="cleanup">Removes attachment leftovers.</param>
 /// <param name="directories">Where the cache is.</param>
 /// <param name="logger">Logs counts, never names.</param>
-public sealed class StartupTasks(NoteService notes, AttachmentCleanup cleanup, IAppDirectories directories, ILogger<StartupTasks> logger)
+/// <param name="autoExport">Automatic backups; null where they are not set up (tests of maintenance alone).</param>
+public sealed class StartupTasks(
+    NoteService notes, AttachmentCleanup cleanup, IAppDirectories directories, ILogger<StartupTasks> logger, AutoExportService? autoExport = null)
 {
     /// <summary>How often maintenance runs while the app is open.</summary>
     public static readonly TimeSpan Interval = TimeSpan.FromHours(1);
@@ -59,12 +64,14 @@ public sealed class StartupTasks(NoteService notes, AttachmentCleanup cleanup, I
     public async Task RunPeriodicallyAsync(TimeProvider time, CancellationToken cancellationToken)
     {
         await RunAsync(includeTemporaryFolders: true);
+        await BackUpIfDueAsync(cancellationToken);
         using var timer = new PeriodicTimer(Interval, time);
         try
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
                 await RunAsync(includeTemporaryFolders: false);
+                await BackUpIfDueAsync(cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -72,6 +79,9 @@ public sealed class StartupTasks(NoteService notes, AttachmentCleanup cleanup, I
             // The app is closing.
         }
     }
+
+    private Task BackUpIfDueAsync(CancellationToken cancellationToken) =>
+        autoExport?.RunIfDueAsync(cancellationToken) ?? Task.CompletedTask;
 
     private int DeleteTemporaryFolders()
     {

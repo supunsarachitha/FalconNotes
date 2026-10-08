@@ -210,6 +210,19 @@ already finished.
 **Acceptance**: export from the app restores in the web app (run the reference with Docker or `dotnet run`), and a web
 export restores in the app. The lock cannot be bypassed by Back, the app switcher, deep links or reopening.
 
+Added afterwards (2026-10-08, at the owner's request): **automatic backups** to a folder the user chooses
+([05](05-backup-compatibility.md#automatic-backups)). `AutoExportService` in Core decides when one is due, writes the
+ordinary export and tidies the folder; `StartupTasks` calls it after each maintenance pass; `IBackupFolders` is the
+folder, on Android `AndroidBackupFolders`; Settings gains `AutoBackupSection` and Home `AutoBackupNotice`. The rules
+are covered by Core tests and the screens by bUnit tests, both over a fake folder ([11](11-testing.md)).
+Checked on the emulator (API 36, 2026-10-08): the switch opens the system's folder picker, which refuses the top of
+the storage as [12](12-platforms.md) says; with Documents chosen, `falcon-notes-auto-2026-10-08_1932.zip` appeared
+there with a version 3 manifest, and Android listed the grant as persisted. After a restart nothing was written, and
+**Back up now** then kept the newest three automatic backups and left a hand-saved export and another file alone.
+With the folder deleted, Settings and Home said "Falcon Notes can no longer reach the folder. Choose it again." With
+the folder back and the clock eight days on, opening the app made the backup by itself and the notice went. Not
+checked: a memory card, a USB drive, a cloud app's folder, and a real phone.
+
 Status (2026-10-07): built and manually checked on the Android emulator. The Settings shell (`Settings.razor`) ports
 `SettingsPage.tsx`'s list-beside-section layout; every section renders real data (the Profile screenshot showed the
 live key fingerprint, storage use and "On this device since"). The app lock's PIN flow was exercised end to end on
@@ -269,8 +282,9 @@ release that carries this, the README's and the website's "no permissions" lines
 
 - [ ] Platform details in [12-platforms.md](12-platforms.md): icons, splash, manifests and entitlements, single
       instance on Windows, window sizes, keyboard on macOS, Android insets, keyboard resize, Back.
-- [ ] `THIRD-PARTY-NOTICES.md` and a licence check script (port `reference/.../scripts/check-licenses.py` to read
-      `packages.lock.json` / `deps.json` and the copied Lucide icons).
+- [ ] `THIRD-PARTY-NOTICES.md` and a licence check script (port the web app's `scripts/check-licenses.py` to read
+      `packages.lock.json` / `deps.json` and the copied Lucide icons). The port is `scripts/check-licenses.py`; the
+      reference's own `scripts/` folder was removed on 2026-10-08, at the owner's request.
 - [ ] Release builds: Android AAB/APK signed, Windows MSIX signed, macOS app signed and notarized (or an unsigned
       build for personal use, by decision).
 - [ ] The full manual QA checklist on every platform, the performance budgets, and an accessibility pass (keyboard
@@ -374,8 +388,43 @@ with the switch on (no prompt, no button, the PIN opens the app). The signed fil
 versionCode 4, still version 1.1.0, so that an upload cannot collide with versionCode 3 if that was already sent to
 Google Play.
 
+Brought up to Maple Notes 1.15.0 (2026-10-08, for 1.2.0, at the owner's request): everything the web app gained
+between 1.8.0 and 1.15.0 that is not about its server or its accounts, ported from its repository at `main` (commit
+`3343d10`), with its tests. Settings now says "Based on Maple Notes 1.15.0" (D7, D10 in
+[01](01-scope-and-decisions.md)).
+
+- **Photo size** (web 1.10): Large, Medium or Small under "Shrink photos before adding" (`PhotoShrinker.Presets`,
+  `PhotoSizeChoice`).
+- **Daily-note template** (web 1.15): a note's ⋯ menu makes it the template, the Today card starts with its text, and
+  Settings → Features shows which note it is (`DailyNotes.GetTemplateAsync`, `DailyTemplateSetting`).
+- **Help in the menu** (web 1.9): a switch that hides Help from the side menu. One adaptation: the web app's guide
+  keeps an address that can be typed, so here a **Help** link stands at the foot of Settings while it is hidden.
+- **Labels…** no longer puts the cursor in its field, so the phone's keyboard stays down (web 1.8.1).
+- From the web app's security audit (web 1.11): file names lose the invisible characters that reorder text; `//host`
+  links are other sites, not pages of the app; a note shows only the app's own files as images, and the description
+  of any other; the write-ahead log is cut back after each checkpoint.
+
+Left out, as not applying to an app with no server: two-factor sign-in, session length, offline reading and writing,
+the Online/Offline badge, install as an app, the end-to-end encryption fixes and the link-preview hardening. Already
+here before: labels in backups and the restore's size limits (Phase 2), a trash purge that cannot delete a note
+restored meanwhile (one statement with its condition), and attachments served as `no-store`.
+
+Checked on the API 36 emulator in a Debug build, with real taps: the three photo sizes show and Small is kept; a
+4000 × 3000 JPEG then came out 1280 × 960 (1.47 MB to 73 KB); a quick note was made the template from its menu, the
+Today card started with its text without its title, and posting it made the day's note; Labels… opened with the
+focus on the dialog and no keyboard; with Help out of the menu, the link at the foot of Settings opened the guide,
+which shows "Based on Maple Notes 1.15.0". Not checked: a real phone, a Release build, and the two Markdown rules
+and the file-name rule on a device (they are Core tests only).
+
+The reference's source left the repository the same day (2026-10-08, at the owner's request): `src/`, `tests/` and
+`scripts/` of `reference/maple-notes-1.8.0/` were removed, 1.8.0 being behind what the app follows. The documents and
+CLAUDE.md now name the Maple Notes repository at release 1.15.0 as the reference, and the licensing policy was copied
+to [licensing.md](licensing.md) first. Nothing in the build, the tests or CI read the folder.
+
 Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4) and labels in backups (see
-Phase 2), on the `release-1.2.0` branch.
+Phase 2), on the `release-1.2.0` branch, merged into `main` as pull request #9. The rest of Maple Notes 1.15.0
+(above), the documents pass and the removal of the reference's source came after that merge, on the
+`maple-notes-1.15.0` branch.
 The version numbers are set, but the signed AAB and APK have not been built or checked yet. Before building from
 clean, move the 1.1.0 output out of `src/FalconNotes.App/bin/Release/` as was done for 1.0.1, and repeat the
 shrinking check from Phase 4 on the release APK, since R8 and trimming have not run over the new code.

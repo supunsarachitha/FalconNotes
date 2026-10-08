@@ -7,7 +7,7 @@ component's markup with its Tailwind classes unchanged**, and build the CSS from
 
 ## Stylesheet
 
-`FalconNotes.UI/Styles/app.css` = `reference/maple-notes-1.8.0/src/maple-web/src/index.css`, copied whole. It defines:
+`FalconNotes.UI/Styles/app.css` = the web app's `src/maple-web/src/index.css`, copied whole. It defines:
 
 - `@import "tailwindcss"` (Tailwind 4).
 - The `dark` variant: the `.dark` class on `<html>`, or the device's dark mode unless `.light` is set. The app always
@@ -128,7 +128,7 @@ with a minimum of 400 × 600.
 
 ## Components
 
-Port these from `reference/maple-notes-1.8.0/src/maple-web/src/components/ui.tsx` and the files named, keeping the
+Port these from the web app's `src/maple-web/src/components/ui.tsx` and the files named, keeping the
 class strings:
 
 | Component | Source | Notes |
@@ -153,7 +153,7 @@ component: `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `strok
 round caps and joins, `aria-hidden="true"`. Copy the path data of exactly these icons from the Lucide version the
 reference uses (`lucide-react` in `package.json`):
 
-`AlertCircle Archive ArchiveRestore ArrowDown ArrowUp Bold CalendarCheck CalendarDays Check ChevronLeft ChevronRight
+`AlertCircle Archive ArchiveRestore ArrowDown ArrowUp Bold CalendarCheck CalendarDays CalendarX Check ChevronLeft ChevronRight
 CircleHelp CircleUserRound Code Copy DatabaseBackup Download FileText GripVertical Hash Heading2 Home Italic Link2 List
 ListChecks ListTodo Lock LogOut Menu Monitor Moon MoreHorizontal Palette PanelLeft Paperclip Pencil PenLine Pin PinOff
 Play Plus Quote RotateCcw Search Settings ShieldCheck Sun Tag ToggleRight Trash2 TriangleAlert Upload X Zap`

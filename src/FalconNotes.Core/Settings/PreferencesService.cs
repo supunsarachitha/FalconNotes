@@ -35,7 +35,10 @@ public sealed class PreferencesService(StorageContext storage, ChangeFeed feed)
         return clean;
     }
 
-    /// <summary>Replaces values that are not offered (an unknown date format, a stray menu order) with defaults.</summary>
+    /// <summary>
+    /// Replaces values that are not offered (an unknown date format, a stray menu order, a daily-note template that
+    /// is not a note's ID) with defaults.
+    /// </summary>
     /// <param name="preferences">The preferences.</param>
     /// <returns>The cleaned preferences.</returns>
     public static Preferences Normalise(Preferences preferences) => preferences with
@@ -45,6 +48,8 @@ public sealed class PreferencesService(StorageContext storage, ChangeFeed feed)
         Accent = Enum.IsDefined(preferences.Accent) ? preferences.Accent : Accent.Falcon,
         MenuTextSize = Enum.IsDefined(preferences.MenuTextSize) ? preferences.MenuTextSize : MenuTextSize.Medium,
         WeekStart = Enum.IsDefined(preferences.WeekStart) ? preferences.WeekStart : WeekStart.Auto,
+        PhotoSize = Enum.IsDefined(preferences.PhotoSize) ? preferences.PhotoSize : PhotoSize.Large,
+        DailyNoteTemplate = Guid.TryParseExact(preferences.DailyNoteTemplate, "D", out var template) ? template.ToString("D") : "",
         MenuOrder = MenuOrder.Save(MenuOrder.Read(preferences.MenuOrder ?? "")),
     };
 }

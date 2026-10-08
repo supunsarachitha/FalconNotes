@@ -1,13 +1,13 @@
 # 8. Help guide
 
-The in-app guide (`Help`), adapted from `reference/maple-notes-1.8.0/src/maple-web/src/help/guide.ts`. Ship it as
+The in-app guide (`Help`), adapted from the web app's `src/maple-web/src/help/guide.ts`. Ship it as
 `FalconNotes.UI/Help/Guide.cs`: a list of `(Id, Title, Body)` with Markdown bodies, in this order. Bodies are rendered
 with the note Markdown renderer. Tag examples are in `code`, because plain `#words` would become tag links.
 
 The guide names the app "Falcon Notes" itself. Do not port `HelpPage.tsx`'s `replaceAll("Maple Notes", appName)`: the
 guide's mentions of the Maple Notes web app must stay as written.
 
-Sections marked **as in web** are copied from the reference without change. The others are given in full here.
+Sections marked **as in web** are copied from the reference without change (they are the same in 1.8.0 and 1.15.0). The others are given in full here.
 
 | # | Id | Title | Source |
 |---|---|---|---|
@@ -57,6 +57,14 @@ adding**.
 Changed with labels in backups (1.2.0, 2026-10-08), to the web app's wording since 1.9.0: the last line of `labels`,
 the restore paragraph of `backup`, and in `devices` labels now travel with their notes and only settings stay behind.
 
+Added with automatic backups (2026-10-08): the second paragraph of `backup`. It is this app's own; the web app has no
+such feature.
+
+Brought up to Maple Notes 1.15.0 (1.2.0, 2026-10-08): `daily` gains the paragraph on the template, word for word;
+`pictures` describes the three photo sizes; `features` lists "Help in the side menu" and says where the guide is
+when it is hidden: "opened from the foot of Settings", where the web app gives its address, `/help`, which a phone
+app has no place to type.
+
 ## 1. Writing notes (`writing`)
 
 ````markdown
@@ -93,6 +101,12 @@ Exports list each note's labels by name, and restoring one brings them back.
 ````markdown
 Turn on **Daily notes** in [Settings → Features](/settings/features) to get a **Today** card at the top of Home, titled with today's
 date. Write in it and it becomes today's note; days you skip leave no empty notes.
+
+**A template** gives each new day's note the same start, such as headings or a checklist. Write it as an ordinary note,
+then choose **Use as daily-note template** from its **⋯** menu. Today's card then starts with its text, ready to fill in;
+the template's title, if it has one, is left out, and its files are not copied. Edit the note to change the template.
+A quick note or an archived note works well for it, as it stays out of your timeline. To stop, choose **Stop using as
+daily template** from its menu, or **Stop using** under Daily notes in [Settings → Features](/settings/features).
 ````
 
 ## 11. Pictures, video and files (`pictures`)
@@ -106,13 +120,16 @@ a copy.
 Pictures and players load as you scroll towards them, so a long timeline opens quickly however many files it has.
 
 To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are
-resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and
-camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are.
+resized and saved as JPEG, and their location and camera details are left out. Then choose a **Photo size**: **Large**
+(2560 pixels on the longest side) stays sharp on big screens and is often a tenth of the original; **Medium** (1920
+pixels) and **Small** (1280 pixels) are smaller still, and saved at a lower quality, which suits photos you mostly
+look at on a phone. The full-size original is not kept, and photos you added earlier stay as they are.
 ````
 
-Rename the Features switch to match: **Shrink photos before adding**. Its description: "Large photos are resized to
-2560 pixels on their longest side and saved as JPEG, often a tenth of the size. Their location and camera details are
-left out too. Photos already added stay as they are."
+Rename the Features switch to match: **Shrink photos before adding**. Its description: "Large photos are resized and
+saved as JPEG, often a tenth of the size or less. Their location and camera details are left out too. Photos already
+added stay as they are." (the web app's since 1.10.0, when the size became a choice; before 1.2.0 here it named 2560
+pixels).
 
 ## 12. Appearance (`appearance`)
 
@@ -128,8 +145,9 @@ with its arrows. You can also make the menu's text smaller or larger.
 
 ````markdown
 Everything beyond plain notes can be switched on or off in [Settings → Features](/settings/features): todo
-lists, quick notes, the habit tracker, the Tags page, the archive, daily notes, the calendar, labels and the trash.
-Turning something off only hides it; nothing is deleted, and it all comes back when you turn it on again.
+lists, quick notes, the habit tracker, the Tags page, the archive, Help in the side menu, daily notes, the calendar,
+labels and the trash. Turning something off only hides it; nothing is deleted, and it all comes back when you turn it
+on again. With Help hidden from the menu, this guide is opened from the foot of [Settings](/settings).
 ````
 
 ## 15. Keeping your notes private (`privacy`)
@@ -175,6 +193,11 @@ Your notes live only on this device, so make a backup from time to time. Under [
 **Export** saves your notes as a ZIP file of Markdown, plain text or JSON, with your files, in folders by year, month or
 day. Keep it somewhere safe, such as a USB drive or a cloud folder you trust. Exports are not encrypted, so store them
 with care.
+
+So that you need not remember, turn on **Back up automatically** in the same place and choose a folder. Falcon Notes
+then saves a backup of everything there every day, week or month, keeps the newest few and deletes the older ones. It
+does this when it is open, so open it now and then. These backups are not encrypted either, so choose a folder only
+you can open. A folder on this device is lost with the device, so copy the backups somewhere else from time to time.
 
 **Restore** brings notes back from such a file. It also works with exports from the Maple Notes web app and its
 servers, and their restore works with yours. Notes keep their dates, pins, archive state, labels and files, and

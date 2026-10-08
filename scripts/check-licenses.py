@@ -5,8 +5,8 @@ this app has no npm dependency tree (the Tailwind CLI is a pinned standalone bin
 npm package: see build/Tailwind.targets) and ships as an Android app, not a container image, so "shipped" is read
 from `dotnet list package` on the app project rather than a published deps.json.
 
-Policy: reference/maple-notes-1.8.0/docs/licensing.md (this app has no license policy doc of its own; the server's
-applies unchanged, per CLAUDE.md rule 10). Exit code 1 when:
+Policy: docs/licensing.md (the web app's policy, copied into this project; it applies unchanged, per CLAUDE.md
+rule 10). Exit code 1 when:
   * a shipped dependency is not on the allow list, or
   * any dependency, shipped or build-time, uses a denied license.
 Build-time dependencies with an unknown license only produce a warning.
@@ -250,7 +250,7 @@ def main() -> int:
     for line in failures:
         print(f"FAIL  {line}")
     if failures:
-        print("License check failed. See reference/maple-notes-1.8.0/docs/licensing.md; record reviewed exceptions in REVIEWED.")
+        print("License check failed. See docs/licensing.md; record reviewed exceptions in REVIEWED.")
         return 1
     print("License check passed.")
     if notices_path:

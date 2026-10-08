@@ -30,15 +30,22 @@ public sealed class AndroidFileSaver : Core.Platform.IFileSaver
             return false;
         }
 
-        await Task.Run(async () =>
-        {
-            using var descriptor = Platform.AppContext.ContentResolver!.OpenFileDescriptor(uri, "wt")
-                ?? throw new IOException("The chosen file could not be opened.");
-            await using var output = new FileStream(new SafeFileHandle(descriptor.DetachFd(), ownsHandle: true), FileAccess.Write, 1);
-            await content.CopyToAsync(output, BufferSize, cancellationToken);
-            await output.FlushAsync(cancellationToken);
-        }, cancellationToken);
+        await Task.Run(() => WriteAsync(uri, content, cancellationToken), cancellationToken);
         return true;
+    }
+
+    /// <summary>Writes a document the user gave access to, replacing what it held. Call it off the UI thread.</summary>
+    /// <param name="document">The document's URI.</param>
+    /// <param name="content">The content, read from its current position to the end.</param>
+    /// <param name="cancellationToken">Cancels the write.</param>
+    /// <returns>A task that completes when everything is written.</returns>
+    internal static async Task WriteAsync(AndroidUri document, Stream content, CancellationToken cancellationToken)
+    {
+        using var descriptor = Platform.AppContext.ContentResolver!.OpenFileDescriptor(document, "wt")
+            ?? throw new IOException("The chosen file could not be opened.");
+        await using var output = new FileStream(new SafeFileHandle(descriptor.DetachFd(), ownsHandle: true), FileAccess.Write, 1);
+        await content.CopyToAsync(output, BufferSize, cancellationToken);
+        await output.FlushAsync(cancellationToken);
     }
 
     /// <summary>Called by <c>MainActivity</c> with the dialog's result.</summary>

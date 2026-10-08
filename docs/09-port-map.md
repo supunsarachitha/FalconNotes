@@ -1,7 +1,10 @@
 # 9. Port map
 
 Every file of the reference and where it goes. Work file by file: open the source, port it, then port its tests.
-`web/` = `reference/maple-notes-1.8.0/src/maple-web/src/`, `server/` = `reference/maple-notes-1.8.0/src/MapleNotes.Server/`.
+`web/` = `src/maple-web/src/`, `server/` = `src/MapleNotes.Server/`, in the [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0)
+at release 1.15.0. The map was drawn from 1.8.0, so files that only later releases have are not in it: of those, the
+app has none but the label, photo-size and daily-template parts named in the rows below, since the rest serve the web
+app's accounts and its offline mode.
 
 Legend: **Port** = same behaviour, new language or framework · **Copy** = take the code almost verbatim · **Adapt** =
 port with the changes in the docs · **Drop** = not in this app.
@@ -24,7 +27,7 @@ port with the changes in the docs · **Drop** = not in this app.
 | `lib/labels.ts` | `UI/Components/LabelStyles.cs` + `Core/Labels/LabelRules.cs` (`HasLabelNamed`, `NextColor`) | Port |
 | `lib/appearance.ts` | `UI/State/AppearanceService.cs` + `UI/wwwroot/js/appearance.js` | Adapt ([06](06-design-system.md#light-and-dark)) |
 | `lib/preferences.ts` | `Core/Preferences/PreferencesService.cs` (defaults, optimistic save) + `UI/State/AppState.cs` | Port |
-| `lib/daily.ts` | `Core/Notes/DailyNotes.cs` + `UI` today timer | Port |
+| `lib/daily.ts` | `Core/Notes/DailyNotes.cs` + `UI` today timer | Port, with the template of web 1.15 (`templateText`, `useDailyTemplate`) |
 | `lib/noteEditor.ts` | `UI/State/NoteEditor<T>.cs` | Port |
 | `lib/doubleTap.ts` | `UI/wwwroot/js/gestures.js` | Port |
 | `lib/viewport.ts` | `UI/wwwroot/js/observe.js` + `NearViewport` component | Port |
@@ -71,10 +74,10 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `components/TodoCard.tsx` | `UI/Components/TodoCard.razor`, `ItemsEditor.razor` |
 | `components/HabitRow.tsx`, `HabitChart.tsx`, `HabitCalendar.tsx` | `UI/Components/Habits/*.razor` |
 | `components/Calendar.tsx` | `UI/Components/Calendar.razor` |
-| `components/PreferenceSections.tsx` | `UI/Pages/Settings/{Appearance,Menu,Writing,Editing,Features}Section.razor` (Adapt: no link previews) |
+| `components/PreferenceSections.tsx` | `UI/Pages/Settings/{Appearance,Menu,Writing,Editing,Features}Section.razor` (Adapt: no link previews), and from web 1.15.0 `PhotoSizeChoice.razor` and `DailyTemplateSetting.razor` |
 | `components/MenuOrderEditor.tsx` | `UI/Pages/Settings/MenuOrderEditor.razor` + `gestures.js` |
 | `components/ExportSection.tsx`, `RestorePanel.tsx` | `UI/Pages/Settings/BackupSection.razor`, `RestorePanel.razor` (Adapt) |
-| `components/VersionNote.tsx` | `UI/Components/VersionNote.razor` (Adapt: app version, "based on 1.8.0") |
+| `components/VersionNote.tsx` | `UI/Components/VersionNote.razor` (Adapt: app version, "Based on Maple Notes 1.15.0") |
 | `components/EncryptionSection.tsx`, `EndToEndSetupDialog.tsx`, `PasswordDialog.tsx`, `RecoveryKit.tsx`, `RecoveryKitDialog.tsx`, `LinkPreviews.tsx` | Drop |
 | `pages/HomePage.tsx` | `UI/Pages/Home.razor`, `Archive.razor`, `FilterHeader.razor`, `TodayCard.razor` |
 | `pages/TodoPage.tsx` | `UI/Pages/Todo.razor`, `UI/Components/FeatureOff.razor` |
@@ -82,7 +85,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `pages/HabitsPage.tsx` | `UI/Pages/Habits.razor` |
 | `pages/TagsPage.tsx` | `UI/Pages/Tags.razor` + `Core/Text/TagTree.cs` |
 | `pages/TrashPage.tsx` | `UI/Pages/Trash.razor` |
-| `pages/SettingsPage.tsx` | `UI/Pages/Settings/Settings.razor`, `ProfileSection.razor`, `StorageRow.razor`, `TrashSection.razor`, `DeleteContentSection.razor` (Adapt) + new `AppLockSection.razor`, `DataProtectionSection.razor`, `EraseSection.razor` |
+| `pages/SettingsPage.tsx` | `UI/Pages/Settings/Settings.razor`, `ProfileSection.razor`, `StorageRow.razor`, `TrashSection.razor`, `DeleteContentSection.razor` (Adapt) + new `AppLockSection.razor`, `DataProtectionSection.razor`, `EraseSection.razor`, `AutoBackupSection.razor` (and `Components/AutoBackupNotice.razor` on Home) |
 | `pages/HelpPage.tsx` | `UI/Pages/Help.razor` |
 | `pages/AuthPage.tsx`, `UnlockPage.tsx`, `RecoverPage.tsx` | Drop (new `Welcome.razor`, `Lock.razor`, `KeyLost.razor`) |
 
@@ -98,7 +101,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `Features/Labels/LabelService.cs` | `Core/Labels/LabelService.cs` | Adapt |
 | `Features/Attachments/UploadPolicy.cs` | `Core/Attachments/UploadPolicy.cs` | Copy (replace `FileExtensionContentTypeProvider` with a table) |
 | `Features/Attachments/AttachmentService.cs`, `AttachmentCleanup.cs` | `Core/Attachments/AttachmentService.cs`, `Core/Maintenance/AttachmentCleanup.cs` | Adapt |
-| `Features/Export/*.cs` | `Core/Backup/Export/*.cs` | **Copy** ([05](05-backup-compatibility.md#export)), with the label lines of Maple Notes 1.9.0 (manifest version 3), which are not in `reference/` |
+| `Features/Export/*.cs` | `Core/Backup/Export/*.cs` | **Copy** ([05](05-backup-compatibility.md#export)), with the label lines of Maple Notes 1.9.0 (manifest version 3) |
 | `Features/Storage/StorageService.cs` | `Core/Notes/StorageUsage.cs` | Adapt (no quota) |
 | `Infrastructure/Crypto/KeyMaterial.cs`, `AttachmentCipher.cs`, `DecryptingAttachmentStream.cs` | `Core/Crypto/*` | Copy (labels and owner per [03](03-data-storage-and-security.md#keys)) |
 | `Infrastructure/Storage/AttachmentStore.cs`, `LengthLimitedStream.cs` | `Core/Attachments/AttachmentStore.cs` | Copy |
@@ -111,7 +114,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 
 | Source | Target | Notes |
 |---|---|---|
-| `web/lib/*.test.ts` for titles, todo, habits, dates/format, markdownEdit, tagSuggest, menu, shrinkPhoto | `tests/FalconNotes.Core.Tests/Text/*` | Every case |
+| `web/lib/*.test.ts` for titles, todo, habits, dates/format, markdownEdit, tagSuggest, menu, shrinkPhoto | `tests/FalconNotes.Core.Tests/Text/*`, and `Attachments/PhotoShrinkerTests.cs` for shrinkPhoto | Every case |
 | `web/import/import.test.ts`, `web/export/export.test.ts` | `tests/FalconNotes.Core.Tests/Backup/*` | Rebuilt around `fixtures/export-vectors.json` ([11](11-testing.md#backup-conformance)) |
 | `web/components/*.test.tsx`, `web/pages/*.test.tsx` (except encryption, link previews, auth, end-to-end) | `tests/FalconNotes.UI.Tests/*` (bUnit) | The behaviours, not the React specifics |
 | `server/../tests/MapleNotes.Server.Tests/Notes/*`, `Labels/*`, `Export/*`, `Crypto/AttachmentCipherTests.cs`, `Infrastructure/AttachmentStoreTests.cs` | `tests/FalconNotes.Core.Tests/*` | The rules: lists, cursors, tags, trash, daily notes, kinds, labels, import, the cipher's tamper cases |

@@ -20,7 +20,8 @@
   <a href="https://supunsarachitha.github.io/FalconNotes/"><b>Website</b></a> ·
   <a href="https://supunsarachitha.github.io/FalconNotes/privacy.html"><b>Privacy policy</b></a> ·
   <a href="CHANGELOG.md"><b>Changelog</b></a> ·
-  <a href="https://supunsarachitha.github.io/MapleNotes/"><b>Maple Notes web app</b></a>
+  <a href="https://supunsarachitha.github.io/MapleNotes/"><b>Maple Notes web app</b></a> ·
+  <a href="https://buymeacoffee.com/jkhy9gtjs"><b>Buy me a coffee</b></a>
 </p>
 
 ![Home on a tablet](docs/screenshots/home.png)
@@ -46,6 +47,7 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 - [Building from source](#building-from-source)
 - [Documentation](#documentation)
 - [Repository layout](#repository-layout)
+- [Support](#support)
 - [Licence](#licence)
 
 ## Screenshots
@@ -67,17 +69,19 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 - **Todo lists.** A Todo tab for checklists: add items, tick them off, edit them all at once as Markdown, rename, pin
   and archive lists.
 - **Quick notes.** A scratchpad tab for short notes that stay out of your timeline.
-- **Daily notes.** Optionally, today's note at the top of Home, titled with the date.
+- **Daily notes.** Optionally, today's note at the top of Home, titled with the date, starting from a template note
+  if you choose one.
 - **Habit tracker.** Optionally, a Habits tab: tick off the days you keep each habit, and follow your progress in a
   chart of weeks or months, with streaks, and in a month calendar.
 - **Calendar and labels.** A month calendar in the side menu marks the days you wrote on. Coloured labels, in ten
   colours, go on notes and todo lists by hand.
 - **Attachments.** Images, video, audio and any other file, added with the system file picker. Images open in a
   full-screen viewer, where you can save a copy or share one; audio and video play in the note. Optionally, large
-  photos are shrunk before they are added, to 2,560 pixels and JPEG, without their location and camera details.
+  photos are shrunk before they are added, to JPEG in one of three sizes, without their location and camera details.
 - **Search.** Finds text in your notes and the names of attached files.
-- **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files, and restore it on any
-  device.
+- **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files and each note's labels,
+  and restore it on any device. Optionally, a backup is saved by itself to a folder you choose, every day, week or
+  month.
 - **Your look.** Light, dark or the device's setting, seven accent colours, and the side menu in your own order and
   text size.
 - **Help built in.** A user guide in the app explains every feature.
@@ -100,7 +104,8 @@ full [privacy policy](https://supunsarachitha.github.io/FalconNotes/privacy.html
   fingerprint or face unlock where the device has it. It is a privacy screen, not a second key, and a forgotten PIN
   cannot be reset.
 - **Android's automatic backup is off** for the app: the encrypted files would be useless without the key.
-- **Exports are not encrypted.** A backup ZIP can be read by anyone who gets it.
+- **Exports are not encrypted.** A backup ZIP can be read by anyone who gets it. That goes for automatic backups
+  too, which are off unless you turn them on.
 - **Uninstalling deletes the notes** together with their key. Export first.
 
 The details, and what the encryption does and does not protect against, are in
@@ -117,10 +122,10 @@ device, use Maple Notes instead of Falcon Notes, or alongside it.
   restore there, with each note's labels (Maple Notes 1.9.0 or later; older versions restore the notes without
   them). The format is specified in [05 Backup compatibility](docs/05-backup-compatibility.md) and checked by
   conformance tests against shared export vectors.
-- **The reference implementation.** Falcon Notes matches Maple Notes 1.8.0, and its backups the format of Maple Notes
-  1.9.0 to 1.15.0, which added labels. The 1.8.0 source (commit
-  [`a28db71`](https://github.com/supunsarachitha/MapleNotes/commit/a28db714a66a4021449abb98ad3bb1a5614ff1b0)) is kept
-  in `reference/maple-notes-1.8.0/` to port from. It is read-only, and is never built or shipped.
+- **The reference implementation.** Falcon Notes matches Maple Notes 1.15.0, apart from what needs a server. It was
+  first ported from 1.8.0 and brought up to 1.15.0 in Falcon Notes 1.2.0. The source to port from is the
+  [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0) at that release; `reference/maple-notes-1.8.0/` keeps only the 1.8.0
+  documents and screenshots the specification was written against.
 
 ## Building from source
 
@@ -176,6 +181,7 @@ The specification the app is built from is in `docs/`, numbered in reading order
 | [11 Testing](docs/11-testing.md) | Test projects, tests to port, backup conformance, performance budgets, manual QA |
 | [12 Platforms](docs/12-platforms.md) | Android, Windows and macOS specifics |
 | [13 Storage benchmark](docs/13-storage-benchmark.md) | Why SQLite with AEGIS encryption, measured on Android |
+| [Licensing policy](docs/licensing.md) | Which third-party licences are allowed, copied from the web app |
 
 ## Repository layout
 
@@ -189,8 +195,14 @@ site/                     the website, published to GitHub Pages by .github/work
 fixtures/                 the shared export vectors, two demo backups, the falcon mark
 benchmarks/storage/       the storage benchmark source (desktop and Android) and its raw results
 scripts/                  the licence check that writes THIRD-PARTY-NOTICES.md
-reference/                the Maple Notes web app 1.8.0: read-only, never built, never shipped
+reference/                the Maple Notes web app's 1.8.0 documents and screenshots (its source is on GitHub)
 ```
+
+## Support
+
+If Falcon Notes is useful to you, you can support its development:
+
+<a href="https://buymeacoffee.com/jkhy9gtjs"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
 
 ## Licence
 

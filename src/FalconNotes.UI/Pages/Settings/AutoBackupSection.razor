@@ -1,0 +1,152 @@
+@* New (docs/07, Settings → Backup & data → Automatic backups; docs/05, Automatic backups): the web app has none,
+   because its server keeps the notes. Shown only where the platform can keep a folder to write to (docs/12). *@
+@using FalconNotes.Core.Backup.Export
+@using FalconNotes.Core.Text
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject AutoExportService AutoExport
+@inject Toasts Toasts
+@inject TimeProvider Time
+
+@if (AutoExport.IsAvailable && _settings is { } settings)
+{
+    <Section Title="Automatic backups">
+        <Description>
+            Save a backup to a folder you choose, without having to remember. Falcon Notes checks when it opens and
+            every hour while it is open; it cannot back up while it is closed. <strong>These backups are not
+            encrypted</strong>, so choose a folder that only you can open.
+        </Description>
+        <ChildContent>
+            <PreferenceSwitch Label="Back up automatically"
+                               Description="Saves a ZIP with all your notes, archived ones too, and their files, as Markdown. Turning it on asks for the folder."
+                               Checked="settings.Enabled" CheckedChanged="OnEnabledChangedAsync" />
+
+            @if (_error is not null)
+            {
+                <div class="py-3"><ErrorMessage>@_error</ErrorMessage></div>
+            }
+
+            @if (settings.Enabled)
+            {
+                <div class="flex items-center gap-3 py-3">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium">Folder</p>
+                        <p class="truncate text-sm text-stone-600 dark:text-stone-300">@settings.FolderName</p>
+                    </div>
+                    <Button Variant="ButtonVariant.Secondary" OnClick="ChooseAsync">Change…</Button>
+                </div>
+
+                <div class="flex flex-col gap-1.5 py-3">
+                    <label for="@_everyId" class="text-sm font-medium">How often</label>
+                    <select id="@_everyId" value="@settings.EveryDays" @onchange="OnEveryChangedAsync"
+                            class="h-11 w-full max-w-xs rounded-xl border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950">
+                        @foreach (var days in AutoExportSettings.EveryDaysChoices)
+                        {
+                            <option value="@days">@EveryLabel(days)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="flex flex-col gap-1.5 py-3">
+                    <label for="@_keepId" class="text-sm font-medium">Keep</label>
+                    <select id="@_keepId" value="@settings.Keep" @onchange="OnKeepChangedAsync"
+                            class="h-11 w-full max-w-xs rounded-xl border border-stone-300 bg-white px-3 text-sm dark:border-stone-700 dark:bg-stone-950">
+                        @foreach (var keep in AutoExportSettings.KeepChoices)
+                        {
+                            <option value="@keep">The newest @keep</option>
+                        }
+                    </select>
+                    <p class="text-sm text-stone-600 dark:text-stone-300">
+                        Older automatic backups in the folder are deleted. Other files in it are never touched.
+                    </p>
+                </div>
+
+                @if (settings.LastError is not null && !AutoExport.IsRunning)
+                {
+                    <div class="py-3"><ErrorMessage>The last automatic backup failed. @settings.LastError</ErrorMessage></div>
+                }
+
+                <div class="flex flex-wrap items-center gap-3 pt-3">
+                    <Button Variant="ButtonVariant.Secondary" Busy="AutoExport.IsRunning" OnClick="BackUpNowAsync">Back up now</Button>
+                    <span class="text-xs text-stone-500 dark:text-stone-400" aria-live="polite">@Status(settings)</span>
+                </div>
+            }
+        </ChildContent>
+    </Section>
+}
+
+@code {
+    private readonly string _everyId = $"auto-backup-every-{Guid.NewGuid():N}";
+    private readonly string _keepId = $"auto-backup-keep-{Guid.NewGuid():N}";
+    private AutoExportSettings? _settings;
+    private string? _error;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        AutoExport.Changed += OnChanged;
+        if (AutoExport.IsAvailable)
+        {
+            _settings = await AutoExport.GetAsync();
+        }
+    }
+
+    // A backup made in the background, at start or on the hour, shows here when it ends.
+    private void OnChanged() => _ = InvokeAsync(async () =>
+    {
+        _settings = await AutoExport.GetAsync();
+        StateHasChanged();
+    });
+
+    /// <inheritdoc />
+    public void Dispose() => AutoExport.Changed -= OnChanged;
+
+    private static string EveryLabel(int days) => days switch
+    {
+        1 => "Every day",
+        7 => "Every week",
+        30 => "Every month",
+        _ => $"Every {days} days",
+    };
+
+    private string Status(AutoExportSettings settings) =>
+        AutoExport.IsRunning ? "Backing up…"
+        : settings.LastRunAt is { } last ? $"Last automatic backup: {RelativeTime.Format(last, Time.GetUtcNow(), Time.LocalTimeZone)}"
+        : "No automatic backup yet.";
+
+    private Task OnEnabledChangedAsync(bool on) => on ? ChooseAsync() : AutoExport.TurnOffAsync();
+
+    /// <summary>Asks for the folder, and makes the first backup there at once: it shows that the folder works.</summary>
+    private async Task ChooseAsync()
+    {
+        _error = null;
+        try
+        {
+            if (await AutoExport.ChooseFolderAsync() is null)
+            {
+                return; // cancelled in the picker: nothing changes
+            }
+        }
+        catch (IOException)
+        {
+            _error = "That folder cannot be used. Choose another.";
+            return;
+        }
+
+        await BackUpNowAsync();
+    }
+
+    private async Task BackUpNowAsync()
+    {
+        if (await AutoExport.RunNowAsync() is { Result: { } result })
+        {
+            Toasts.Info(ExportService.Summary(result));
+        }
+    }
+
+    private Task OnEveryChangedAsync(ChangeEventArgs e) =>
+        AutoExport.SetEveryDaysAsync(int.TryParse(e.Value?.ToString(), out var days) ? days : AutoExportSettings.Default.EveryDays);
+
+    private Task OnKeepChangedAsync(ChangeEventArgs e) =>
+        AutoExport.SetKeepAsync(int.TryParse(e.Value?.ToString(), out var keep) ? keep : AutoExportSettings.Default.Keep);
+}

@@ -7,6 +7,7 @@ using FalconNotes.Core.Notes;
 using FalconNotes.Core.Settings;
 using FalconNotes.Core.Startup;
 using FalconNotes.Core.Tests;
+using FalconNotes.Core.Tests.Fakes;
 using FalconNotes.UI.State;
 using FalconNotes.UI.Tests.Fakes;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +22,10 @@ public sealed class UiTestApp : IDisposable
 {
     private UiTestApp(
         TestApp core, AppState state, AppLockState appLock, FakeAppLock biometrics, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener,
-        FakeFileSaver saver, FakeClipboard clipboard, FakeShare share)
+        FakeFileSaver saver, FakeClipboard clipboard, FakeShare share, FakeBackupFolders backupFolders, AutoExportService autoExport)
     {
+        BackupFolders = backupFolders;
+        AutoExport = autoExport;
         Core = core;
         State = state;
         AppLock = appLock;
@@ -64,6 +67,12 @@ public sealed class UiTestApp : IDisposable
 
     /// <summary>Records files handed to the share sheet.</summary>
     public FakeShare Share { get; }
+
+    /// <summary>The folder automatic backups go to: what the picker answers, what is in it, and how it fails.</summary>
+    public FakeBackupFolders BackupFolders { get; }
+
+    /// <summary>Automatic backups, over <see cref="BackupFolders"/>.</summary>
+    public AutoExportService AutoExport { get; }
 
     /// <summary>
     /// Starts a database, registers it and the UI state into <paramref name="services"/>, and loads <see cref="AppState"/>.
@@ -119,15 +128,18 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton<Core.Platform.IFileSaver>(saver);
         services.AddSingleton<Core.Platform.IClipboard>(clipboard);
         services.AddSingleton<Core.Platform.IShare>(share);
-        services.AddSingleton(new ExportService(
-            new NoteExporter(core.Storage, core.Attachments, core.Profile, core.Clock, Microsoft.Extensions.Logging.Abstractions.NullLogger<NoteExporter>.Instance),
-            saver, core.Directories, core.Storage, core.Clock));
+        var exporter = new NoteExporter(core.Storage, core.Attachments, core.Profile, core.Clock, Microsoft.Extensions.Logging.Abstractions.NullLogger<NoteExporter>.Instance);
+        var backupFolders = new FakeBackupFolders();
+        var autoExport = new AutoExportService(
+            exporter, core.Directories, core.Storage, core.Clock, Microsoft.Extensions.Logging.Abstractions.NullLogger<AutoExportService>.Instance, backupFolders);
+        services.AddSingleton(new ExportService(exporter, saver, core.Directories, core.Storage, core.Clock));
+        services.AddSingleton(autoExport);
         services.AddSingleton(new RestoreReader(core.Directories, core.Clock));
         services.AddSingleton(new RestoreRunner(core.Storage, core.Attachments, core.Labels, core.Feed, core.Clock));
         services.AddSingleton(new KeyLostRecovery(new DeviceKeyStore(core.Secrets), core.Directories, core.Clock));
         services.AddSingleton(new EraseAllData(new DeviceKeyStore(core.Secrets), core.Storage, core.Directories));
 
-        return new UiTestApp(core, state, appLock, fakeAppLock, toasts, picker, opener, saver, clipboard, share);
+        return new UiTestApp(core, state, appLock, fakeAppLock, toasts, picker, opener, saver, clipboard, share, backupFolders, autoExport);
     }
 
     /// <summary>Posts a note (docs/04): used to give the calendar, tag counts and lists something to show.</summary>

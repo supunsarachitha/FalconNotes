@@ -5,7 +5,7 @@ namespace FalconNotes.Core.Storage;
 
 /// <summary>
 /// The <c>Settings</c> table: small JSON values by key (<c>installationId</c>, <c>profile</c>, <c>preferences</c>,
-/// <c>appLock</c>, <c>lastExportAt</c>; docs/03, Schema).
+/// <c>appLock</c>, <c>lastExportAt</c>, <c>autoExport</c>; docs/03, Schema).
 /// </summary>
 public static class SettingsStore
 {

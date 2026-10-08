@@ -1,4 +1,5 @@
 using FalconNotes.Core.Attachments;
+using FalconNotes.Core.Domain;
 using FalconNotes.Core.Platform;
 
 namespace FalconNotes.Core.Tests.Attachments;
@@ -13,6 +14,16 @@ public class PhotoShrinkerTests
         Assert.Equal((1920, 2560), PhotoShrinker.FitWithin(3000, 4000));
         Assert.Equal((1200, 800), PhotoShrinker.FitWithin(1200, 800));
         Assert.Equal((2560, 1), PhotoShrinker.FitWithin(10_000, 3));
+    }
+
+    [Fact]
+    public void Shrinks_smaller_photo_sizes_further_at_a_lower_quality()
+    {
+        Assert.Equal((2560, 85), PhotoShrinker.Presets[PhotoSize.Large]);
+        Assert.Equal((1920, 80), PhotoShrinker.Presets[PhotoSize.Medium]);
+        Assert.Equal((1280, 75), PhotoShrinker.Presets[PhotoSize.Small]);
+        Assert.Equal((1920, 1440), PhotoShrinker.FitWithin(4000, 3000, PhotoShrinker.Presets[PhotoSize.Medium].MaxSide));
+        Assert.Equal((960, 1280), PhotoShrinker.FitWithin(3000, 4000, PhotoShrinker.Presets[PhotoSize.Small].MaxSide));
     }
 
     [Theory]
@@ -49,6 +60,17 @@ public class PhotoShrinkerTests
         Assert.Equal(50, result.Content.Length);
         Assert.Equal((2560, 1920), codec.Drawn);
         Assert.Equal(85, codec.Quality);
+    }
+
+    [Fact]
+    public async Task Asks_the_codec_for_the_chosen_size_and_quality()
+    {
+        var codec = new FakeCodec(new EncodedImage(new byte[20], HasTransparency: false), upright: (4000, 3000));
+
+        await new PhotoShrinker(codec).ShrinkAsync(new FileToAdd(new MemoryStream(new byte[100]), "a.jpg", "image/jpeg"), PhotoSize.Small);
+
+        Assert.Equal((1280, 960), codec.Drawn);
+        Assert.Equal(75, codec.Quality);
     }
 
     [Theory]

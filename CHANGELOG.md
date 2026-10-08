@@ -101,6 +101,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   created in the colour it had. One that cannot be created, for example past the limit of 100, is reported and the
   notes arrive without it. The summary adds "Added {n} labels." Older versions of either app restore these backups as
   before, without the labels.
+- **Photo size** (Settings → Features, with Shrink photos before adding on): choose how far photos shrink. **Large**
+  (2560 pixels on the longest side, JPEG quality 85%) is the size photos were shrunk to before, and stays the default;
+  **Medium** (1920 pixels, 80%) and **Small** (1280 pixels, 75%) save much more space.
+- **Daily-note template:** with daily notes on, any note can be chosen from its ⋯ menu as the template, and each new
+  day's note starts with its text (without its title). Settings → Features shows which note it is and can stop using
+  it.
+- **Help in the menu** (Settings → Features, on by default): turn it off to hide Help from the side menu. The guide is
+  then opened from a Help link at the foot of Settings.
+- **Automatic backups** (Settings → Backup & data, off by default). Turn on **Back up automatically** and choose a
+  folder, and Falcon Notes saves a backup of everything there every day, week or month: all your notes, archived
+  ones too, with their files, as the same ZIP an export makes. It keeps the newest 3, 5 or 10 and deletes the older
+  ones; no other file in the folder is ever touched. It checks when it opens and every hour while it is open, since
+  it cannot run while closed. **Back up now** makes one at once. If a backup fails, for example because the folder
+  was deleted, Settings and Home say so until one works. These backups are not encrypted, so choose a folder only
+  you can open. Android only for now; it needs no new permission. Help describes it.
 
 ### Changed
 
@@ -118,16 +133,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Android app now asks for the `USE_BIOMETRIC` and `USE_FINGERPRINT` permissions, for fingerprint or face unlock.
   They are granted at install with no prompt. It still has no internet permission. The README, the website and the
   privacy policy said the app asks for no permissions, and now name this one.
+- Falcon Notes now follows Maple Notes 1.15.0 (it followed 1.8.0), apart from what needs a server; Settings and Help
+  say "Based on Maple Notes 1.15.0". Help describes the daily-note template, the photo sizes and Help in the menu.
+- Opening **Labels…** from a note's ⋯ menu no longer puts the cursor in the find-or-create field, so the keyboard
+  stays down until you tap the field.
+- A note shows only its own attached files as images; any other image in its Markdown shows its description.
+- The database's write-ahead log is cut back after each checkpoint.
 - Settings → Labels, Settings → Backup & data and Help no longer say that labels are not part of exports.
+- The README, the website and the privacy policy say that a backup holds each note's labels.
 - A note file over 4 MB inside a backup is refused before it is read, and a manifest over 64 MB is treated as
   unreadable, as in Maple Notes since 1.11.
 - The Lock screen shows no message when a fingerprint or face prompt closes without unlocking. It used to be written
   to show "That didn't work. Please try again." under the PIN field.
+- The README links to Buy me a coffee, at the top and in a new Support section, as the Maple Notes README does.
+- The README, the website and the privacy policy describe automatic backups.
 - The README is reorganised: a contents list, a section on how Falcon Notes relates to Maple Notes, and the limits
   as a list. It no longer describes how the repository was set up or points to the prompts used to build it.
 
 ### Removed
 
+- `reference/maple-notes-1.8.0/scripts/`, the web app's licence check, which this project ported to `scripts/`.
+- `reference/maple-notes-1.8.0/src/` and `tests/`, the copy of the web app's 1.8.0 source. The app follows Maple Notes
+  1.15.0 now, and the place to port from is its repository on GitHub. The licensing policy the project follows is
+  kept as `docs/licensing.md`; the 1.8.0 documents and screenshots stay in `reference/`.
 - `KICKOFF-PROMPT.md`, the prompts used to start each phase of the build, and the Android project template's
   `AboutResources.txt` in the storage benchmark. Neither was used by anything.
 - The generated stylesheet `src/FalconNotes.UI/wwwroot/css/app.css` is no longer in the repository. It was already
@@ -135,6 +163,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A file whose name holds invisible text-reordering characters, which can make `invoice…exe` read as a PDF, is added
+  under its name without them.
+- A link written as `//host/…` in a note opens as another site, not as a page of the app.
 - Android 14 and earlier: the app draws behind the status and navigation bars, as it does on Android 15 and later.
   Before, it showed a purple status bar and a black navigation bar there.
 - The picture viewer's buttons no longer sit under the status bar on Android.

@@ -11,6 +11,11 @@ public sealed class FakeClock(DateTimeOffset start) : TimeProvider
     /// </summary>
     public TimeSpan Step { get; set; }
 
+    /// <summary>The device's time zone, for tests whose result depends on it; the machine's own when not set.</summary>
+    public TimeZoneInfo? Zone { get; set; }
+
+    public override TimeZoneInfo LocalTimeZone => Zone ?? base.LocalTimeZone;
+
     public override DateTimeOffset GetUtcNow()
     {
         var now = Now;

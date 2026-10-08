@@ -5,7 +5,9 @@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Text
 @using FalconNotes.UI.State
+@implements IDisposable
 @inject ExportService Export
+@inject AutoExportService AutoExport
 @inject Toasts Toasts
 @inject TimeProvider Time
 
@@ -134,7 +136,21 @@
     private DateTime? _lastExport;
 
     /// <inheritdoc />
-    protected override async Task OnInitializedAsync() => _lastExport = await Export.LastExportAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        AutoExport.Changed += OnAutoExportChanged;
+        _lastExport = await Export.LastExportAsync();
+    }
+
+    // An automatic backup (the section below, or one made in the background) is an export too.
+    private void OnAutoExportChanged() => _ = InvokeAsync(async () =>
+    {
+        _lastExport = await Export.LastExportAsync();
+        StateHasChanged();
+    });
+
+    /// <inheritdoc />
+    public void Dispose() => AutoExport.Changed -= OnAutoExportChanged;
 
     private async Task ExportAsync()
     {

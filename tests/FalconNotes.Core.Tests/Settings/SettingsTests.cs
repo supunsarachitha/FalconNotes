@@ -43,6 +43,39 @@ public class SettingsTests
         Assert.True(preferences.TodoLists); // missing: the default
     }
 
+    // Ported from the server's PreferencesTests.cs (Maple Notes 1.9.0 to 1.15.0). There a value that is not offered
+    // is refused; here it falls back to its default, as every preference does.
+    [Fact]
+    public async Task Help_in_the_menu_the_photo_size_and_the_daily_note_template_have_defaults_and_save()
+    {
+        using var app = await TestApp.StartAsync();
+        var defaults = await app.Preferences.GetAsync();
+        Assert.True(defaults.HelpMenu);
+        Assert.Equal("", defaults.DailyNoteTemplate); // no template until one is chosen
+        Assert.Equal(PhotoSize.Large, defaults.PhotoSize); // as photos were shrunk before sizes could be chosen
+
+        await app.Preferences.SaveAsync(new Preferences
+        {
+            HelpMenu = false, PhotoSize = PhotoSize.Small, DailyNoteTemplate = "0199A1B2-C3D4-E5F6-0718-293A4B5C6D7E",
+        });
+
+        var saved = await app.Preferences.GetAsync();
+        Assert.Equal((false, PhotoSize.Small, "0199a1b2-c3d4-e5f6-0718-293a4b5c6d7e"), (saved.HelpMenu, saved.PhotoSize, saved.DailyNoteTemplate));
+    }
+
+    [Theory]
+    [InlineData("today")]
+    [InlineData("0199a1b2c3d4e5f60718293a4b5c6d7e")]
+    [InlineData("{0199a1b2-c3d4-e5f6-0718-293a4b5c6d7e}")]
+    public async Task The_daily_note_template_is_a_note_id_or_nothing(string template)
+    {
+        using var app = await TestApp.StartAsync();
+
+        var saved = await app.Preferences.SaveAsync(new Preferences { DailyNoteTemplate = template, PhotoSize = (PhotoSize)7 });
+
+        Assert.Equal(("", PhotoSize.Large), (saved.DailyNoteTemplate, saved.PhotoSize));
+    }
+
     [Fact]
     public async Task The_profile_is_created_once_with_a_name_or_Me()
     {

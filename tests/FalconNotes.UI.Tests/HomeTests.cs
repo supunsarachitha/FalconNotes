@@ -59,6 +59,42 @@ public class HomeTests : BunitContext
     }
 
     [Fact]
+    public async Task Starts_a_new_days_note_with_the_templates_text_without_the_templates_title()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex");
+        var template = await app.PostAsync("# Daily template\n\n## Plan\n- [ ] \n\n## Done\n", NoteKind.Quick);
+        await app.State.UpdatePreferencesAsync(p => p with { DailyNotes = true, DateFormat = "dddd, d MMMM yyyy", DailyNoteTemplate = template.Id.ToString("D") });
+        SetUpJs();
+
+        var cut = Render<Home>();
+
+        cut.WaitForAssertion(
+            () => Assert.Equal("## Plan\n- [ ] \n\n## Done\n", cut.Find("section[aria-label=Today] textarea").GetAttribute("value")), TimeSpan.FromSeconds(5));
+        cut.FindAll("section[aria-label=Today] button").First(b => b.TextContent.Trim() == "Post").Click();
+
+        // Only a DOM check while waiting: the card shows the saved note in place of the composer.
+        cut.WaitForAssertion(() => Assert.Empty(cut.FindAll("section[aria-label=Today] textarea")), TimeSpan.FromSeconds(5));
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(app.Core.Clock.GetUtcNow(), app.Core.Clock.LocalTimeZone).DateTime);
+        var saved = (await app.Core.Notes.GetDailyAsync(today))!;
+        Assert.Equal($"# {DateFormats.Format(today, "dddd, d MMMM yyyy")}\n\n## Plan\n- [ ] \n\n## Done", saved.Content.TrimEnd());
+    }
+
+    [Fact]
+    public async Task Starts_the_days_note_empty_when_the_template_is_in_the_trash_or_none_is_chosen()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex");
+        var template = await app.PostAsync("Old template");
+        await app.Core.Notes.PatchAsync(template.Id, new Core.Notes.NotePatch(IsTrashed: true));
+        await app.State.UpdatePreferencesAsync(p => p with { DailyNotes = true, DailyNoteTemplate = template.Id.ToString("D") });
+        SetUpJs();
+
+        var cut = Render<Home>();
+
+        cut.WaitForAssertion(() => cut.Find("section[aria-label=Today] textarea"), TimeSpan.FromSeconds(5));
+        Assert.Equal("", cut.Find("section[aria-label=Today] textarea").GetAttribute("value") ?? "");
+    }
+
+    [Fact]
     public async Task Hides_todays_note_from_the_feed_below()
     {
         using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { DailyNotes = true });

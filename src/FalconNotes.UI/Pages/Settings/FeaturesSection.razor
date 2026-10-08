@@ -1,5 +1,7 @@
-@* Port of FeaturesSection in components/PreferenceSections.tsx, adapted (docs/07, Settings → Features): without Link
-   previews; "Shrink photos before uploading" becomes "Shrink photos before adding" (docs/08, Pictures, video and files). *@
+@* Port of FeaturesSection in components/PreferenceSections.tsx (Maple Notes 1.15.0), adapted (docs/07, Settings →
+   Features): without Link previews; "Shrink photos before uploading" becomes "Shrink photos before adding" (docs/08,
+   Pictures, video and files); with Help out of the menu, the guide is opened from the foot of Settings, since there
+   is no address to type. *@
 @using FalconNotes.UI.State
 @inject AppState State
 
@@ -18,6 +20,9 @@
             <PreferenceSwitch Label="Archive"
                                Description="An Archive page for notes you put away, and the Archive action on notes and lists. Turning it off hides them; archived notes are kept."
                                Checked="State.Preferences.Archive" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { Archive = on }))" />
+            <PreferenceSwitch Label="Help in the menu"
+                               Description="Help in the side menu. Turning it off hides the item; the guide is then opened from the foot of Settings."
+                               Checked="State.Preferences.HelpMenu" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { HelpMenu = on }))" />
         </div>
     </ChildContent>
 </Section>
@@ -27,6 +32,11 @@
         <PreferenceSwitch Label="Daily notes"
                            Description="Show today's note at the top of Home, titled with the date. It is saved the first time you write in it, so days you skip leave no empty notes."
                            Checked="State.Preferences.DailyNotes" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { DailyNotes = on }))" />
+        @if (State.Preferences.DailyNotes)
+        {
+            <DailyTemplateSetting TemplateId="@State.Preferences.DailyNoteTemplate"
+                                  OnClear="@(() => State.UpdatePreferencesAsync(p => p with { DailyNoteTemplate = "" }))" />
+        }
         <PreferenceSwitch Label="Calendar" Description="A month calendar in the side menu. Days with notes are marked; choose one to see its notes."
                            Checked="State.Preferences.Calendar" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { Calendar = on }))" />
         <PreferenceSwitch Label="Labels"
@@ -40,8 +50,15 @@
         <PreferenceSwitch Label="Trash"
                            Description="Deleted notes go to the trash, where you can restore them for 30 days; it is in Settings → Backup & data. Off, deleting is immediate and permanent."
                            Checked="State.Preferences.Trash" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { Trash = on }))" />
-        <PreferenceSwitch Label="Shrink photos before adding"
-                           Description="Large photos are resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size. Their location and camera details are left out too. Photos already added stay as they are."
-                           Checked="State.Preferences.ShrinkPhotos" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { ShrinkPhotos = on }))" />
+        <div class="py-3 first:pt-0 last:pb-0">
+            <PreferenceSwitch Label="Shrink photos before adding"
+                               Description="Large photos are resized and saved as JPEG, often a tenth of the size or less. Their location and camera details are left out too. Photos already added stay as they are."
+                               Checked="State.Preferences.ShrinkPhotos" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { ShrinkPhotos = on }))" />
+            @if (State.Preferences.ShrinkPhotos)
+            {
+                <PhotoSizeChoice Value="State.Preferences.PhotoSize"
+                                 ValueChanged="@(size => State.UpdatePreferencesAsync(p => p with { PhotoSize = size }))" />
+            }
+        </div>
     </div>
 </Section>
