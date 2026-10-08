@@ -83,9 +83,9 @@ public sealed class PerformanceBudgetTests(ITestOutputHelper output)
         {
             var items = Enumerable.Range(0, 10_000).Select(i => new RestoreItem(
                 $"{i}.md", Guid.CreateVersion7(), $"Restored note {i} #topic{i % 50}", empty.Clock.Now.AddDays(-i), empty.Clock.Now.AddDays(-i),
-                false, i % 10 == 0, NoteKind.Note, null, [], [])).ToList();
+                false, i % 10 == 0, NoteKind.Note, null, [], [], [])).ToList();
             var watch = Stopwatch.StartNew();
-            var restored = await new RestoreRunner(empty.Storage, empty.Attachments, empty.Feed, empty.Clock).RunAsync(items);
+            var restored = await new RestoreRunner(empty.Storage, empty.Attachments, empty.Labels, empty.Feed, empty.Clock).RunAsync(items);
             var seconds = watch.Elapsed.TotalSeconds;
             Assert.Equal(10_000, restored.Restored);
             report.Add($"{"Restore of 10,000 notes without files",-40} {seconds * 1000,8:F0} ms   (budget 5000 ms)");

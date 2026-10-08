@@ -92,6 +92,21 @@ Status (2026-10-01): all of it passes on the Mac (Core tests) and on the Android
 which runs the same checks inside the app: 13 exports match, 13 restores clean, both demos 35 notes and 8 files, in
 5.2 s). Windows waits for the Windows head. A 10,000-note restore takes 0.4 s on the Mac (budget 5 s).
 
+Labels in backups (2026-10-08, for 1.2.0, at the owner's request): the format is now **manifest version 3**, as Maple
+Notes has written it since 1.9.0 and still does in 1.15.0, its latest ([05](05-backup-compatibility.md#labels-in-backups)).
+The Maple Notes repository was read at `main` (commit `3343d10`): nothing in its export has changed since 1.9.0, and
+its restore gained only size limits, which are ported too. The exporter's label lines are the server's, the restore's
+are `parse.ts` and `importer.ts`, and `fixtures/export-vectors.json` is that repository's current file, whose labels
+have names that need escaping. All 13 exports match it entry for entry and all 13 restore with their labels and
+colours; the server's and the web app's label tests are ported with them. The Labels and Backup screens and Help
+now say that labels are kept ([07](07-screens.md), [08](08-help-guide.md)).
+
+Settings in backups were asked for in the same breath and are **not** built: the web app's format has no place for
+them, so it would be a change in this project alone ([05](05-backup-compatibility.md#settings-in-backups)).
+
+Not checked, still open: the on-device run of these checks (the Debug spike page's S7 is updated for labels but was
+not run again); a backup made here restored in a running Maple Notes, and one made there restored here by hand.
+
 ## Phase 3: shell and design system
 
 - [x] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): approved by the owner, saved as
@@ -359,7 +374,8 @@ with the switch on (no prompt, no button, the PIN opens the app). The signed fil
 versionCode 4, still version 1.1.0, so that an upload cannot collide with versionCode 3 if that was already sent to
 Google Play.
 
-Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4), on the `release-1.2.0` branch.
+Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4) and labels in backups (see
+Phase 2), on the `release-1.2.0` branch.
 The version numbers are set, but the signed AAB and APK have not been built or checked yet. Before building from
 clean, move the 1.1.0 output out of `src/FalconNotes.App/bin/Release/` as was done for 1.0.1, and repeat the
 shrinking check from Phase 4 on the release APK, since R8 and trimming have not run over the new code.

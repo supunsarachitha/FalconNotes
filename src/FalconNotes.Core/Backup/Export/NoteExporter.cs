@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace FalconNotes.Core.Backup.Export;
 
 /// <summary>
-/// Writes the notes as the web app's export ZIP, manifest version 2, byte for byte (docs/05). Copied from the server's
+/// Writes the notes as the web app's export ZIP, manifest version 3, byte for byte (docs/05). Copied from the server's
 /// <c>NoteExporter</c>; only the data access changed: notes come from this app's database (plain text in
 /// <c>NoteBodies</c>), files through <see cref="AttachmentService"/>, and the account is the profile's display name.
 /// </summary>
@@ -61,7 +61,9 @@ public sealed class NoteExporter(
         var usedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "manifest.json" };
         var problems = new List<string>();
         var manifestNotes = new List<object>();
+        var labelColors = new SortedDictionary<string, string>(StringComparer.Ordinal); // the labels the notes carry
         var attachmentCount = 0;
+        var labels = await storage.Database.ReadAsync(LabelsById, cancellationToken);
         DateTime? fromUtc = options.From is { } from ? StartOfDayUtc(from, options.TimeZone) : null;
         DateTime? beforeUtc = options.To is { } to ? StartOfDayUtc(to.AddDays(1), options.TimeZone) : null;
 
@@ -76,8 +78,14 @@ public sealed class NoteExporter(
                     cancellationToken);
                 foreach (var note in batch)
                 {
-                    var (path, exported) = await WriteNoteAsync(zip, note, options, usedPaths, problems, cancellationToken);
+                    var noteLabels = note.LabelIds.Where(labels.ContainsKey).Select(id => labels[id]).ToList();
+                    var (path, exported) = await WriteNoteAsync(zip, note, noteLabels, options, usedPaths, problems, cancellationToken);
                     attachmentCount += exported.Attachments.Count;
+                    foreach (var label in noteLabels)
+                    {
+                        labelColors[label.Name] = label.Color;
+                    }
+
                     manifestNotes.Add(new
                     {
                         exported.Id,
@@ -86,6 +94,7 @@ public sealed class NoteExporter(
                         DailyDate = exported.DailyDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                         CreatedAt = exported.Created.ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture),
                         exported.Tags,
+                        Labels = exported.LabelNames,
                         exported.Archived,
                         Attachments = exported.Attachments.Select(a => a.ArchivePath),
                     });
@@ -103,7 +112,7 @@ public sealed class NoteExporter(
             var manifest = new
             {
                 Application = "Maple Notes", // the format's name, which the web app's restore checks (D12): never this app's
-                ManifestVersion = 2, // 2: notes record their kind and daily date
+                ManifestVersion = 3, // 2: notes record their kind and daily date; 3: and their labels
                 ExportedAt = exportedAt.ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture),
                 Account = account,
                 Options = new
@@ -119,6 +128,7 @@ public sealed class NoteExporter(
                 NoteCount = manifestNotes.Count,
                 AttachmentCount = attachmentCount,
                 Problems = problems,
+                Labels = labelColors.Select(l => new { Name = l.Key, Color = l.Value }),
                 Notes = manifestNotes,
             };
             await WriteTextAsync(zip, "manifest.json", NoteFormatter.ManifestJson(manifest), exportedAt, cancellationToken);
@@ -144,7 +154,8 @@ public sealed class NoteExporter(
     }
 
     private async Task<(string Path, ExportedNote Note)> WriteNoteAsync(
-        ZipArchive zip, Note note, ExportOptions options, ISet<string> usedPaths, List<string> problems, CancellationToken cancellationToken)
+        ZipArchive zip, Note note, IReadOnlyList<(string Name, string Color)> labels, ExportOptions options, ISet<string> usedPaths,
+        List<string> problems, CancellationToken cancellationToken)
     {
         var content = note.Content;
         var created = TimeZoneInfo.ConvertTime(new DateTimeOffset(note.CreatedAtUtc), options.TimeZone);
@@ -171,9 +182,27 @@ public sealed class NoteExporter(
         }
 
         var exported = new ExportedNote(
-            note.Id, content, created, updated, note.Tags, note.IsPinned, note.IsArchived, exportedAttachments, note.Kind, note.DailyDate);
+            note.Id, content, created, updated, note.Tags, note.IsPinned, note.IsArchived, exportedAttachments, note.Kind, note.DailyDate,
+            labels.Select(l => l.Name).Order(StringComparer.Ordinal).ToList());
         await WriteTextAsync(zip, notePath, NoteFormatter.Render(exported, options.Format), updated, cancellationToken);
         return (notePath, exported);
+    }
+
+    /// <summary>
+    /// Every label's name and colour, by ID. The colour is written as the web app names it ("Blue"), which is how it
+    /// is stored.
+    /// </summary>
+    private static Dictionary<Guid, (string Name, string Color)> LabelsById(Microsoft.Data.Sqlite.SqliteConnection connection)
+    {
+        using var command = Sql.Command(connection, "SELECT Id, Name, Color FROM Labels");
+        var labels = new Dictionary<Guid, (string, string)>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            labels[reader.GetId(0)] = (reader.GetString(1), reader.GetString(2));
+        }
+
+        return labels;
     }
 
     private async Task<bool> WriteAttachmentAsync(

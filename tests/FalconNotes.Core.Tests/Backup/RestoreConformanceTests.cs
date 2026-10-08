@@ -39,7 +39,7 @@ public class RestoreConformanceTests
 
     internal static RestoreReader NewReader(TestApp app) => new(app.Directories, app.Clock);
 
-    internal static RestoreRunner NewRunner(TestApp app) => new(app.Storage, app.Attachments, app.Feed, app.Clock);
+    internal static RestoreRunner NewRunner(TestApp app) => new(app.Storage, app.Attachments, app.Labels, app.Feed, app.Clock);
 
     private static DateTime Seconds(string iso)
     {
@@ -64,6 +64,11 @@ public class RestoreConformanceTests
 
         Assert.Empty(plan.Problems);
         Assert.Equal(manifest.RootElement.GetProperty("notes").EnumerateArray().Select(n => n.GetProperty("id").GetGuid()), plan.Items.Select(i => i.Id!.Value));
+        var listedLabels = manifest.RootElement.GetProperty("labels").EnumerateArray().ToList();
+        Assert.Equal(
+            listedLabels.ToDictionary(l => l.GetProperty("name").GetString()!.ToLowerInvariant(), l => l.GetProperty("color").GetString()),
+            plan.LabelColors.ToDictionary(l => l.Key, l => (string?)l.Value.ToString()));
+        Assert.DoesNotContain("Unused", listedLabels.Select(l => l.GetProperty("name").GetString())); // only the labels the exported notes carry
         foreach (var item in plan.Items)
         {
             var note = notes[item.Id!.Value];
@@ -79,6 +84,7 @@ public class RestoreConformanceTests
             Assert.Equal(Enum.Parse<NoteKind>(note.GetProperty("kind").GetString()!), item.Kind);
             var daily = note.GetProperty("dailyDate");
             Assert.Equal(daily.ValueKind == JsonValueKind.Null ? null : daily.GetString(), item.DailyDate);
+            Assert.Equal(ExportVectors.LabelNames(note), item.Labels.Order(StringComparer.Ordinal));
             Assert.Empty(item.Missing);
 
             var expected = withFiles ? note.GetProperty("attachments").EnumerateArray().ToList() : [];
@@ -111,14 +117,25 @@ public class RestoreConformanceTests
         var archive = Archive(entries);
         using var plan = await NewReader(app).ReadAsync([Source("maple-notes.zip", archive)]);
 
-        var result = await NewRunner(app).RunAsync(plan.Items);
+        var result = await NewRunner(app).RunAsync(plan.Items, labelColors: plan.LabelColors);
 
         Assert.Empty(result.Failed);
         Assert.Equal(plan.Items.Count, result.Restored);
         Assert.Equal(plan.FileCount, result.Files);
+
+        // Every label the notes carry is back, under its name and in its colour.
+        var labels = (await app.Labels.ListAsync(Enum.GetValues<NoteKind>())).Select(l => l.Label).ToList();
+        using var manifest = JsonDocument.Parse(entries.GetProperty("manifest.json").GetString()!);
+        Assert.Equal(
+            manifest.RootElement.GetProperty("labels").EnumerateArray().Select(l => (l.GetProperty("name").GetString(), l.GetProperty("color").GetString())).Order(),
+            labels.Select(l => ((string?)l.Name, (string?)l.Color.ToString())).Order());
+        Assert.Equal(labels.Count, result.Labels);
         foreach (var item in plan.Items)
         {
             var note = (await app.Notes.GetAsync(item.Id!.Value))!;
+            Assert.Equal(
+                item.Labels.Order(StringComparer.Ordinal),
+                note.LabelIds.Select(id => labels.Single(l => l.Id == id).Name).Order(StringComparer.Ordinal));
             Assert.Equal(item.Content, note.Content);
             Assert.Equal(item.CreatedAt.UtcDateTime, note.CreatedAtUtc);
             Assert.Equal(item.UpdatedAt.UtcDateTime, note.UpdatedAtUtc);
@@ -128,8 +145,8 @@ public class RestoreConformanceTests
         }
 
         using var again = await NewReader(app).ReadAsync([Source("maple-notes.zip", archive)]);
-        var second = await NewRunner(app).RunAsync(again.Items);
-        Assert.Equal((0, plan.Items.Count, 0), (second.Restored, second.Skipped, second.Files));
+        var second = await NewRunner(app).RunAsync(again.Items, labelColors: again.LabelColors);
+        Assert.Equal((0, plan.Items.Count, 0, 0), (second.Restored, second.Skipped, second.Files, second.Labels));
     }
 
     [Fact]
@@ -179,6 +196,36 @@ public class RestoreConformanceTests
 
         var result = await NewRunner(app).RunAsync(plan.Items);
         Assert.Equal([("a.md", "Restored without lost.png, which the archive does not contain.")], result.Failed);
+    }
+
+    // Not in import.test.ts as one case: where a note's labels are read from, and what is not a label.
+    [Fact]
+    public async Task Labels_are_read_from_each_format_and_from_the_manifest_when_the_file_has_none()
+    {
+        using var app = await TestApp.StartAsync();
+        var manifest = """
+            {"application":"Maple Notes","manifestVersion":3,
+             "labels":[{"name":" Work ","color":"Blue"},{"name":"Odd","color":"Magenta"},{"name":7,"color":"Red"},"x"],
+             "notes":[{"path":"a.md","labels":["From the manifest"]},{"path":"b.txt","labels":["Work"]},{"path":"c.json","labels":"Work"}]}
+            """;
+        var zip = Zip(
+            ("manifest.json", manifest),
+            ("a.md", "---\ncreated: 2025-01-01T10:00:00+01:00\nlabels: [\"Zebra, \\\"quoted\\\" #1\", \"été ☀️\"]\n---\n\nA\n"),
+            ("b.txt", "Created: 2025-01-01T10:00:00+01:00\n\nB\n"),
+            ("c.json", """{"content":"C","createdAt":"2025-01-01T10:00:00+01:00","labels":["Work",5,null,"Trip"]}"""));
+
+        using var plan = await NewReader(app).ReadAsync(
+        [
+            Source("backup.zip", zip),
+            Source("old.txt", Encoding.UTF8.GetBytes("Created: 2025-01-01T10:00:00+01:00\nLabels: [\"Road trip, 2026\", \"Work\"]\n\nOld\n")),
+            Source("broken.md", Encoding.UTF8.GetBytes("---\ncreated: 2025-01-01T10:00:00+01:00\nlabels: Work, Trip\n---\n\nNot a list\n")),
+        ]);
+
+        Assert.Empty(plan.Problems);
+        Assert.Equal(
+            [("a.md", "Zebra, \"quoted\" #1|été ☀️"), ("b.txt", "Work"), ("c.json", "Work|Trip"), ("old.txt", "Road trip, 2026|Work"), ("broken.md", "")],
+            plan.Items.Select(i => (i.Source, string.Join('|', i.Labels))));
+        Assert.Equal([("work", LabelColor.Blue)], plan.LabelColors.Select(l => (l.Key, l.Value))); // only colours the app knows
     }
 
     private static byte[] Zip(params (string Name, string Text)[] entries)

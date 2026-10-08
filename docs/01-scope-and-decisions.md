@@ -87,7 +87,8 @@ screens in [07-screens.md](07-screens.md).
 
 | Proposal | Note |
 |---|---|
-| Labels and settings in backups | Needs a coordinated change in the web app (manifest version 3). Until then, labels do not survive a backup, exactly as in the web app ("Exports do not include labels yet."). See [05](05-backup-compatibility.md#future-labels-in-backups). |
+| Labels in backups | **Done in 1.2.0** (2026-10-08, at the owner's request): manifest version 3, exactly as Maple Notes 1.9.0 defined it and 1.15.0 still writes it. See [05](05-backup-compatibility.md#labels-in-backups). |
+| Settings in backups | Still open. The web app's format has no place for them, so this needs a new manifest version there first ([05](05-backup-compatibility.md#settings-in-backups)). |
 | Backup reminder | A local app has no other copy of the notes. Proposal: Settings → Backup & data shows "Last export: …", and Home shows a dismissible reminder after 30 days without one. Off by default. |
 | Share into Falcon Notes (Android share sheet, macOS Share menu) | Turns shared text, links and images into a new note. |
 | iOS | D1 keeps it possible. |

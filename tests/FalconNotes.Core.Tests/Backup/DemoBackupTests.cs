@@ -49,7 +49,7 @@ public partial class DemoBackupTests
         using var zip = new MemoryStream();
         await ExportConformanceTests.NewExporter(app).WriteAsync(ExportVectors.Options(query), zip);
         zip.Position = 0;
-        var after = Normalise(ExportVectors.Entries(zip));
+        var after = Normalise(ExportVectors.Entries(zip)).Select(e => (e.Name, WithoutVersion3(e.Content))).ToList();
 
         Assert.Equal(before.Select(e => e.Name), after.Select(e => e.Name));
         foreach (var ((entry, want), (_, got)) in before.Zip(after))
@@ -75,6 +75,14 @@ public partial class DemoBackupTests
 
     [System.Text.RegularExpressions.GeneratedRegex("attachments/[0-9a-f]{8}_")]
     private static partial System.Text.RegularExpressions.Regex FileIds();
+
+    /// <summary>
+    /// The demo backups are manifest version 2, from before exports listed labels (the web app still ships them as
+    /// they are). What is exported now is version 3: the same, plus the empty lists of labels.
+    /// </summary>
+    private static string WithoutVersion3(string content) =>
+        System.Text.RegularExpressions.Regex.Replace(content, "^ *\"?labels\"?: \\[\\],?\n", "", System.Text.RegularExpressions.RegexOptions.Multiline)
+            .Replace("\"manifestVersion\": 3", "\"manifestVersion\": 2", StringComparison.Ordinal);
 
     private static string WithoutAccount(string manifest) =>
         System.Text.RegularExpressions.Regex.Replace(manifest, "\"account\": \"[^\"]*\"", "\"account\": \"\"");

@@ -123,7 +123,7 @@ public sealed class UiTestApp : IDisposable
             new NoteExporter(core.Storage, core.Attachments, core.Profile, core.Clock, Microsoft.Extensions.Logging.Abstractions.NullLogger<NoteExporter>.Instance),
             saver, core.Directories, core.Storage, core.Clock));
         services.AddSingleton(new RestoreReader(core.Directories, core.Clock));
-        services.AddSingleton(new RestoreRunner(core.Storage, core.Attachments, core.Feed, core.Clock));
+        services.AddSingleton(new RestoreRunner(core.Storage, core.Attachments, core.Labels, core.Feed, core.Clock));
         services.AddSingleton(new KeyLostRecovery(new DeviceKeyStore(core.Secrets), core.Directories, core.Clock));
         services.AddSingleton(new EraseAllData(new DeviceKeyStore(core.Secrets), core.Storage, core.Directories));
 

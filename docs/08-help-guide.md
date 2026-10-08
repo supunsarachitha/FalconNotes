@@ -54,6 +54,9 @@ Touch ID.
 Put back with photo shrinking (1.2.0, 2026-10-08): the `pictures` section's last paragraph, on **Shrink photos before
 adding**.
 
+Changed with labels in backups (1.2.0, 2026-10-08), to the web app's wording since 1.9.0: the last line of `labels`,
+the restore paragraph of `backup`, and in `devices` labels now travel with their notes and only settings stay behind.
+
 ## 1. Writing notes (`writing`)
 
 ````markdown
@@ -82,7 +85,7 @@ Then choose **Labels…** in a note's **⋯** menu to tick the ones it should ha
 by typing its name. A note shows its labels at the bottom, and choosing one, or a label in the side menu, lists its
 notes.
 
-Exports do not include labels yet, so labels stay on this device when you move your notes elsewhere.
+Exports list each note's labels by name, and restoring one brings them back.
 ````
 
 ## 8. Daily notes (`daily`)
@@ -174,9 +177,9 @@ day. Keep it somewhere safe, such as a USB drive or a cloud folder you trust. Ex
 with care.
 
 **Restore** brings notes back from such a file. It also works with exports from the Maple Notes web app and its
-servers, and their restore works with yours. Notes keep their dates, pins, archive state and files, and notes you
-already have are skipped, so restoring twice does no harm. You can also add single Markdown, text or JSON files as
-notes. Labels are not part of exports yet.
+servers, and their restore works with yours. Notes keep their dates, pins, archive state, labels and files, and
+notes you already have are skipped, so restoring twice does no harm. A label is matched by name to one you
+already have, or created in the colour it had. You can also add single Markdown, text or JSON files as notes.
 
 To start over, **Delete all notes and files**, in the same place, deletes everything you wrote and added at once,
 labels and the trash included. Your name, settings and app lock stay. This cannot be undone, so export first if you
@@ -187,8 +190,8 @@ might want your notes back.
 
 ````markdown
 Falcon Notes does not sync. To move your notes to a new phone or computer, **Export** them on the old one, copy the ZIP
-across, and **Restore** it on the new one, in [Settings → Backup & data](/settings/data). Your settings and labels do
-not travel with it, so set them up again on the new device.
+across, and **Restore** it on the new one, in [Settings → Backup & data](/settings/data). Labels come with the notes
+that carry them. Your settings do not travel with it, so set them up again on the new device.
 ````
 
 ## 20. How much you store (`storage`)

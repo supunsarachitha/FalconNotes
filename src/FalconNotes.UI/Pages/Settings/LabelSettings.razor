@@ -1,6 +1,6 @@
 @* Port of components/LabelSettings.tsx: turning labels on or off, and the account's labels to create, rename,
-   recolour or delete. docs/07: the note about end-to-end encryption is gone (there is no such mode here); "Exports
-   do not include labels yet" stays. Not yet placed in a Settings page shell (Phase 6); reached directly for now. *@
+   recolour or delete. docs/07: the note about end-to-end encryption is gone (there is no such mode here), and the
+   line on exports is the web app's since 1.9.0, when exports began to keep labels. *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Events
 @using FalconNotes.Core.Labels
@@ -63,7 +63,7 @@
     }
     <p class="mt-3 text-xs text-stone-500 dark:text-stone-400">
         Up to @LabelRules.MaxLabels labels, @LabelRules.MaxNameLength characters each, and @LabelRules.MaxPerNote on a note.
-        Exports do not include labels yet.
+        Exports keep each note's labels, and restoring one brings them back.
     </p>
     </ChildContent>
 </Section>

@@ -60,7 +60,8 @@ The most important tests in the repository: they keep backups interchangeable wi
 1. Seed an empty database from `vectors.active.items` and `vectors.archived.items`: `id`, `content`, `kind`, `dailyDate`,
    `isPinned`, `isArchived`, `createdAtUtc` and `updatedAtUtc` at full precision, and each attachment's `id`, `fileName`,
    `contentType`, `sizeBytes` and `createdAtUtc`, with its bytes from `vectors.files` stored through `AttachmentStore`.
-   Tags come from the parser and must equal each note's `tags` (assert it).
+   Tags come from the parser and must equal each note's `tags` (assert it). First insert `vectors.labels` with their
+   `id`, `name` and `color`, then each note's `labelIds`.
 2. Set the profile name to `vectors.account` (`maple`).
 3. Run the exporter with the options from `query`: `format`, `layout`, `includeArchived`, `includeAttachments` (default
    true), `from`, `to`, `timeZone` (default UTC).
@@ -69,7 +70,7 @@ The most important tests in the repository: they keep backups interchangeable wi
 5. Assert the **entry names in order** equal the vector's keys, then every entry's content.
 
 Also: an attachment whose stored file is missing appears in `problems` as
-`attachments/00000009__con.txt: the stored file could not be read, so it was left out.`, and `attachmentCount` drops by one.
+`attachments/00000013__con.txt: the stored file could not be read, so it was left out.`, and `attachmentCount` drops by one.
 
 **Restore: one test per vector export** (as `web/import/import.test.ts`):
 
@@ -77,16 +78,18 @@ Also: an attachment whose stored file is missing appears in `problems` as
   problems, and the item IDs equal the manifest's note IDs in order.
 - Each item's content equals the note's content (`TrimEnd()` except for JSON). Created equals the original truncated to
   the second. Updated is the same, except plain text that was not edited gives the created time. Pinned, archived, kind
-  and daily date are equal; nothing is missing.
+  and daily date are equal; nothing is missing. Its labels are the names of the note's `labelIds`. The plan's label
+  colours equal the manifest's `labels`, which do not include `Unused`.
 - Attachments: names equal the originals (`SafeFileName` for plain text). Types are equal for JSON. Bytes are equal.
-- Then **run** the restore into an empty database and compare the stored notes the same way. Running it a second time
-  imports nothing and skips everything.
+- Then **run** the restore into an empty database and compare the stored notes the same way, and the labels with the
+  manifest's names and colours. Running it a second time imports nothing, creates no label and skips everything.
 
 **Demo backups**: both restore 35 notes (22 timeline notes, 5 quick notes, 4 habits, 4 todo lists) and 8 files, with no
 problems.
 
 **Round trip**: restore each demo backup, export with the same options, and compare the entries with the original
-archive. The manifests may differ only in `exportedAt` and `account`, and file names in their 8-hex-digit ID prefix:
+archive. The demo backups are manifest version 2, so first take out of the new export what version 3 adds: the empty
+`labels` lists and the version number. The manifests may then differ only in `exportedAt` and `account`, and file names in their 8-hex-digit ID prefix:
 exports name files `attachments/{last 8 hex of the file's ID}_{name}` but do not record the file IDs, so a restore
 gives files new IDs, as the web app's restore does (found in Phase 2).
 

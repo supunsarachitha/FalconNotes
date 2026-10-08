@@ -123,13 +123,13 @@
     private async Task RestoreAsync()
     {
         _step = Step.Running;
-        _progress = new RestoreProgress(_plan!.Items.Count, 0, 0, 0, 0, []);
+        _progress = new RestoreProgress(_plan!.Items.Count, 0, 0, 0, 0, 0, []);
         var progress = new Progress<RestoreProgress>(p =>
         {
             _progress = p;
             StateHasChanged();
         });
-        var result = await Runner.RunAsync(_plan.Items, progress);
+        var result = await Runner.RunAsync(_plan.Items, progress, _plan.LabelColors);
         _progress = result;
         _step = Step.Done;
         _plan.Dispose();

@@ -85,7 +85,7 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 ### Not yet available
 
 - Pasting or dragging files into a note.
-- Labels and settings in backups. Labels in a Maple Notes backup are left out when it is restored here.
+- Settings in backups. Maple Notes' backup format, which Falcon Notes shares, has no place for them yet.
 
 ## Privacy and security
 
@@ -114,9 +114,11 @@ optional end-to-end encryption, and has a [live demo](https://maplenotes.onrende
 device, use Maple Notes instead of Falcon Notes, or alongside it.
 
 - **Moving between them.** Exports from the Maple Notes web app restore in Falcon Notes, and Falcon Notes' exports
-  restore there. The format is specified in [05 Backup compatibility](docs/05-backup-compatibility.md) and checked by
+  restore there, with each note's labels (Maple Notes 1.9.0 or later; older versions restore the notes without
+  them). The format is specified in [05 Backup compatibility](docs/05-backup-compatibility.md) and checked by
   conformance tests against shared export vectors.
-- **The reference implementation.** Falcon Notes matches Maple Notes 1.8.0. That release's source (commit
+- **The reference implementation.** Falcon Notes matches Maple Notes 1.8.0, and its backups the format of Maple Notes
+  1.9.0 to 1.15.0, which added labels. The 1.8.0 source (commit
   [`a28db71`](https://github.com/supunsarachitha/MapleNotes/commit/a28db714a66a4021449abb98ad3bb1a5614ff1b0)) is kept
   in `reference/maple-notes-1.8.0/` to port from. It is read-only, and is never built or shipped.
 
