@@ -57,6 +57,9 @@ adding**.
 Changed with labels in backups (1.2.0, 2026-10-08), to the web app's wording since 1.9.0: the last line of `labels`,
 the restore paragraph of `backup`, and in `devices` labels now travel with their notes and only settings stay behind.
 
+Added with automatic backups (2026-10-08): the second paragraph of `backup`. It is this app's own; the web app has no
+such feature.
+
 Brought up to Maple Notes 1.15.0 (1.2.0, 2026-10-08): `daily` gains the paragraph on the template, word for word;
 `pictures` describes the three photo sizes; `features` lists "Help in the side menu" and says where the guide is
 when it is hidden: "opened from the foot of Settings", where the web app gives its address, `/help`, which a phone
@@ -190,6 +193,11 @@ Your notes live only on this device, so make a backup from time to time. Under [
 **Export** saves your notes as a ZIP file of Markdown, plain text or JSON, with your files, in folders by year, month or
 day. Keep it somewhere safe, such as a USB drive or a cloud folder you trust. Exports are not encrypted, so store them
 with care.
+
+So that you need not remember, turn on **Back up automatically** in the same place and choose a folder. Falcon Notes
+then saves a backup of everything there every day, week or month, keeps the newest few and deletes the older ones. It
+does this when it is open, so open it now and then. These backups are not encrypted either, so choose a folder only
+you can open. A folder on this device is lost with the device, so copy the backups somewhere else from time to time.
 
 **Restore** brings notes back from such a file. It also works with exports from the Maple Notes web app and its
 servers, and their restore works with yours. Notes keep their dates, pins, archive state, labels and files, and

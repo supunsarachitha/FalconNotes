@@ -50,6 +50,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<Core.Platform.IAppLock, Services.AndroidAppLock>();
         builder.Services.AddSingleton<Core.Platform.IShare, Services.AndroidShare>();
         builder.Services.AddSingleton<IImageCodec, Services.AndroidImageCodec>();
+        builder.Services.AddSingleton<IBackupFolders, AndroidBackupFolders>();
         builder.Services.AddSingleton<PhotoShrinker>();
 #endif
 
@@ -76,6 +77,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<MediaHandler>();
         builder.Services.AddSingleton<NoteExporter>();
         builder.Services.AddSingleton<ExportService>();
+        builder.Services.AddSingleton<AutoExportService>();
         builder.Services.AddSingleton<RestoreReader>();
         builder.Services.AddSingleton<RestoreRunner>();
         builder.Services.AddSingleton<EraseAllData>();

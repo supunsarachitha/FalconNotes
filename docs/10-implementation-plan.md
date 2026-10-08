@@ -210,6 +210,19 @@ already finished.
 **Acceptance**: export from the app restores in the web app (run the reference with Docker or `dotnet run`), and a web
 export restores in the app. The lock cannot be bypassed by Back, the app switcher, deep links or reopening.
 
+Added afterwards (2026-10-08, at the owner's request): **automatic backups** to a folder the user chooses
+([05](05-backup-compatibility.md#automatic-backups)). `AutoExportService` in Core decides when one is due, writes the
+ordinary export and tidies the folder; `StartupTasks` calls it after each maintenance pass; `IBackupFolders` is the
+folder, on Android `AndroidBackupFolders`; Settings gains `AutoBackupSection` and Home `AutoBackupNotice`. The rules
+are covered by Core tests and the screens by bUnit tests, both over a fake folder ([11](11-testing.md)).
+Checked on the emulator (API 36, 2026-10-08): the switch opens the system's folder picker, which refuses the top of
+the storage as [12](12-platforms.md) says; with Documents chosen, `falcon-notes-auto-2026-10-08_1932.zip` appeared
+there with a version 3 manifest, and Android listed the grant as persisted. After a restart nothing was written, and
+**Back up now** then kept the newest three automatic backups and left a hand-saved export and another file alone.
+With the folder deleted, Settings and Home said "Falcon Notes can no longer reach the folder. Choose it again." With
+the folder back and the clock eight days on, opening the app made the backup by itself and the notice went. Not
+checked: a memory card, a USB drive, a cloud app's folder, and a real phone.
+
 Status (2026-10-07): built and manually checked on the Android emulator. The Settings shell (`Settings.razor`) ports
 `SettingsPage.tsx`'s list-beside-section layout; every section renders real data (the Profile screenshot showed the
 live key fingerprint, storage use and "On this device since"). The app lock's PIN flow was exercised end to end on

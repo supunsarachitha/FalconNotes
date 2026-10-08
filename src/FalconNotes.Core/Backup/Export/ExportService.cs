@@ -6,7 +6,7 @@ namespace FalconNotes.Core.Backup.Export;
 /// <summary>
 /// Exports to a file the user chooses (docs/05, Writing the file): the archive is written into
 /// <c>cache/export/{random}.zip</c>, handed to the system's save dialog with the suggested name, and deleted whatever
-/// happens. A saved export is remembered as the last one.
+/// happens. A saved export is remembered as the last one. <see cref="AutoExportService"/> writes the automatic ones.
 /// </summary>
 /// <param name="exporter">Writes the archive.</param>
 /// <param name="saver">The save dialog.</param>
@@ -15,7 +15,8 @@ namespace FalconNotes.Core.Backup.Export;
 /// <param name="time">The clock.</param>
 public sealed class ExportService(NoteExporter exporter, IFileSaver saver, IAppDirectories directories, StorageContext storage, TimeProvider time)
 {
-    private const string LastExportKey = "lastExportAt";
+    /// <summary>The setting that holds when the last export was saved, by hand or automatically.</summary>
+    internal const string LastExportKey = "lastExportAt";
 
     /// <summary>Writes the export and lets the user save it.</summary>
     /// <param name="options">The options.</param>

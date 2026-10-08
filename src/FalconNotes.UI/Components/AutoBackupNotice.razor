@@ -1,0 +1,44 @@
+@* New (docs/07, Home; docs/05, Automatic backups): says on Home that the last automatic backup failed, until one
+   works again. A backup that fails where nobody looks is worse than none, because it is relied on. *@
+@using FalconNotes.Core.Backup.Export
+@implements IDisposable
+@inject AutoExportService AutoExport
+
+@if (_error is not null)
+{
+    <p role="status" class="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
+        The last automatic backup failed. @_error
+        <a href="/settings/data" class="font-medium underline underline-offset-2">Open Backup &amp; data</a>
+    </p>
+}
+
+@code {
+    private string? _error;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        AutoExport.Changed += OnChanged;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (!AutoExport.IsAvailable)
+        {
+            return;
+        }
+
+        var settings = await AutoExport.GetAsync();
+        _error = settings.Enabled && !AutoExport.IsRunning ? settings.LastError : null;
+    }
+
+    private void OnChanged() => _ = InvokeAsync(async () =>
+    {
+        await LoadAsync();
+        StateHasChanged();
+    });
+
+    /// <inheritdoc />
+    public void Dispose() => AutoExport.Changed -= OnChanged;
+}

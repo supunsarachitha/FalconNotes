@@ -20,7 +20,8 @@
   <a href="https://supunsarachitha.github.io/FalconNotes/"><b>Website</b></a> ·
   <a href="https://supunsarachitha.github.io/FalconNotes/privacy.html"><b>Privacy policy</b></a> ·
   <a href="CHANGELOG.md"><b>Changelog</b></a> ·
-  <a href="https://supunsarachitha.github.io/MapleNotes/"><b>Maple Notes web app</b></a>
+  <a href="https://supunsarachitha.github.io/MapleNotes/"><b>Maple Notes web app</b></a> ·
+  <a href="https://buymeacoffee.com/jkhy9gtjs"><b>Buy me a coffee</b></a>
 </p>
 
 ![Home on a tablet](docs/screenshots/home.png)
@@ -46,6 +47,7 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 - [Building from source](#building-from-source)
 - [Documentation](#documentation)
 - [Repository layout](#repository-layout)
+- [Support](#support)
 - [Licence](#licence)
 
 ## Screenshots
@@ -78,7 +80,8 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
   photos are shrunk before they are added, to JPEG in one of three sizes, without their location and camera details.
 - **Search.** Finds text in your notes and the names of attached files.
 - **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files and each note's labels,
-  and restore it on any device.
+  and restore it on any device. Optionally, a backup is saved by itself to a folder you choose, every day, week or
+  month.
 - **Your look.** Light, dark or the device's setting, seven accent colours, and the side menu in your own order and
   text size.
 - **Help built in.** A user guide in the app explains every feature.
@@ -101,7 +104,8 @@ full [privacy policy](https://supunsarachitha.github.io/FalconNotes/privacy.html
   fingerprint or face unlock where the device has it. It is a privacy screen, not a second key, and a forgotten PIN
   cannot be reset.
 - **Android's automatic backup is off** for the app: the encrypted files would be useless without the key.
-- **Exports are not encrypted.** A backup ZIP can be read by anyone who gets it.
+- **Exports are not encrypted.** A backup ZIP can be read by anyone who gets it. That goes for automatic backups
+  too, which are off unless you turn them on.
 - **Uninstalling deletes the notes** together with their key. Export first.
 
 The details, and what the encryption does and does not protect against, are in
@@ -193,6 +197,12 @@ benchmarks/storage/       the storage benchmark source (desktop and Android) and
 scripts/                  the licence check that writes THIRD-PARTY-NOTICES.md
 reference/                the Maple Notes web app's 1.8.0 documents and screenshots (its source is on GitHub)
 ```
+
+## Support
+
+If Falcon Notes is useful to you, you can support its development:
+
+<a href="https://buymeacoffee.com/jkhy9gtjs"><img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy me a coffee"></a>
 
 ## Licence
 

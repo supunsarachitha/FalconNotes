@@ -44,6 +44,10 @@ these:
   keyboard stays down until the field is tapped (the web app since 1.8.1). The dialog has `tabindex="-1"` and
   `data-focus-self`, which `dialogs.js` acts on after `showModal()`.
 - **Link previews** are gone.
+- **A failed automatic backup** (new, [05](05-backup-compatibility.md#automatic-backups)): above everything else on
+  Home, not on the filtered views, "The last automatic backup failed. {reason}" with a link **Open Backup & data**
+  (`/settings/data`), in the colours of `ErrorMessage`, as a `status`. It stays until a backup works, or automatic
+  backups are turned off. A backup that fails where nobody looks is worse than none, because it is relied on.
 - **Filtered views** (`?tag`, `?q`, `?day`, `?label`) and their empty states are unchanged.
 
 ## Composer
@@ -140,6 +144,27 @@ first. Afterwards: the Welcome screen.
   and files. Notes you already have are skipped, so restoring the same export twice is safe." (Until 1.2.0 it ended
   "Labels are not part of exports.")
 - **Choose files…** opens the native picker.
+
+**Automatic backups** (`Section`, new, between Backup & restore and Trash; only on a platform with `IBackupFolders`,
+[12](12-platforms.md)). The rules are in [05](05-backup-compatibility.md#automatic-backups). Description: "Save a
+backup to a folder you choose, without having to remember. Falcon Notes checks when it opens and every hour while it
+is open; it cannot back up while it is closed. **These backups are not encrypted**, so choose a folder that only you
+can open."
+
+- `PreferenceSwitch` **Back up automatically** ("Saves a ZIP with all your notes, archived ones too, and their files,
+  as Markdown. Turning it on asks for the folder."). Turning it on opens the system's folder picker; cancelling it
+  leaves the switch off. With a folder chosen, the first backup is made at once, which shows that the folder works.
+  A folder the system will not lend for later: "That folder cannot be used. Choose another."
+- While it is on:
+  - **Folder**, with the folder's name and a secondary button **Change…** (the picker again, then a backup at once).
+  - **How often**: a select with "Every day", "Every week" (the default), "Every month".
+  - **Keep**: a select with "The newest 3" (the default), "The newest 5", "The newest 10". Hint "Older automatic
+    backups in the folder are deleted. Other files in it are never touched."
+  - After a failure: "The last automatic backup failed. {reason}" (`ErrorMessage`), until one works.
+  - A secondary button **Back up now**, busy while a backup is written, and beside it "Last automatic backup:
+    {relative time}", "No automatic backup yet." or "Backing up…". Done by hand: the toast "Exported {n} notes and {m}
+    files."
+- "Last export: …" in Backup & restore counts automatic backups too.
 
 **Trash** (`TrashSection`) and **Delete all notes and files** (`DeleteContentSection`) are unchanged, except the second
 one's confirmation:

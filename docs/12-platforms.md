@@ -18,6 +18,7 @@ Phase 0 spikes here.
 | Keyboard | `WindowSoftInputMode = AdjustResize`, so the composer and dialogs stay above the keyboard. Check the drawer and dialogs with the keyboard open. |
 | Back | Goes back in the app's history. On Home (or Welcome, Lock, Key lost) it leaves the app. Closes an open dialog, menu or the image viewer first. The `BlazorWebView` default already goes back through the WebView's history and leaves from the first page (spike S5). |
 | Files | `FilePicker.PickMultipleAsync` (Storage Access Framework); saving uses our `AndroidFileSaver` (`ACTION_CREATE_DOCUMENT`, then a .NET `FileStream` on the descriptor; spike S4); Open uses MAUI's `FileProvider` URI for the cached copy, with read permission granted |
+| Automatic backups | `AndroidBackupFolders` ([05](05-backup-compatibility.md#automatic-backups)). The folder is chosen with `ACTION_OPEN_DOCUMENT_TREE`, and the app keeps the grant with `takePersistableUriPermission` (read and write), so it still has the folder after a restart: **no storage permission**, and nothing outside that folder can be reached. The folder's reference is its tree URI, kept in the encrypted database. Files are listed, created (`application/zip`) and deleted through `DocumentsContract`, and written like an export, by a .NET `FileStream` on the document's descriptor. The app holds one grant at a time: choosing a folder gives up every other one, which also clears a grant whose record went with the database (Erase all data, Key lost). Android takes the grant back when the folder is deleted or the app's data is cleared; the next backup then fails with "Falcon Notes can no longer reach the folder. Choose it again." Since Android 11 the picker refuses the top of the device's storage and the Download folder itself; a folder inside them, a memory card and a USB drive are fine. Which cloud apps offer their folders there is up to them. Nothing runs while the app is closed: no `WorkManager`, no alarm, no foreground service and no new dependency. |
 | Photos | "Shrink photos before adding" uses Android's own codecs and no library (`AndroidImageCodec`, 2026-10-08). `ImageDecoder` decodes the photo upright (it applies the EXIF orientation itself) and straight to the wanted size, with the software allocator so the pixels can be read for transparency; `Bitmap.compress` writes the JPEG, which has no EXIF. An animated WebP or AVIF is refused and so kept as it is ([04](04-domain-rules.md#attachments)). Android 8.0 and 8.1 have no `ImageDecoder`: there `BitmapFactory` decodes at a power-of-two sample size, the EXIF orientation is read with the platform's `ExifInterface` and applied with a matrix, and an animated WebP is recognised by its header. A format the device's version of Android cannot decode (HEIC and AVIF on older ones) is added as it is. The file is read into memory to decode it, so one over 64 MB is not tried. |
 | Single instance | `LaunchMode.SingleTop` on the only activity: a second launch returns to the open window. A second activity would share the first one's services and its page would not respond (found in the 1.0.0 QA pass). |
 | Share (viewer) | `Share.RequestAsync(new ShareFileRequest)` with the cached decrypted copy |
@@ -40,6 +41,7 @@ Phase 0 spikes here.
 | Context menu | Disable WebView2's default context menu, except in text fields (cut, copy, paste) |
 | Time zone | `TimeZoneInfo.Local.Id` is a Windows ID: convert it to IANA for exports ([05](05-backup-compatibility.md#manifest)) |
 | Lock privacy | When locked or in the background with the lock on, show the cover; Windows has no app switcher snapshot to block |
+| Automatic backups | With this head: `IBackupFolders` on a folder picker and plain file paths. Until then Settings does not offer them. |
 
 ## macOS (Mac Catalyst)
 
@@ -52,6 +54,7 @@ Phase 0 spikes here.
 | Window | 1,200 × 800, minimum 400 × 600, remembered. Closing the last window quits the app. |
 | Menu bar | Keep App, Edit (Undo, Redo, Cut, Copy, Paste, Select All) and Window. Remove default items whose shortcuts would take ⌘B, ⌘I or ⌘K from the page (S5). |
 | Keyboard | ⌘ shortcuts as in the web app (the reference picks ⌘ on Mac via `navigator.platform`; in the app, pass the platform from C#) |
+| Automatic backups | With this head: `IBackupFolders` on a folder picker, keeping the folder across restarts with a **security-scoped bookmark** (the sandbox forgets a picked folder otherwise). Until then Settings does not offer them. |
 | Release | Signed with a Developer ID and notarized for direct download, or the Mac App Store. Without an Apple developer account, an unsigned build runs locally only. |
 
 ## Shared

@@ -149,6 +149,42 @@ your notes… {n}"). Then hand it to `IFileSaver` with the suggested name and de
 store `Settings['lastExportAt']` and show "Exported {n} notes and {m} files." Exports are not encrypted: the screen says
 so, as the web app does.
 
+## Automatic backups
+
+New in this app (2026-10-08, at the owner's request): the web app has none, because its server keeps the notes. Here
+the only copy is on the device, and uninstalling the app deletes it. **The format is not touched**: an automatic backup
+is the ordinary export, written by the same `NoteExporter`, and restores wherever an export does.
+
+- **Off by default**, because the backups are not encrypted. The user turns them on in Settings → Backup & data and
+  chooses a folder in the system's picker ([07](07-screens.md#settings--backup--data)). The app keeps the access to
+  that one folder (`IBackupFolders`, [12](12-platforms.md)); no storage permission is involved.
+- **What is written**: everything, so that one backup restores it all. Markdown, by month, with files and archived
+  notes: the export with `format=md`, `layout=month`, `includeArchived=true`, `includeAttachments=true` and no dates.
+  There are no options: a backup that leaves things out is one to be sorry about later.
+- **When**: the app cannot run while it is closed, so it checks when it starts and after each hourly maintenance pass
+  ([02](02-architecture.md#start-up-sequence)). A backup is due when there has been none in this folder, or when the
+  last one was made the chosen number of **calendar days** ago or more, in the device's time zone: every day (1), every
+  week (7, the default) or every month (30). Days, not hours, so that someone who opens the app each morning gets a
+  backup each morning. A clock set back to before the last backup makes one due.
+- **The file**: `falcon-notes-auto-{yyyy-MM-dd_HHmm}.zip`, the time in the device's zone. The name differs from a
+  manual export's (`falcon-notes-{yyyy-MM-dd}.zip`) on purpose. A second backup in the same minute replaces the first.
+- **Writing**: list the folder first, which finds a folder that is gone before any note is read; write the ZIP into
+  `{CacheDirectory}/export/{random}.zip`; copy it into the folder; delete the cache file whatever happens. A copy that
+  fails part-way is removed from the folder.
+- **Keeping**: after a backup has been written, the automatic backups beyond the newest 3 (the default), 5 or 10 are
+  deleted, oldest first by name. **Only files named exactly as above are ever deleted**, and never the one just
+  written: an export saved by hand, a renamed copy and every other file in the folder stay. A file that cannot be
+  deleted is left for the next time. Nothing is deleted when the backup failed.
+- **Afterwards**: `Settings['autoExport']` records the time, and `Settings['lastExportAt']` too, since it is an
+  export. Nothing is shown for a backup made in the background; **Back up now** and turning it on show the export's
+  toast, "Exported {n} notes and {m} files."
+- **Failure**: the reason is kept in `Settings['autoExport']` and shown in Settings and on Home until a backup works
+  again: "Falcon Notes can no longer reach the folder. Choose it again." (deleted, moved, its card or drive not
+  there, or the access taken back), "There was not enough space.", or "The backup could not be saved." The backup
+  stays due, so each hourly pass and each start tries again. Logs get the kind of error and counts, never a name.
+- **Turning it off, or choosing another folder**, gives up the access to the folder. The backups in it stay: they are
+  the user's. Erase all data does the same, and deletes none of them.
+
 ## Restore
 
 Port the web app's `src/maple-web/src/import/parse.ts` (reading) and `importer.ts` (restoring) to C#, and

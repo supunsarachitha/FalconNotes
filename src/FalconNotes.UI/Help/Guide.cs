@@ -200,6 +200,11 @@ public static class Guide
             day. Keep it somewhere safe, such as a USB drive or a cloud folder you trust. Exports are not encrypted, so store them
             with care.
 
+            So that you need not remember, turn on **Back up automatically** in the same place and choose a folder. Falcon Notes
+            then saves a backup of everything there every day, week or month, keeps the newest few and deletes the older ones. It
+            does this when it is open, so open it now and then. These backups are not encrypted either, so choose a folder only
+            you can open. A folder on this device is lost with the device, so copy the backups somewhere else from time to time.
+
             **Restore** brings notes back from such a file. It also works with exports from the Maple Notes web app and its
             servers, and their restore works with yours. Notes keep their dates, pins, archive state, labels and files, and
             notes you already have are skipped, so restoring twice does no harm. A label is matched by name to one you

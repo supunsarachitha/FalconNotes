@@ -70,10 +70,11 @@ src/
     Notes/           NoteService, SearchService, CalendarService, TagService
     Labels/          LabelService
     Settings/        PreferencesService, ProfileService (not Preferences/: that name is the record's)
-    Backup/Export/   NoteExporter, NoteFormatter, ExportNaming, ExportModels (ported from the server)
+    Backup/Export/   NoteExporter, NoteFormatter, ExportNaming, ExportModels (ported from the server);
+                     ExportService, AutoExportService and AutoExportSettings (this app's)
     Backup/Restore/  RestoreReader (port of parse.ts), RestoreRunner (port of importer.ts)
     Maintenance/     StartupTasks, TrashPurge, AttachmentCleanup, TempFiles, DatabaseBackups
-    Platform/        IFileSaver, IFilePicker, IFileOpener, IClipboard, IAppLock, IThemeSource, IAppInfo
+    Platform/        IFileSaver, IFilePicker, IFileOpener, IClipboard, IAppLock, IThemeSource, IAppInfo, IBackupFolders
     Events/          ChangeFeed (NotesChanged, LabelsChanged, PreferencesChanged, ProfileChanged)
   FalconNotes.UI/
     Layout/          AppShell, Sidebar, Drawer, MainLayout
@@ -128,7 +129,9 @@ tests/
       transaction each.
    4. Run maintenance, without blocking the first screen: purge trash older than 30 days, remove abandoned uploads
       (older than 24 h, `NoteId` null) and orphan files (older than 1 h), and delete `cache/open/` (decrypted temporary
-      copies). Repeat the purges hourly while the app runs, as the server did.
+      copies). Repeat the purges hourly while the app runs, as the server did. After each pass, make an automatic
+      backup if one is due ([05](05-backup-compatibility.md#automatic-backups)); after, so that the start's clean-up
+      of `cache/export/` never meets the archive being written there.
    5. Load the profile and preferences into `AppState`, then apply the theme.
 3. Route: no profile yet → **Welcome**; app lock on → **Lock**; otherwise **Home**.
 4. Lock again after the app has been in the background for the chosen time ([03](03-data-storage-and-security.md#app-lock)).
@@ -248,8 +251,10 @@ Core defines the interfaces; the App implements them per platform; tests use fak
 | `IImageCodec` (shrink photos) | `AndroidImageCodec`: `ImageDecoder` and `Bitmap.compress`, `BitmapFactory` on Android 8 | `BitmapDecoder`/`BitmapEncoder`, with that head | ImageIO, with that head |
 | `IShare` (the viewer's share button) | `Share.RequestAsync` with the cached copy | with that head | with that head |
 | `IWindowInsets` (the system bars' insets) | `AndroidWindowInsets`, from the decor view | not needed | not needed |
+| `IBackupFolders` (the folder for automatic backups) | `AndroidBackupFolders`: `ACTION_OPEN_DOCUMENT_TREE` with a persisted grant, then `DocumentsContract` | a folder picker and plain files, with that head | a folder picker and a security-scoped bookmark, with that head |
 
 A platform that has no `IImageCodec` yet registers no `PhotoShrinker`, and the composer then adds photos as they are.
+A platform that has no `IBackupFolders` yet registers none, and Settings then does not offer automatic backups.
 
 See [12-platforms.md](12-platforms.md) for the platform details.
 

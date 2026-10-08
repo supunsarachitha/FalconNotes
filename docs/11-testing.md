@@ -60,6 +60,15 @@ New tests the reference does not have:
 - Labels in backups: where a note's labels are read from in each format, and what is not a label
   (`RestoreConformanceTests`); at most 20 labels on a restored note and the limit of 100 (`RestoreRunnerTests`); the
   restore flow passes the manifest's colours on and says "Added {n} labels." (bUnit, `WelcomeTests`).
+- Automatic backups (`AutoExportServiceTests`, over a fake folder): off until a folder is chosen; the first backup is
+  due at once and equals the shared vectors' Markdown-by-month export entry for entry; due by calendar days in the
+  device's zone, and when the clock was set back; only the newest automatic backups are kept and no other file in
+  the folder is ever deleted; a failed backup deletes nothing, says why and is tried again; turning it off, another
+  folder and Erase all data give up the folder and leave its backups; maintenance makes the backup due at start.
+  The screens (bUnit, `AutoBackupSectionTests`): the switch asks for the folder and makes the first backup, a
+  cancelled picker leaves it off, the choices are saved, a failure shows in Settings and on Home until one works,
+  and a platform without `IBackupFolders` shows neither. The real folder (`AndroidBackupFolders`) can only be
+  checked on a device or an emulator.
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 
@@ -145,6 +154,11 @@ in light and dark mode:
 - [ ] Settings: every switch hides and shows its feature without losing data; menu order by drag and by arrows; text
       sizes; accents; week start.
 - [ ] Backup: export in each format → restore in the web app; web export → restore here; restore twice skips.
+- [ ] Automatic backups: turn on and choose a folder → a `falcon-notes-auto-….zip` appears there and restores; **Back
+      up now** twice in a minute leaves one file; with Keep at 3, a fourth backup deletes the oldest and leaves a file
+      of another name alone; set the clock a day on and reopen the app → a new backup; delete the folder in the
+      Files app → Settings and Home say it failed, and **Change…** mends it; a folder on a memory card or USB drive;
+      turning it off leaves the backups.
 - [ ] App lock: set, lock after delay, biometrics, wrong PIN ×5, Lock now, background cover, screenshots blocked
       (Android), Forgot PIN → erase.
 - [ ] Erase all data → Welcome. Removing the device key with the Debug-only developer action leads to Key lost, where

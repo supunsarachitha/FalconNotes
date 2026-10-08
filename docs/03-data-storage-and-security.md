@@ -11,9 +11,13 @@
 | App lock settings and PIN hash | `Settings['appLock']` in the database | Yes (inside the database) |
 | Decrypted copies for **Open** | `{FileSystem.CacheDirectory}/open/{random}/{file name}` | **No**: deleted at the next start, and at most 24 h old |
 | Export being written, restore archive being read | `{CacheDirectory}/export/`, `{CacheDirectory}/restore/` | **No** (exports are plain by design); deleted when done and at start |
+| Automatic backups, when the user turns them on | A folder **outside the app** that the user chose, as `falcon-notes-auto-{yyyy-MM-dd_HHmm}.zip`, the newest 3, 5 or 10 kept ([05](05-backup-compatibility.md#automatic-backups)) | **No**: they are exports. Off by default, and Settings says so before the folder is chosen. |
+| Automatic backups' settings and the folder's reference | `Settings['autoExport']` in the database | Yes (inside the database) |
 | Appearance for the first paint | WebView `localStorage` key `falcon-notes:appearance` (`{theme, accent}`) | No (not sensitive) |
 
-Exports are not encrypted, exactly as in the web app; the Help and Backup screens say so.
+Exports are not encrypted, exactly as in the web app; the Help and Backup screens say so. Automatic backups are
+exports written without asking each time, so they are the one place where plain copies of the notes are made without
+a tap: only after the user has turned them on and chosen the folder, and only into that folder.
 
 ## Keys
 
@@ -77,7 +81,7 @@ decrypt pages of text ([13](13-storage-benchmark.md#reading-the-results)).
 
 ```sql
 CREATE TABLE Settings (
-  Key   TEXT NOT NULL PRIMARY KEY,   -- 'installationId', 'profile', 'preferences', 'appLock', 'lastExportAt'
+  Key   TEXT NOT NULL PRIMARY KEY,   -- 'installationId', 'profile', 'preferences', 'appLock', 'lastExportAt', 'autoExport'
   Value TEXT NOT NULL                -- JSON
 );
 
@@ -194,7 +198,7 @@ anything: the device key does not depend on the PIN, so a forgotten PIN can neve
 | A cloud or device-transfer backup of the app folder | **Yes** | Auto Backup off on Android. Elsewhere, files copied without the key are unreadable. |
 | Someone with the unlocked device opens the app | **Yes, with the app lock on**; otherwise no | PIN or biometrics, the background cover, `FLAG_SECURE` |
 | Malware running as the same OS user, or root/admin access while the user is logged in | **No** | It can ask the OS secure store for the key, as the app does. That is the limit of any app without a password-derived key. |
-| Exported ZIP files | **No** | Exports are plain Markdown/text/JSON by design (compatibility); the app says so when exporting |
+| Exported ZIP files, by hand or automatic | **No** | Exports are plain Markdown/text/JSON by design (compatibility); the app says so when exporting and where automatic backups are turned on. Whoever can open the chosen folder can read the automatic ones. |
 | Decrypted temporary copies made by **Open** | Partly | Kept in the app's private cache, deleted at the next start and after 24 h |
 | Tampering with the database or files | **Detected** | AEGIS and AES-GCM authenticate every page and chunk; damaged attachments are reported, not shown |
 | Notes leaving the device over the network | **Yes** | The app makes no network requests; the WebView's content security policy forbids remote loads |
