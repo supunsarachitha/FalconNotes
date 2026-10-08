@@ -254,7 +254,9 @@ day(s)". Confirmation texts are in [07-screens.md](07-screens.md).
 - The picker shows every label to tick, a find-or-create box, and "Create label “{typed}”" when the typed name is new
   and valid. Save applies the ticked set in the list's order, dropping labels deleted meanwhile. An unchanged set
   closes without saving.
-- Labels are not part of backups, as in the web app ([05](05-backup-compatibility.md#future-labels-in-backups)).
+- Backups keep each note's labels by name, and the colours of the labels in use; a restore matches a label by name,
+  ignoring case and surrounding spaces, or creates it ([05](05-backup-compatibility.md#labels-in-backups)). A label on
+  no note is not in a backup.
 
 ## Preferences
 

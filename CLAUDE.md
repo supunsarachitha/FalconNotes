@@ -23,6 +23,8 @@ something behaves, the reference does. [docs/09-port-map.md](docs/09-port-map.md
    [01](docs/01-scope-and-decisions.md)).
 3. **Backups are a contract** ([05](docs/05-backup-compatibility.md)). The exporter is copied from the server's C#. The
    conformance tests against `fixtures/export-vectors.json` must always pass. Never change the format here alone.
+   The format is the latest Maple Notes' (manifest version 3, with labels), which is newer than the reference: for
+   backup work, read the Maple Notes repository's current export and import code and vectors first.
 4. **Offline means offline.** No network calls, no `INTERNET` permission on Android, no remote content in the WebView,
    no telemetry, no update checks, no CDN.
 5. **Encryption is always on**: SQLite3MC with AEGIS-256, the MNAE attachment format, and the device key in

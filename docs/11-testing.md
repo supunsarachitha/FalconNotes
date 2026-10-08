@@ -32,8 +32,8 @@ fast enough to make two IDs in a millisecond (the Linux and Windows CI machines)
 | `web/components/Markdown.test.tsx` (7) | `Core.Tests/Markdown/*` | Raw HTML not rendered, tags linked, not in code, task offsets, safe links |
 | `server/../Notes/*Tests.cs` (notes API, calendar, daily notes, kinds, import, trash), `Labels/LabelsTests.cs`, `Storage/StorageTests.cs`, `Auth/DeleteContentTests.cs` | `Core.Tests/Notes/*`, `Labels/*` | Lists and cursors, filters, search, the calendar's days, daily notes (one per day, given up in the trash), kind moves (no habits), trash and purge, label limits and counts, storage use, delete all |
 | `server/../Crypto/AttachmentCipherTests.cs`, `Infrastructure/AttachmentStoreTests.cs` | `Core.Tests/Crypto/*`, `Attachments/*` | Every tamper case and chunk boundary; storage keys cannot escape the folder |
-| `server/../Export/ExportTests.cs` | `Core.Tests/Backup/ExportTests.cs` | Options, ranges, daylight-saving gaps, problems in the manifest |
-| `web/import/import.test.ts` (5) | `Core.Tests/Backup/RestoreTests.cs` | Every format and layout restores; single files; archives without a manifest; wrong files; skipping existing notes |
+| `server/../Export/ExportTests.cs` | `Core.Tests/Backup/ExportConformanceTests.cs`, `ExportServiceTests.cs` | Options, ranges, daylight-saving gaps, problems in the manifest, labels by name with their colours (Maple Notes 1.9.0) |
+| `web/import/import.test.ts` (5, and the label case of Maple Notes 1.9.0) | `Core.Tests/Backup/RestoreConformanceTests.cs`, `RestoreRunnerTests.cs`, `DemoBackupTests.cs` | Every format and layout restores; single files; archives without a manifest; wrong files; skipping existing notes; labels reused by name, created in their colour, or reported |
 | `web/components/*.test.tsx`, `web/pages/*.test.tsx` except encryption, link previews, auth and end-to-end (~130) | `UI.Tests/*` | Composer (13), TodoCard (13), NoteCard (7), AttachmentGallery (7), HabitsPage (8), HabitChart (5), Calendar (5), Labels (5), QuickNotesPage (8), SettingsPage (22, minus the removed sections), TrashPage (5), TagsPage (3), HelpPage (4), AppShell (4), RestorePanel and ExportSection |
 
 New tests the reference does not have:
@@ -47,6 +47,12 @@ New tests the reference does not have:
   succeeds; a cancelled prompt leaves the PIN working and shows no error; a check stands in for the PIN where
   Settings asks for it. The real prompt (`AndroidAppLock`) can only be checked on a device or an emulator with a
   fingerprint enrolled.
+- Shrinking photos in the composer (bUnit, `ComposerTests`, with a fake codec): a photo is shrunk when the setting is
+  on, added as it is when it is off, and added as it is on a platform with no `IImageCodec`. The real codec
+  (`AndroidImageCodec`) can only be checked on a device or an emulator ([10](10-implementation-plan.md), Phase 4).
+- Labels in backups: where a note's labels are read from in each format, and what is not a label
+  (`RestoreConformanceTests`); at most 20 labels on a restored note and the limit of 100 (`RestoreRunnerTests`); the
+  restore flow passes the manifest's colours on and says "Added {n} labels." (bUnit, `WelcomeTests`).
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 

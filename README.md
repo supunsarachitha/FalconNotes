@@ -76,8 +76,8 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
   full-screen viewer, where you can save a copy or share one; audio and video play in the note. Optionally, large
   photos are shrunk before they are added, to 2,560 pixels and JPEG, without their location and camera details.
 - **Search.** Finds text in your notes and the names of attached files.
-- **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files, and restore it on any
-  device.
+- **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files and each note's labels,
+  and restore it on any device.
 - **Your look.** Light, dark or the device's setting, seven accent colours, and the side menu in your own order and
   text size.
 - **Help built in.** A user guide in the app explains every feature.

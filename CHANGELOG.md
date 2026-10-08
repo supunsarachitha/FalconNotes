@@ -119,6 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   They are granted at install with no prompt. It still has no internet permission. The README, the website and the
   privacy policy said the app asks for no permissions, and now name this one.
 - Settings → Labels, Settings → Backup & data and Help no longer say that labels are not part of exports.
+- The README, the website and the privacy policy say that a backup holds each note's labels.
 - A note file over 4 MB inside a backup is refused before it is read, and a manifest over 64 MB is treated as
   unreadable, as in Maple Notes since 1.11.
 - The Lock screen shows no message when a fingerprint or face prompt closes without unlocking. It used to be written

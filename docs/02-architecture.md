@@ -244,6 +244,11 @@ Core defines the interfaces; the App implements them per platform; tests use fak
 | `IThemeSource` (device theme and changes) | `Application.RequestedTheme` + `RequestedThemeChanged` | same | same |
 | `IAppInfo` (version) | `AppInfo.VersionString` | same | same |
 | `IAppDirectories` (data and cache folders) | `FileSystem.AppDataDirectory`, `FileSystem.CacheDirectory` | same | same |
+| `IImageCodec` (shrink photos) | `AndroidImageCodec`: `ImageDecoder` and `Bitmap.compress`, `BitmapFactory` on Android 8 | `BitmapDecoder`/`BitmapEncoder`, with that head | ImageIO, with that head |
+| `IShare` (the viewer's share button) | `Share.RequestAsync` with the cached copy | with that head | with that head |
+| `IWindowInsets` (the system bars' insets) | `AndroidWindowInsets`, from the decor view | not needed | not needed |
+
+A platform that has no `IImageCodec` yet registers no `PhotoShrinker`, and the composer then adds photos as they are.
 
 See [12-platforms.md](12-platforms.md) for the platform details.
 
