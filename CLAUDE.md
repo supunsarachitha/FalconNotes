@@ -76,7 +76,8 @@ deployment files; use `-p:EmbedAssembliesIntoApk=true` when clearing app data be
 
 Release signing reads `src/FalconNotes.App/signing.local.props` (git-ignored; the template is
 `signing.local.props.example`). Without it, as in CI, a Release build is signed with the debug key. Never commit a
-keystore or its passwords. The upload key is the owner's; a release-signed build cannot be installed over a Debug
+keystore or its passwords. Build a release from clean (delete `src/FalconNotes.App/bin/Release` and `obj/Release`
+first): an incremental build can keep the old R8-shrunk Java code and the old version in the APK. The upload key is the owner's; a release-signed build cannot be installed over a Debug
 build, so test it on an emulator that does not hold the Debug build's data.
 
 Update this section when the commands change.

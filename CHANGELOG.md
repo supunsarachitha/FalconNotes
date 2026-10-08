@@ -99,6 +99,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Android 14 and earlier: the app draws behind the status and navigation bars, as it does on Android 15 and later.
+  Before, it showed a purple status bar and a black navigation bar there.
+- The picture viewer's buttons no longer sit under the status bar on Android.
 - Closing the Labels dialog (Cancel, Save, Esc or a tap outside) no longer leaves an empty box on the note.
 - The actions menu (the three dots) on notes, todo lists and trashed notes is shown when opened. Before, it opened
   inside the card, out of place and hidden.

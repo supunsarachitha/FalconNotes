@@ -19,7 +19,7 @@
         @onkeydown="OnKeyDownAsync">
     @if (Open)
     {
-        <div class="flex items-center gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div class="flex items-center gap-2 p-3 pt-[max(0.75rem,var(--safe-top,env(safe-area-inset-top)))]">
             <h2 class="min-w-0 flex-1 truncate px-2 text-sm">
                 @Image!.FileName
                 @if (Many)
@@ -37,7 +37,7 @@
                 <Icon Name="IconName.X" Class="size-5" />
             </button>
         </div>
-        <div class="relative flex min-h-0 flex-1 touch-pan-y items-center justify-center px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+        <div class="relative flex min-h-0 flex-1 touch-pan-y items-center justify-center px-2 pb-[max(0.75rem,var(--safe-bottom,env(safe-area-inset-bottom)))]"
              @onpointerdown="(e) => _swipeStartX = e.ClientX" @onpointerup="OnPointerUpAsync">
             <img src="@MediaUrl.For(Image)" alt="@Image.FileName" draggable="false" class="max-h-full max-w-full select-none object-contain" />
             @if (Many)
