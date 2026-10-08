@@ -1,6 +1,6 @@
 # 7. Screens
 
-For each screen: where it comes from in `reference/maple-notes-1.8.0/src/maple-web/src/`, and only what differs. Anything
+For each screen: where it comes from in the web app's `src/maple-web/src/`, and only what differs. Anything
 not mentioned is ported as it is: markup, classes, copy, keyboard handling, empty and loading states, toasts and ARIA.
 
 ## Wording

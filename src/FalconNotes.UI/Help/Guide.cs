@@ -7,7 +7,7 @@ namespace FalconNotes.UI.Help;
 public sealed record GuideSection(string Id, string Title, string Body);
 
 /// <summary>
-/// The in-app user guide, adapted from <c>reference/maple-notes-1.8.0/src/maple-web/src/help/guide.ts</c> (docs/08).
+/// The in-app user guide, adapted from the web app's <c>src/maple-web/src/help/guide.ts</c> (docs/08).
 /// Sections marked "as in web" there are copied unchanged; the others are rewritten for an offline, single-device app
 /// with no sign-in, server or link previews. The guide names the app "Falcon Notes" itself; its mentions of the Maple
 /// Notes web app stay as written, unlike ported screen text.

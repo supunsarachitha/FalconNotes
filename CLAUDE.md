@@ -10,14 +10,16 @@ The specification is in `docs/`. Read **all of it, in order (01 → 13)**, befor
 starts a new phase. Afterwards, re-read the documents your task touches. The [README](README.md) lists what each one
 settles.
 
-The web app is the **reference implementation**, in `reference/maple-notes-1.8.0/`. When the docs do not say how
-something behaves, the reference does. That copy is release 1.8.0; what the app took from 1.9.0 to 1.15.0 came from
-the Maple Notes repository (<https://github.com/supunsarachitha/MapleNotes>), which is the place to look for anything
-newer. [docs/09-port-map.md](docs/09-port-map.md) says where every reference file goes.
+The web app is the **reference implementation**: the Maple Notes repository (<https://github.com/supunsarachitha/MapleNotes>) at release 1.15.0 (tag
+`v1.15.0`). When the docs do not say how something behaves, the reference does. Its source is not in this repository
+any more (a 1.8.0 copy was removed on 2026-10-08): clone it somewhere outside the project, such as a scratch folder,
+and read it there. `reference/maple-notes-1.8.0/` keeps only that release's documents and screenshots.
+[docs/09-port-map.md](docs/09-port-map.md) says where every reference file goes.
 
 ## Ground rules
 
-1. **The reference is read-only.** Never edit, build, ship or reference it from a project. Read it and port from it.
+1. **The reference is read-only.** Never build, ship or reference it from a project, never copy its source into this
+   repository, and never push to it. Read it and port from it.
 2. **Port, do not redesign.** Keep the React components' markup, Tailwind classes, copy text, ARIA and keyboard
    behaviour. Change only what [07-screens.md](docs/07-screens.md) and [08-help-guide.md](docs/08-help-guide.md) say to change.
    Spelling is British, as in the reference ("colour", "organise"). Where ported text names the app, it says "Falcon
@@ -25,8 +27,8 @@ newer. [docs/09-port-map.md](docs/09-port-map.md) says where every reference fil
    [01](docs/01-scope-and-decisions.md)).
 3. **Backups are a contract** ([05](docs/05-backup-compatibility.md)). The exporter is copied from the server's C#. The
    conformance tests against `fixtures/export-vectors.json` must always pass. Never change the format here alone.
-   The format is the latest Maple Notes' (manifest version 3, with labels), which is newer than the reference: for
-   backup work, read the Maple Notes repository's current export and import code and vectors first.
+   The format is the latest Maple Notes' (manifest version 3, with labels): for backup work, read the Maple Notes
+   repository's current export and import code and vectors first, not only the release the app follows.
 4. **Offline means offline.** No network calls, no `INTERNET` permission on Android, no remote content in the WebView,
    no telemetry, no update checks, no CDN.
 5. **Encryption is always on**: SQLite3MC with AEGIS-256, the MNAE attachment format, and the device key in
@@ -40,7 +42,7 @@ newer. [docs/09-port-map.md](docs/09-port-map.md) says where every reference fil
 8. **Core and UI never reference MAUI.** Platform features go through the interfaces in `FalconNotes.Core/Platform/`.
 9. **Port the tests with the code** ([11](docs/11-testing.md)). A rule is done when its reference tests pass here.
 10. **Dependencies**: only those in [02 → Dependencies](docs/02-architecture.md#dependencies). Anything new needs an
-    allowed licence (see `reference/maple-notes-1.8.0/docs/licensing.md`), an entry in `THIRD-PARTY-NOTICES.md`, and my
+    allowed licence (see [docs/licensing.md](docs/licensing.md)), an entry in `THIRD-PARTY-NOTICES.md`, and my
     approval first.
 11. **Ask me before** you change the backup format, a decision in [01](docs/01-scope-and-decisions.md), the schema of a
     released version without a migration, or the copy of a screen beyond what the docs say. Also ask before adding a

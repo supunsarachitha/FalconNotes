@@ -28,7 +28,7 @@ The salt and labels are this app's own (the server uses `MapleNotes.KeyDerivatio
 program ever derives these keys.
 
 Port `KeyMaterial`, `AttachmentCipher` and `DecryptingAttachmentStream` from
-`reference/maple-notes-1.8.0/src/MapleNotes.Server/Infrastructure/Crypto/`. The attachment format stays byte for byte
+the web app's `src/MapleNotes.Server/Infrastructure/Crypto/`. The attachment format stays byte for byte
 the same, including the 42-byte `MNAE` header (it keeps its name: it is the format's magic, and the server's tests check
 it), 64 KiB chunks, the STREAM nonce and the associated data. The "owner ID" bound into each chunk is the installation
 ID: a random UUID stored in `Settings` on first run.
@@ -157,7 +157,7 @@ Rules the schema relies on:
 
 ## Attachment store
 
-Port `AttachmentStore` from `reference/maple-notes-1.8.0/src/MapleNotes.Server/Infrastructure/Storage/`:
+Port `AttachmentStore` from the web app's `src/MapleNotes.Server/Infrastructure/Storage/`:
 
 - Storage keys follow `^[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{32}(-[0-9a-f]{8})?\.bin$`. They are checked before every
   file operation, so a damaged row can never point outside `attachments/`.

@@ -1,7 +1,10 @@
 # 9. Port map
 
 Every file of the reference and where it goes. Work file by file: open the source, port it, then port its tests.
-`web/` = `reference/maple-notes-1.8.0/src/maple-web/src/`, `server/` = `reference/maple-notes-1.8.0/src/MapleNotes.Server/`.
+`web/` = `src/maple-web/src/`, `server/` = `src/MapleNotes.Server/`, in the [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0)
+at release 1.15.0. The map was drawn from 1.8.0, so files that only later releases have are not in it: of those, the
+app has none but the label, photo-size and daily-template parts named in the rows below, since the rest serve the web
+app's accounts and its offline mode.
 
 Legend: **Port** = same behaviour, new language or framework · **Copy** = take the code almost verbatim · **Adapt** =
 port with the changes in the docs · **Drop** = not in this app.
@@ -98,7 +101,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `Features/Labels/LabelService.cs` | `Core/Labels/LabelService.cs` | Adapt |
 | `Features/Attachments/UploadPolicy.cs` | `Core/Attachments/UploadPolicy.cs` | Copy (replace `FileExtensionContentTypeProvider` with a table) |
 | `Features/Attachments/AttachmentService.cs`, `AttachmentCleanup.cs` | `Core/Attachments/AttachmentService.cs`, `Core/Maintenance/AttachmentCleanup.cs` | Adapt |
-| `Features/Export/*.cs` | `Core/Backup/Export/*.cs` | **Copy** ([05](05-backup-compatibility.md#export)), with the label lines of Maple Notes 1.9.0 (manifest version 3), which are not in `reference/` |
+| `Features/Export/*.cs` | `Core/Backup/Export/*.cs` | **Copy** ([05](05-backup-compatibility.md#export)), with the label lines of Maple Notes 1.9.0 (manifest version 3) |
 | `Features/Storage/StorageService.cs` | `Core/Notes/StorageUsage.cs` | Adapt (no quota) |
 | `Infrastructure/Crypto/KeyMaterial.cs`, `AttachmentCipher.cs`, `DecryptingAttachmentStream.cs` | `Core/Crypto/*` | Copy (labels and owner per [03](03-data-storage-and-security.md#keys)) |
 | `Infrastructure/Storage/AttachmentStore.cs`, `LengthLimitedStream.cs` | `Core/Attachments/AttachmentStore.cs` | Copy |

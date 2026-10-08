@@ -144,6 +144,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `reference/maple-notes-1.8.0/scripts/`, the web app's licence check, which this project ported to `scripts/`.
+- `reference/maple-notes-1.8.0/src/` and `tests/`, the copy of the web app's 1.8.0 source. The app follows Maple Notes
+  1.15.0 now, and the place to port from is its repository on GitHub. The licensing policy the project follows is
+  kept as `docs/licensing.md`; the 1.8.0 documents and screenshots stay in `reference/`.
 - `KICKOFF-PROMPT.md`, the prompts used to start each phase of the build, and the Android project template's
   `AboutResources.txt` in the storage benchmark. Neither was used by anything.
 - The generated stylesheet `src/FalconNotes.UI/wwwroot/css/app.css` is no longer in the repository. It was already

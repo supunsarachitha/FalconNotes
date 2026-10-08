@@ -58,7 +58,7 @@ LICENSE                        PolyForm Noncommercial 1.0.0
 docs/                          this specification
 fixtures/                      export-vectors.json, demo backups, the falcon mark, the web app's leaf
 benchmarks/storage/            the storage benchmark (doc 13)
-reference/maple-notes-1.8.0/   the web app, read-only (never built, never shipped, never edited)
+reference/maple-notes-1.8.0/   the web app's 1.8.0 documents and screenshots, read-only (its source is on GitHub)
 src/
   FalconNotes.Core/
     Domain/          Note, NoteKind, Attachment, Label, LabelColor, Preferences, Profile, NoteState …
@@ -256,14 +256,14 @@ See [12-platforms.md](12-platforms.md) for the platform details.
 ## Dependencies
 
 Only these, unless a decision is recorded here first. Every one must be on the allowed list in
-`reference/maple-notes-1.8.0/docs/licensing.md` (MIT, Apache-2.0, BSD, ISC, …) and be listed in
+[licensing.md](licensing.md) (MIT, Apache-2.0, BSD, ISC, …) and be listed in
 `THIRD-PARTY-NOTICES.md`.
 
 | Package | Licence | Use |
 |---|---|---|
 | .NET MAUI, Blazor (`Microsoft.AspNetCore.Components.WebView.Maui`) | MIT | App framework |
 | `Microsoft.Data.Sqlite.Core` | MIT | Data access |
-| `SQLite3MC.PCLRaw.bundle` 2.4.x | MIT (bundles SQLite, public domain, and permissive embedded code: see the reference `licensing.md`) | Encrypted SQLite, native for android-arm/arm64/x86/x64, maccatalyst-arm64/x64, win-x86/x64/arm64 |
+| `SQLite3MC.PCLRaw.bundle` 2.4.x | MIT (bundles SQLite, public domain, and permissive embedded code: see [licensing.md](licensing.md)) | Encrypted SQLite, native for android-arm/arm64/x86/x64, maccatalyst-arm64/x64, win-x86/x64/arm64 |
 | `Markdig` | BSD-2-Clause | Markdown rendering |
 | `SkiaSharp` (+ native assets per platform) | MIT, but see below | **Not added, and not needed** (2026-10-08): photos are shrunk by each platform's own codec behind `IImageCodec`, with no third-party code (Android: `AndroidImageCodec`, [12](12-platforms.md); Windows `BitmapDecoder`/`BitmapEncoder` and Apple ImageIO come with those heads). The licence question that held it back since 2026-10-01 was never settled. Its native library bundles code under other terms: Adobe's DNG SDK (a custom licence), the GIF decoder (MPL 1.1 / GPL / LGPL), FreeType (FTL, an advertising clause), and it lists libmicrohttpd (LGPL). The licence policy puts custom, MPL and LGPL terms under "review first". |
 | `CommunityToolkit.Maui` | MIT | File saver, status bar colour |
@@ -273,12 +273,12 @@ Only these, unless a decision is recorded here first. Every one must be on the a
 | `Microsoft.Extensions.Logging.Abstractions` | MIT | Logging interfaces in Core (already part of MAUI) |
 | Tests: `xunit.v3`, `bunit` | Apache-2.0, MIT | Tests only |
 
-Not allowed: anything in the reference's "Not allowed" list, and the "known traps" there (FluentAssertions 8+,
+Not allowed: anything in the "Not allowed" list of [licensing.md](licensing.md), and the "known traps" there (FluentAssertions 8+,
 MediatR 13+, AutoMapper 15+, ImageSharp, commercial SQLCipher builds).
 
 ## Styling pipeline
 
-- `FalconNotes.UI/Styles/app.css` starts as a copy of `reference/maple-notes-1.8.0/src/maple-web/src/index.css`: the
+- `FalconNotes.UI/Styles/app.css` started as a copy of the web app's `src/maple-web/src/index.css`: the
   same `@theme` tokens, accent overrides, `dark` variant, `.markdown` rules and `.note-card`. Add new rules at the end,
   in the same style.
 - An MSBuild target runs the Tailwind 4 standalone CLI before build:

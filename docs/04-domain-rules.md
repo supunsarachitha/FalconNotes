@@ -1,8 +1,9 @@
 # 4. Domain rules
 
 Every rule the app enforces, with the reference file that defines it. Port the rule, not just its effect: tests in the
-reference show the edge cases (see [11-testing.md](11-testing.md)). Paths are relative to
-`reference/maple-notes-1.8.0/`; `web/` means `src/maple-web/src/` and `server/` means `src/MapleNotes.Server/`.
+reference show the edge cases (see [11-testing.md](11-testing.md)). Paths are relative to the
+[Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0) at release 1.15.0; `web/` means `src/maple-web/src/` and `server/` means
+`src/MapleNotes.Server/`.
 
 ## Notes
 

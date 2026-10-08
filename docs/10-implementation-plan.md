@@ -403,8 +403,15 @@ focus on the dialog and no keyboard; with Help out of the menu, the link at the 
 which shows "Based on Maple Notes 1.15.0". Not checked: a real phone, a Release build, and the two Markdown rules
 and the file-name rule on a device (they are Core tests only).
 
-Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4), labels in backups (see
-Phase 2) and the rest of Maple Notes 1.15.0 (above), on the `release-1.2.0` branch.
+The reference's source left the repository the same day (2026-10-08, at the owner's request): `src/`, `tests/` and
+`scripts/` of `reference/maple-notes-1.8.0/` were removed, 1.8.0 being behind what the app follows. The documents and
+CLAUDE.md now name the Maple Notes repository at release 1.15.0 as the reference, and the licensing policy was copied
+to [licensing.md](licensing.md) first. Nothing in the build, the tests or CI read the folder.
+
+Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4) and labels in backups (see
+Phase 2), on the `release-1.2.0` branch, merged into `main` as pull request #9. The rest of Maple Notes 1.15.0
+(above), the documents pass and the removal of the reference's source came after that merge, on the
+`maple-notes-1.15.0` branch.
 The version numbers are set, but the signed AAB and APK have not been built or checked yet. Before building from
 clean, move the 1.1.0 output out of `src/FalconNotes.App/bin/Release/` as was done for 1.0.1, and repeat the
 shrinking check from Phase 4 on the release APK, since R8 and trimming have not run over the new code.

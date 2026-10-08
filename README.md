@@ -119,9 +119,9 @@ device, use Maple Notes instead of Falcon Notes, or alongside it.
   them). The format is specified in [05 Backup compatibility](docs/05-backup-compatibility.md) and checked by
   conformance tests against shared export vectors.
 - **The reference implementation.** Falcon Notes matches Maple Notes 1.15.0, apart from what needs a server. It was
-  first ported from 1.8.0 and brought up to 1.15.0 in Falcon Notes 1.2.0. The 1.8.0 source (commit
-  [`a28db71`](https://github.com/supunsarachitha/MapleNotes/commit/a28db714a66a4021449abb98ad3bb1a5614ff1b0)) is kept
-  in `reference/maple-notes-1.8.0/` to port from. It is read-only, and is never built or shipped.
+  first ported from 1.8.0 and brought up to 1.15.0 in Falcon Notes 1.2.0. The source to port from is the
+  [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0) at that release; `reference/maple-notes-1.8.0/` keeps only the 1.8.0
+  documents and screenshots the specification was written against.
 
 ## Building from source
 
@@ -177,6 +177,7 @@ The specification the app is built from is in `docs/`, numbered in reading order
 | [11 Testing](docs/11-testing.md) | Test projects, tests to port, backup conformance, performance budgets, manual QA |
 | [12 Platforms](docs/12-platforms.md) | Android, Windows and macOS specifics |
 | [13 Storage benchmark](docs/13-storage-benchmark.md) | Why SQLite with AEGIS encryption, measured on Android |
+| [Licensing policy](docs/licensing.md) | Which third-party licences are allowed, copied from the web app |
 
 ## Repository layout
 
@@ -190,7 +191,7 @@ site/                     the website, published to GitHub Pages by .github/work
 fixtures/                 the shared export vectors, two demo backups, the falcon mark
 benchmarks/storage/       the storage benchmark source (desktop and Android) and its raw results
 scripts/                  the licence check that writes THIRD-PARTY-NOTICES.md
-reference/                the Maple Notes web app 1.8.0: read-only, never built, never shipped
+reference/                the Maple Notes web app's 1.8.0 documents and screenshots (its source is on GitHub)
 ```
 
 ## Licence

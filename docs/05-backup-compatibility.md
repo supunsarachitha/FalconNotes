@@ -32,17 +32,17 @@ lists every archive entry in order, with its exact text (or `base64:` for binary
 The app's exporter must reproduce every entry of all 13 exports, in the same order and byte for byte. Its restore
 must read every one of them back into the original notes. Both are tests, run on every platform
 ([11-testing.md](11-testing.md)). `fixtures/demo-backups/*.zip` (35 notes, 8 files, JSON and Markdown) are real archives
-for manual and smoke tests. They are manifest version 2 archives, from before labels, as the web app still ships them.
+for manual and smoke tests. They are manifest version 2 archives, from before labels, as the web app still ships them
+(`demo-backup-samples/` in its repository).
 
 The file here is a copy of `src/maple-web/src/export/export-vectors.json` in the Maple Notes repository, last taken
-from its `main` at commit `3343d10` (2026-10-08, release 1.15.0), where it is the same as in release 1.9.0. The copy
-inside `reference/maple-notes-1.8.0/` is the older, version 2 one and is not used.
+from its `main` at commit `3343d10` (2026-10-08, release 1.15.0), where it is the same as in release 1.9.0.
 
 ## Export
 
-Port these files from `reference/maple-notes-1.8.0/src/MapleNotes.Server/Features/Export/` almost verbatim:
+Port these files from the web app's `src/MapleNotes.Server/Features/Export/` almost verbatim:
 `NoteExporter.cs` (`WriteAsync` and its helpers), `NoteFormatter.cs`, `ExportNaming.cs` and `ExportModels.cs`, and the
-label lines of the first, second and fourth from Maple Notes 1.9.0 (commit `20ee12f`, not in `reference/`). They are
+label lines of the first, second and fourth came with Maple Notes 1.9.0 (commit `20ee12f`). They are
 already .NET, so their string, Unicode and JSON behaviour is identical by construction. Replace only the data access
 (EF Core → the app's repositories) and the decryption (the server's note cipher → plain text from `NoteBodies`; files →
 `DecryptingAttachmentStream`).
@@ -151,7 +151,7 @@ so, as the web app does.
 
 ## Restore
 
-Port `reference/maple-notes-1.8.0/src/maple-web/src/import/parse.ts` (reading) and `importer.ts` (restoring) to C#, and
+Port the web app's `src/maple-web/src/import/parse.ts` (reading) and `importer.ts` (restoring) to C#, and
 open ZIPs with `System.IO.Compression.ZipArchive`. It reads stored and deflated entries and ZIP64 archives. The web
 app's hand-written ZIP reader is not needed.
 

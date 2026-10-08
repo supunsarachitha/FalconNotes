@@ -7,9 +7,11 @@ the Maple Notes web app version 1.15.0 (1.8.0 until Falcon Notes 1.1.0), under i
 server. Notes stay on the device, encrypted. Backups are ZIP files in exactly the web app's export format, so notes move
 freely between this app, another device running it, and any Maple Notes server.
 
-The web app is the **reference implementation**. Its source, at the commit this plan was written against, is copied
-into `reference/maple-notes-1.8.0/` of this repository (see the [README](../README.md)). When this documentation does not
-say how something behaves, the reference does: port its behaviour, its copy text and its Tailwind classes.
+The web app is the **reference implementation**: the [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes) at release 1.15.0 (tag
+`v1.15.0`). When this documentation does not say how something behaves, the reference does: port its behaviour, its
+copy text and its Tailwind classes. Until 2026-10-08 a copy of its 1.8.0 source, which this plan was written against,
+sat in `reference/maple-notes-1.8.0/`; the source and tests were removed once the app had moved on to 1.15.0, and
+what is left there is that release's documents and screenshots (see the [README](../README.md)).
 
 ## Decisions
 
@@ -25,7 +27,7 @@ say how something behaves, the reference does: port its behaviour, its copy text
 | D8 | **Same copy text**, in English, with British spelling ("colour", "organise"), except where a server concept changes. New and changed text is spelled out in [07-screens.md](07-screens.md) and [08-help-guide.md](08-help-guide.md). | Consistency with the web app. |
 | D9 | **SQL through `Microsoft.Data.Sqlite`, no EF Core.** Note text is kept in its own table. | EF Core's first query costs about 0.8 s on Android (about 4 s on a budget phone) at every launch ([13](13-storage-benchmark.md)). |
 | D10 | **A separate repository**, starting at version **1.0.0**. The About line reads "Falcon Notes {version}" and, under it, "Based on Maple Notes 1.15.0" (1.8.0 until Falcon Notes 1.1.0). | The user's choice. |
-| D11 | **The same licence and dependency policy** as the web app: PolyForm Noncommercial 1.0.0 for our code, only permissive third-party licences, a `THIRD-PARTY-NOTICES.md` (see [02-architecture.md](02-architecture.md#dependencies)). | Continuity with `reference/maple-notes-1.8.0/docs/licensing.md`. |
+| D11 | **The same licence and dependency policy** as the web app: PolyForm Noncommercial 1.0.0 for our code, only permissive third-party licences, a `THIRD-PARTY-NOTICES.md` (see [02-architecture.md](02-architecture.md#dependencies)). | Continuity with the web app's policy, kept here as [licensing.md](licensing.md). |
 | D12 | **The name is Falcon Notes, with its own mark** (decided 2026-10-01). Code uses `FalconNotes.*`, and the app ID is `lk.stechbuzz.falconnotes` ([12](12-platforms.md); changed from `dev.falconnotes.app` on 2026-10-07, before the first release, to sit under the owner's `lk.stechbuzz` name). The mark is an original falcon drawn for this app ([06](06-design-system.md#app-icon-and-splash)). The default accent is called **Falcon**: the web app's Maple colours, unchanged. Names users never see keep the reference's: the `maple-*` colour classes and the `MNAE` attachment header. Backups keep `"application": "Maple Notes"`, the format's name, which the web app checks ([05](05-backup-compatibility.md#manifest)). | The user's choice. Renaming only what users see keeps the port line for line and the backups compatible. |
 
 ## Features kept

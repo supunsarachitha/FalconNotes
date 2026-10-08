@@ -1,13 +1,13 @@
 # 8. Help guide
 
-The in-app guide (`Help`), adapted from `reference/maple-notes-1.8.0/src/maple-web/src/help/guide.ts`. Ship it as
+The in-app guide (`Help`), adapted from the web app's `src/maple-web/src/help/guide.ts`. Ship it as
 `FalconNotes.UI/Help/Guide.cs`: a list of `(Id, Title, Body)` with Markdown bodies, in this order. Bodies are rendered
 with the note Markdown renderer. Tag examples are in `code`, because plain `#words` would become tag links.
 
 The guide names the app "Falcon Notes" itself. Do not port `HelpPage.tsx`'s `replaceAll("Maple Notes", appName)`: the
 guide's mentions of the Maple Notes web app must stay as written.
 
-Sections marked **as in web** are copied from the reference without change. The others are given in full here.
+Sections marked **as in web** are copied from the reference without change (they are the same in 1.8.0 and 1.15.0). The others are given in full here.
 
 | # | Id | Title | Source |
 |---|---|---|---|

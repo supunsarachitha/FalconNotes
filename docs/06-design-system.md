@@ -7,7 +7,7 @@ component's markup with its Tailwind classes unchanged**, and build the CSS from
 
 ## Stylesheet
 
-`FalconNotes.UI/Styles/app.css` = `reference/maple-notes-1.8.0/src/maple-web/src/index.css`, copied whole. It defines:
+`FalconNotes.UI/Styles/app.css` = the web app's `src/maple-web/src/index.css`, copied whole. It defines:
 
 - `@import "tailwindcss"` (Tailwind 4).
 - The `dark` variant: the `.dark` class on `<html>`, or the device's dark mode unless `.light` is set. The app always
@@ -128,7 +128,7 @@ with a minimum of 400 × 600.
 
 ## Components
 
-Port these from `reference/maple-notes-1.8.0/src/maple-web/src/components/ui.tsx` and the files named, keeping the
+Port these from the web app's `src/maple-web/src/components/ui.tsx` and the files named, keeping the
 class strings:
 
 | Component | Source | Notes |
