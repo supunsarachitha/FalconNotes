@@ -186,7 +186,8 @@ public class TodoCardTests : BunitContext
 
         Assert.Equal($"/?label={Uri.EscapeDataString(home.Id.ToString())}", cut.Find("a[href^='/?label=']").GetAttribute("href"));
         OpenMenu(cut);
-        Assert.Contains(cut.FindAll("button[role=menuitem]"), b => b.TextContent.Trim() == "Labels…");
+        // On a busy machine the menu is not open yet when the click returns (about 1 run in 50 failed here).
+        cut.WaitForAssertion(() => Assert.Contains(cut.FindAll("button[role=menuitem]"), b => b.TextContent.Trim() == "Labels…"));
         MenuItem(cut, "Move to trash").Click();
 
         await WaitUntilAsync(() => Task.FromResult(app.Toasts.Current.Any(t => t.Message == "List moved to the trash.")));

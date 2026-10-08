@@ -13,6 +13,11 @@ namespace FalconNotes.UI.Tests;
 /// (docs/01, D5). Covers docs/07's Lock and Settings → Privacy &amp; security and docs/03's App lock: the prompt opens
 /// by itself once per lock, is offered only while it is turned on and the device has biometrics, is turned on only
 /// after one check succeeds, and never stands in the PIN's way.</summary>
+/// <remarks>
+/// Every check after a render or a click waits for it (<c>WaitForAssertion</c>). The screens read the database when
+/// they open, and a click made while that answer is being rendered waits its turn, so it has not happened yet when
+/// <c>Click</c> returns. On a busy machine that was 1 run in 16.
+/// </remarks>
 public class BiometricUnlockTests : BunitContext
 {
     private const string Pin = "2580";
@@ -47,9 +52,9 @@ public class BiometricUnlockTests : BunitContext
         using var app = await StartAsync(biometrics: true);
         app.AppLock.LockNow();
 
-        Render<LockScreen>();
+        var cut = Render<LockScreen>();
 
-        Assert.False(app.AppLock.IsLocked);
+        cut.WaitForAssertion(() => Assert.False(app.AppLock.IsLocked));
         Assert.Equal(["Unlock Falcon Notes"], app.Biometrics.Prompts);
     }
 
@@ -62,19 +67,20 @@ public class BiometricUnlockTests : BunitContext
 
         var cut = Render<LockScreen>();
 
+        cut.WaitForAssertion(() => Assert.Single(app.Biometrics.Prompts));
         Assert.True(app.AppLock.IsLocked);
-        Assert.Single(app.Biometrics.Prompts); // once per lock: later renders do not ask again
         Assert.Empty(cut.FindAll("[aria-invalid=true]"));
 
         // Cancelling the prompt the button opened is not a wrong PIN either.
         Button(cut, UseBiometrics)!.Click();
+        cut.WaitForAssertion(() => Assert.Equal(2, app.Biometrics.Prompts.Count)); // the button's, not a second one by itself
         Assert.True(app.AppLock.IsLocked);
         Assert.Empty(cut.FindAll("[aria-invalid=true]"));
 
         app.Biometrics.NextResult = true;
         Button(cut, UseBiometrics)!.Click();
 
-        Assert.False(app.AppLock.IsLocked);
+        cut.WaitForAssertion(() => Assert.False(app.AppLock.IsLocked));
         Assert.Equal(3, app.Biometrics.Prompts.Count);
     }
 
@@ -89,7 +95,8 @@ public class BiometricUnlockTests : BunitContext
         cut.Find("input[type=password]").Input(Pin);
         cut.Find("form").Submit();
 
-        cut.WaitForAssertion(() => Assert.False(app.AppLock.IsLocked));
+        // Checking a PIN is 210,000 rounds of PBKDF2, off the render thread: allow for a slow machine.
+        cut.WaitForAssertion(() => Assert.False(app.AppLock.IsLocked), TimeSpan.FromSeconds(10));
     }
 
     [Fact]
@@ -159,7 +166,7 @@ public class BiometricUnlockTests : BunitContext
         app.Biometrics.NextResult = false;
         cut.Find($"button[aria-label='{UnlockWith}']").Click();
 
-        Assert.Single(app.Biometrics.Prompts);
+        cut.WaitForAssertion(() => Assert.Single(app.Biometrics.Prompts));
         Assert.False(app.AppLock.Settings.Biometrics);
 
         app.Biometrics.NextResult = true;
@@ -191,12 +198,13 @@ public class BiometricUnlockTests : BunitContext
 
         app.Biometrics.NextResult = false;
         Button(cut, UseBiometrics)!.Click();
+        cut.WaitForAssertion(() => Assert.Single(app.Biometrics.Prompts));
         Assert.Equal(0, verified);
 
         app.Biometrics.NextResult = true;
         Button(cut, UseBiometrics)!.Click();
 
-        Assert.Equal(1, verified);
+        cut.WaitForAssertion(() => Assert.Equal(1, verified));
         Assert.Equal(["Confirm it's you", "Confirm it's you"], app.Biometrics.Prompts);
     }
 

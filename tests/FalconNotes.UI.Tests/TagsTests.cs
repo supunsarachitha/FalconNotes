@@ -69,7 +69,10 @@ public class TagsTests : BunitContext
 
         cut.FindAll("button[role=radio]").First(b => b.TextContent.Trim() == "Most used").Click();
 
-        var top = cut.Find("ul[aria-label='All tags']").QuerySelectorAll("a").Select(a => a.GetAttribute("aria-label")).ToList();
-        Assert.Equal(["work, 1 note", "work/meetings, 5 notes", "travel", "travel/japan, 3 notes", "ideas, 2 notes"], top);
+        // The click waits its turn behind the render that showed the list, so on a busy machine the new order is
+        // not there yet when Click returns (it failed in about 1 run in 20 with the processors busy).
+        cut.WaitForAssertion(() => Assert.Equal(
+            ["work, 1 note", "work/meetings, 5 notes", "travel", "travel/japan, 3 notes", "ideas, 2 notes"],
+            cut.Find("ul[aria-label='All tags']").QuerySelectorAll("a").Select(a => a.GetAttribute("aria-label"))));
     }
 }
