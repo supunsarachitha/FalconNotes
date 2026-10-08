@@ -98,6 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- JSON exports and the manifest end their lines with `\n` on Windows too, as the web app's do. Before, Windows wrote
+  `\r\n`, and the archive differed from the web app's.
 - Closing the Labels dialog (Cancel, Save, Esc or a tap outside) no longer leaves an empty box on the note.
 - The actions menu (the three dots) on notes, todo lists and trashed notes is shown when opened. Before, it opened
   inside the card, out of place and hidden.
