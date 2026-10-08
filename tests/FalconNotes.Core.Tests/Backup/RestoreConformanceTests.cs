@@ -106,6 +106,7 @@ public class RestoreConformanceTests
     {
         using var app = await TestApp.StartAsync();
         app.Clock.Now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
+        app.Clock.Step = TimeSpan.FromTicks(1); // a note's files are stored one after another and are listed oldest first
         var entries = ExportVectors.Export(index).GetProperty("entries");
         var archive = Archive(entries);
         using var plan = await NewReader(app).ReadAsync([Source("maple-notes.zip", archive)]);
