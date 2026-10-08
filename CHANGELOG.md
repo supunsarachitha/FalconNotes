@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rather than a hand-drawn SVG: the Android adaptive icon, splash screen and in-app `Logo` (now an `<img>`, not
   inline paths) are all generated from it.
 - The app ID is `lk.stechbuzz.falconnotes` (it was `dev.falconnotes.app`), changed before the first release.
+- Android release builds shrink their Java code with R8, which Google Play asks for; the download is smaller.
 - Help describes what version 1.0.0 does: it no longer mentions fingerprint or face unlock, shrinking photos,
   pasting or dragging files into a note, or dragging the side menu's items, which are not built yet, and it now
   mentions the picture viewer's share button.
