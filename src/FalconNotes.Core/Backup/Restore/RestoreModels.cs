@@ -25,6 +25,7 @@ public sealed record RestoreAttachment(string Name, string ContentType, long Siz
 /// <param name="Archived">Whether it was archived.</param>
 /// <param name="Kind">What it is.</param>
 /// <param name="DailyDate">The day it is the daily note of (<c>yyyy-MM-dd</c>), if any.</param>
+/// <param name="Labels">The names of its labels.</param>
 /// <param name="Attachments">Its files found in the archive.</param>
 /// <param name="Missing">Its files the archive does not contain.</param>
 public sealed record RestoreItem(
@@ -37,6 +38,7 @@ public sealed record RestoreItem(
     bool Archived,
     NoteKind Kind,
     string? DailyDate,
+    IReadOnlyList<string> Labels,
     IReadOnlyList<RestoreAttachment> Attachments,
     IReadOnlyList<string> Missing);
 
@@ -54,6 +56,12 @@ public sealed class RestorePlan : IDisposable
 
     /// <summary>Files or entries that could not be read, as messages.</summary>
     public List<string> Problems { get; } = [];
+
+    /// <summary>
+    /// Label colours from the exports' manifests, by <see cref="Labels.LabelRules.NameKey"/>. A label a note names
+    /// that is not here gets the next colour in turn.
+    /// </summary>
+    public Dictionary<string, LabelColor> LabelColors { get; } = new(StringComparer.Ordinal);
 
     /// <summary>How many files the notes bring.</summary>
     public int FileCount => Items.Sum(item => item.Attachments.Count);

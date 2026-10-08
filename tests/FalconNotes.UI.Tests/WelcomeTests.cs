@@ -91,4 +91,33 @@ public class WelcomeTests : BunitContext
         cut.WaitForAssertion(
             () => Assert.Contains(cut.FindAll("button"), b => b.TextContent.Trim() == "Restore 1 note"), TimeSpan.FromSeconds(5));
     }
+
+    [Fact]
+    public async Task Restoring_a_backup_brings_its_labels_back_in_their_colours()
+    {
+        using var app = await StartAsync();
+        using var buffer = new MemoryStream();
+        using (var zip = new System.IO.Compression.ZipArchive(buffer, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true))
+        {
+            void Entry(string name, string text)
+            {
+                using var stream = zip.CreateEntry(name).Open();
+                stream.Write(System.Text.Encoding.UTF8.GetBytes(text));
+            }
+
+            Entry("trip.md", "---\ncreated: 2025-01-01T10:00:00+01:00\nlabels: [\"Trip\"]\n---\n\nPack the tent\n");
+            Entry("manifest.json", """{"application":"Maple Notes","manifestVersion":3,"labels":[{"name":"Trip","color":"Teal"}],"notes":[{"path":"trip.md"}]}""");
+        }
+
+        app.Picker.Enqueue(new Core.Platform.PickedFile("backup.zip", "application/zip", () => Task.FromResult<Stream>(new MemoryStream(buffer.ToArray()))));
+        var cut = Render<Components.RestoreFlow>(p => p.Add(f => f.StartPicking, true));
+        cut.WaitForAssertion(
+            () => Assert.Contains(cut.FindAll("button"), b => b.TextContent.Trim() == "Restore 1 note"), TimeSpan.FromSeconds(5));
+
+        cut.FindAll("button").First(b => b.TextContent.Trim() == "Restore 1 note").Click();
+
+        cut.WaitForAssertion(() => Assert.Contains("Restored 1 note and 0 files. Added 1 label.", cut.Markup), TimeSpan.FromSeconds(5));
+        var label = Assert.Single(await app.Core.Labels.ListAsync([Core.Domain.NoteKind.Note]));
+        Assert.Equal(("Trip", Core.Domain.LabelColor.Teal, 1), (label.Label.Name, label.Label.Color, label.NoteCount));
+    }
 }

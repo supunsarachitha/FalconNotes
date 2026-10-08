@@ -62,8 +62,7 @@ the release build reaches its first screen in 0.7–0.9 s. CI goes green once th
       truncation, reordering, wrong key, every chunk boundary).
 - [x] `Storage/*`: `Database`, migrations, repositories for notes, bodies, tags, labels, attachments and settings.
 - [x] `Attachments/*`: `AttachmentStore`, `UploadPolicy`, `AttachmentService`, `PhotoShrinker` (its rules; the
-      decoding is the platform's `IImageCodec`, waiting on the SkiaSharp decision in
-      [02](02-architecture.md#dependencies)).
+      decoding is the platform's `IImageCodec`: Android's since 2026-10-08, see Phase 4).
 - [x] `Notes/*`, `Labels/*`, `Settings/*`: every rule in [04](04-domain-rules.md), including lists and cursors,
       search, the calendar, tag and label counts and filters, trash and purge, daily notes, kind moves, delete all, and
       storage use.
@@ -93,6 +92,21 @@ Status (2026-10-01): all of it passes on the Mac (Core tests) and on the Android
 which runs the same checks inside the app: 13 exports match, 13 restores clean, both demos 35 notes and 8 files, in
 5.2 s). Windows waits for the Windows head. A 10,000-note restore takes 0.4 s on the Mac (budget 5 s).
 
+Labels in backups (2026-10-08, for 1.2.0, at the owner's request): the format is now **manifest version 3**, as Maple
+Notes has written it since 1.9.0 and still does in 1.15.0, its latest ([05](05-backup-compatibility.md#labels-in-backups)).
+The Maple Notes repository was read at `main` (commit `3343d10`): nothing in its export has changed since 1.9.0, and
+its restore gained only size limits, which are ported too. The exporter's label lines are the server's, the restore's
+are `parse.ts` and `importer.ts`, and `fixtures/export-vectors.json` is that repository's current file, whose labels
+have names that need escaping. All 13 exports match it entry for entry and all 13 restore with their labels and
+colours; the server's and the web app's label tests are ported with them. The Labels and Backup screens and Help
+now say that labels are kept ([07](07-screens.md), [08](08-help-guide.md)).
+
+Settings in backups were asked for in the same breath and are **not** built: the web app's format has no place for
+them, so it would be a change in this project alone ([05](05-backup-compatibility.md#settings-in-backups)).
+
+Not checked, still open: the on-device run of these checks (the Debug spike page's S7 is updated for labels but was
+not run again); a backup made here restored in a running Maple Notes, and one made there restored here by hand.
+
 ## Phase 3: shell and design system
 
 - [x] The falcon mark ([06](06-design-system.md#app-icon-and-splash)): approved by the owner, saved as
@@ -121,8 +135,8 @@ and Mac Catalyst heads.
 
 - [x] `NoteList` with infinite scroll and reload on change; `NoteCard` with menu, double-tap, tick boxes, labels and
       removal with Undo.
-- [x] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, progress). Paste
-      and drag-and-drop, and "shrink photos", are open (below).
+- [x] `Composer`: titles, date suggestion, toolbar, shortcuts, tag suggestions, attachments (picker, progress,
+      "shrink photos" on Android since 2026-10-08). Paste and drag-and-drop are open (below).
 - [x] `AttachmentGallery`, `ImageViewer`, players, Open and Save a copy. Share (Android) is left for Phase 7.
 - [x] Home (Today card, pinned, feed), filters (`?tag`, `?q`, `?day`, `?label`), Archive, Trash, Quick notes.
 
@@ -143,6 +157,26 @@ Two gaps, deliberately left open rather than blocking the phase: "shrink photos"
 (SkiaSharp), pending the owner's approval of the dependency (docs/02); `Composer` calls it only if it ends up
 registered, so it degrades to adding the file unshrunk until then. Paste and drag-and-drop need their own
 `IJSStreamReference` plumbing beyond the native picker's; the native picker covers every platform meanwhile.
+
+Shrink photos on Android (2026-10-08, for 1.2.0): built on Android's own codecs rather than SkiaSharp, so it needed
+no new dependency and the licence question in [02](02-architecture.md#dependencies) no longer blocks it.
+`AndroidImageCodec` ([12](12-platforms.md), Photos) is the platform's `IImageCodec`, and `MauiProgram` registers it
+with `PhotoShrinker`; the rules, the switch in Settings → Features and the composer's call were already there. One
+rule was added to the reference's: an animated WebP or AVIF is kept as it is
+([04](04-domain-rules.md#attachments)). Help's `pictures` section has its paragraph back
+([08](08-help-guide.md)). Three bUnit tests cover the composer's side (the switch on, off, and a platform with no
+codec).
+
+Checked on the API 36 emulator in a Debug build, with eight files chosen in the system picker and the stored bytes
+read back through the WebView: a 4000 × 3000 JPEG became 2560 × 1920 (1.47 MB to 0.31 MB); the same photo with EXIF
+orientation 6 came out upright at 1920 × 2560; a 3000 × 2000 PNG and a WebP became JPEGs of about 0.26 MB; an
+800 × 600 PNG kept its size in pixels and became a smaller JPEG; none of the JPEGs has an EXIF block; a PNG with
+transparency and an animated WebP were stored byte for byte. The Android 8 path (`BitmapFactory`) gave the same
+results when forced on the same emulator.
+
+Not checked, still open: a real phone and real camera photos (HEIC, Ultra HDR, wide-gamut colour); Android 8.0 and
+8.1 themselves; a Release build with R8 and trimming. Windows and macOS need their own `IImageCodec` with those
+heads; until then the switch would do nothing there, so hide it or build the codec first.
 
 Several real bugs were caught by writing the tests, not by inspection: `TagSuggestions` and `NoteCard.SetEditing`
 mutated state without calling `StateHasChanged`, so arrow-key navigation and double-tap-to-edit would have silently
@@ -339,6 +373,12 @@ Change PIN…; "Lock after: Immediately" with a trip to the home screen; and the
 with the switch on (no prompt, no button, the PIN opens the app). The signed files were rebuilt with the fix as
 versionCode 4, still version 1.1.0, so that an upload cannot collide with versionCode 3 if that was already sent to
 Google Play.
+
+Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4) and labels in backups (see
+Phase 2), on the `release-1.2.0` branch.
+The version numbers are set, but the signed AAB and APK have not been built or checked yet. Before building from
+clean, move the 1.1.0 output out of `src/FalconNotes.App/bin/Release/` as was done for 1.0.1, and repeat the
+shrinking check from Phase 4 on the release APK, since R8 and trimming have not run over the new code.
 
 ## Spike results
 

@@ -8,11 +8,11 @@ namespace FalconNotes.Core.Tests.Backup;
 public class RestoreRunnerTests
 {
     private static RestoreItem Item(string? id, int files = 0, string content = "text", string created = "2025-01-01T00:00:00Z",
-        string? updated = null, NoteKind kind = NoteKind.Note, string? daily = null, bool archived = false) =>
+        string? updated = null, NoteKind kind = NoteKind.Note, string? daily = null, bool archived = false, string[]? labels = null) =>
         new($"{id ?? "new"}.md", id is null ? null : Guid.Parse(id), content,
             DateTimeOffset.Parse(created, System.Globalization.CultureInfo.InvariantCulture),
             DateTimeOffset.Parse(updated ?? created, System.Globalization.CultureInfo.InvariantCulture),
-            false, archived, kind, daily,
+            false, archived, kind, daily, labels ?? [],
             Enumerable.Range(0, files).Select(i => new RestoreAttachment($"f{i}.png", "image/png", 1, () => new MemoryStream([(byte)i]))).ToList(), []);
 
     [Fact]
@@ -33,6 +33,59 @@ public class RestoreRunnerTests
         Assert.Equal(2, app.Store.EnumerateStorageKeys().Count()); // the failed note's file was removed again
         Assert.Equal([0, 1, 2, 3, 4, 4], updates);
         Assert.Equal("Restored 2 notes and 2 files. 1 note was already here.", RestoreRunner.Summary(result));
+    }
+
+    // Port of "reuses labels of the same name, creates the others in their exported colour, and reports the ones it
+    // cannot" in import.test.ts. There a label fails at the account's limit; here also for a name that is too long.
+    [Fact]
+    public async Task Reuses_labels_of_the_same_name_creates_the_others_in_their_colour_and_reports_the_ones_it_cannot()
+    {
+        using var app = await TestApp.StartAsync();
+        var runner = RestoreConformanceTests.NewRunner(app);
+        var work = await app.Labels.CreateAsync("Work", LabelColor.Blue);
+        await runner.RunAsync([Item("0192f3a2-0000-7000-8000-000000000001")]);
+        var tooLong = new string('x', 41);
+
+        var result = await runner.RunAsync(
+            [
+                Item("0192f3a2-0000-7000-8000-000000000001", labels: ["Skipped"]), // this note is here already: its label is not needed
+                Item("0192f3a2-0000-7000-8000-000000000002", labels: [" work ", "Trip", tooLong, " "]),
+                Item("0192f3a2-0000-7000-8000-000000000003", labels: ["trip", "Plain"]),
+            ],
+            labelColors: new Dictionary<string, LabelColor> { ["trip"] = LabelColor.Teal });
+
+        var labels = (await app.Labels.ListAsync([NoteKind.Note])).Select(l => l.Label).ToList();
+        Assert.Equal(
+            [("Plain", LabelColor.Amber), ("Trip", LabelColor.Teal), ("Work", LabelColor.Blue)], // "Plain": the third label, so the third colour in turn
+            labels.Select(l => (l.Name, l.Color)).OrderBy(l => l.Name, StringComparer.Ordinal));
+        Guid Id(string name) => labels.Single(l => l.Name == name).Id;
+        Assert.Equal(new[] { work.Id, Id("Trip") }.Order(), (await app.Notes.GetAsync(Guid.Parse("0192f3a2-0000-7000-8000-000000000002")))!.LabelIds.Order());
+        Assert.Equal(new[] { Id("Trip"), Id("Plain") }.Order(), (await app.Notes.GetAsync(Guid.Parse("0192f3a2-0000-7000-8000-000000000003")))!.LabelIds.Order());
+        Assert.Empty((await app.Notes.GetAsync(Guid.Parse("0192f3a2-0000-7000-8000-000000000001")))!.LabelIds);
+        Assert.Equal((2, 1, 2), (result.Restored, result.Skipped, result.Labels));
+        Assert.Equal([($"Label “{tooLong}”", "A label's name is 1 to 40 characters long. Notes are restored without it.")], result.Failed);
+        Assert.Equal("Restored 2 notes and 0 files. Added 2 labels. 1 note was already here.", RestoreRunner.Summary(result));
+    }
+
+    [Fact]
+    public async Task A_note_gets_at_most_twenty_labels_and_labels_past_the_limit_of_a_hundred_are_reported()
+    {
+        using var app = await TestApp.StartAsync();
+        for (var i = 0; i < 99; i++)
+        {
+            await app.Labels.CreateAsync($"Here {i}");
+        }
+
+        var result = await RestoreConformanceTests.NewRunner(app).RunAsync(
+        [
+            Item("0192f3a2-0000-7000-8000-000000000001", labels: Enumerable.Range(0, 25).Select(i => $"Here {i}").ToArray()),
+            Item("0192f3a2-0000-7000-8000-000000000002", labels: ["New", "One too many"]),
+        ]);
+
+        Assert.Equal(20, (await app.Notes.GetAsync(Guid.Parse("0192f3a2-0000-7000-8000-000000000001")))!.LabelIds.Count);
+        Assert.Single((await app.Notes.GetAsync(Guid.Parse("0192f3a2-0000-7000-8000-000000000002")))!.LabelIds);
+        Assert.Equal((2, 1), (result.Restored, result.Labels));
+        Assert.Equal([("Label “One too many”", "You can have at most 100 labels. Notes are restored without it.")], result.Failed);
     }
 
     [Fact]

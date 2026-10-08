@@ -327,7 +327,9 @@ on `/settings/*` and `/trash`.
 - **Shrink photos** (`web/lib/shrinkPhoto.ts`), when on: only `image/jpeg, png, webp, avif, bmp, heic, heif`. Decode
   upright (EXIF orientation), scale so the longest side is at most 2,560 px (never enlarge), and re-encode as JPEG at
   85%, named `{name}.jpg`. Keep the original when it cannot be decoded, has transparent pixels (and is not a JPEG), or
-  the result is not at least 10% smaller. The shrunk photo has no location or camera details.
+  the result is not at least 10% smaller. The shrunk photo has no location or camera details. An animated WebP or
+  AVIF is kept as it is too, like a GIF: the reference would save its first frame as a JPEG and lose the animation
+  (a deviation, 2026-10-08).
 
 ## Saving structured notes
 

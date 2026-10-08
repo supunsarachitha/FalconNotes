@@ -5,9 +5,8 @@
 
    Adapted per docs/02 and docs/07: the paperclip opens the native file picker (IFilePicker) instead of a hidden
    HTML input, so there is no local blob preview while a file is "uploading" — it streams straight into the
-   encrypted store, which the Phase 0 spike found fast even for large files. Paste and drag-and-drop, and "shrink
-   photos" (pending the SkiaSharp decision in docs/02 — PhotoShrinker is only used if an IImageCodec ends up
-   registered), are follow-ups within this phase. *@
+   encrypted store, which the Phase 0 spike found fast even for large files. Paste and drag-and-drop are a
+   follow-up. *@
 @using FalconNotes.Core.Attachments
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
@@ -303,8 +302,8 @@
             var name = UploadPolicy.SanitizeFileName(file.FileName);
             var toAdd = new FileToAdd(stream, name, UploadPolicy.ResolveContentType(file.ContentType, name));
 
-            // "Shrink photos" needs the platform's IImageCodec (SkiaSharp), pending approval (docs/02): added only
-            // once that is registered, so this degrades to adding the file unshrunk until then.
+            // "Shrink photos" needs the platform's IImageCodec (docs/02). A platform that has none yet registers no
+            // PhotoShrinker, and its files are added as they are.
             if (State.Preferences.ShrinkPhotos && ServiceProvider.GetService<PhotoShrinker>() is { } shrinker)
             {
                 toAdd = await shrinker.ShrinkAsync(toAdd, entry.Cancel.Token);

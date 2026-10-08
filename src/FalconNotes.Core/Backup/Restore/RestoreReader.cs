@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using FalconNotes.Core.Attachments;
 using FalconNotes.Core.Domain;
+using FalconNotes.Core.Labels;
 using FalconNotes.Core.Platform;
 
 namespace FalconNotes.Core.Backup.Restore;
@@ -23,6 +24,15 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
 
     /// <summary>The largest entry a restore reads: 2 GiB.</summary>
     public const long MaxEntryBytes = 2L * 1024 * 1024 * 1024;
+
+    /// <summary>
+    /// The largest note file read from an archive: a note is at most 100,000 characters, which is at most 400 KB of
+    /// UTF-8 plus its header (as the web app since 1.11).
+    /// </summary>
+    public const long MaxNoteFileBytes = 4L * 1024 * 1024;
+
+    /// <summary>The largest manifest read: a few hundred bytes for each note of even a very large backup.</summary>
+    public const long MaxManifestBytes = 64L * 1024 * 1024;
 
     private static readonly Dictionary<string, NoteKind> Kinds = new(StringComparer.Ordinal)
     {
@@ -103,7 +113,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
         {
             try
             {
-                using var manifest = JsonDocument.Parse(ReadText(manifestEntry));
+                using var manifest = JsonDocument.Parse(ReadText(manifestEntry, MaxManifestBytes));
                 var root = manifest.RootElement;
                 if (root.ValueKind == JsonValueKind.Object
                     && root.TryGetProperty("application", out var application) && application.ValueKind == JsonValueKind.String
@@ -112,8 +122,23 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
                 {
                     listed = notes.EnumerateArray().Select(n => n.Clone()).ToList();
                 }
+
+                // Manifest version 3: the colours of the labels the notes carry. Read whatever the application is,
+                // as the web app does.
+                if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("labels", out var labels) && labels.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var label in labels.EnumerateArray().Where(l => l.ValueKind == JsonValueKind.Object))
+                    {
+                        if (label.TryGetProperty("name", out var name) && name.ValueKind == JsonValueKind.String
+                            && label.TryGetProperty("color", out var color) && color.ValueKind == JsonValueKind.String
+                            && ColorOf(color.GetString()!) is { } known)
+                        {
+                            plan.LabelColors[LabelRules.NameKey(name.GetString()!)] = known;
+                        }
+                    }
+                }
             }
-            catch (JsonException)
+            catch (Exception e) when (e is JsonException or UserFacingException)
             {
                 plan.Problems.Add($"{file.Name}: manifest.json could not be read; its notes are read without it.");
             }
@@ -140,7 +165,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
 
             try
             {
-                plan.Items.Add(ToItem(path, ParseNote(path, ReadText(entry), modified), modified, entries, manifestNote));
+                plan.Items.Add(ToItem(path, ParseNote(path, ReadText(entry, MaxNoteFileBytes), modified), modified, entries, manifestNote));
             }
             catch (Exception e) when (e is UserFacingException or IOException or InvalidDataException)
             {
@@ -149,8 +174,14 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
         }
     }
 
-    private static string ReadText(ZipArchiveEntry entry)
+    /// <summary>Reads a text entry, refusing one larger than <paramref name="max"/> before anything is extracted.</summary>
+    private static string ReadText(ZipArchiveEntry entry, long max)
     {
+        if (entry.Length > max)
+        {
+            throw new UserFacingException("This file is too large to be a Falcon Notes or Maple Notes note or manifest.");
+        }
+
         using var stream = OpenEntry(entry);
         using var reader = new StreamReader(stream, new UTF8Encoding(false), detectEncodingFromByteOrderMarks: false);
         return reader.ReadToEnd();
@@ -162,7 +193,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
     /// <summary>What a note file says about itself, before its files are found.</summary>
     private sealed record ParsedNote(
         Guid? Id, string Content, DateTimeOffset? CreatedAt, DateTimeOffset? UpdatedAt, bool Pinned, bool Archived,
-        NoteKind Kind, string? DailyDate, IReadOnlyList<(string Path, string? Name, string? Type)> Attachments);
+        NoteKind Kind, string? DailyDate, IReadOnlyList<string> Labels, IReadOnlyList<(string Path, string? Name, string? Type)> Attachments);
 
     /// <summary>Reads a note file in any export format; anything else becomes a note with the file's text.</summary>
     private static ParsedNote ParseNote(string name, string text, DateTimeOffset modified)
@@ -185,7 +216,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             throw new UserFacingException("This JSON file is not a Falcon Notes or Maple Notes note.");
         }
 
-        return new ParsedNote(null, clean, modified, modified, false, false, NoteKind.Note, null, []);
+        return new ParsedNote(null, clean, modified, modified, false, false, NoteKind.Note, null, [], []);
     }
 
     /// <summary>Markdown with the export's front matter; null if the file has none.</summary>
@@ -264,6 +295,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             fields.GetValueOrDefault("archived") == "true",
             KindOf(fields.GetValueOrDefault("kind")),
             Day(fields.GetValueOrDefault("daily")),
+            JsonNames(fields.GetValueOrDefault("labels")),
             paths.Select((path, i) => (path, names.Count == paths.Count ? names[i] : null, (string?)null)).ToList());
     }
 
@@ -309,6 +341,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             state.Contains("archived", StringComparison.Ordinal),
             KindOf(fields.GetValueOrDefault("Kind")),
             Day(fields.GetValueOrDefault("Daily")),
+            JsonNames(fields.GetValueOrDefault("Labels")),
             paths.Select(path => (path, (string?)null, (string?)null)).ToList());
     }
 
@@ -352,7 +385,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
 
             return new ParsedNote(
                 UuidOrNull(Text("id")), content.GetString()!, Date(Text("createdAt")), Date(Text("updatedAt")),
-                True("pinned"), True("archived"), KindOf(Text("kind")), Day(Text("dailyDate")), attachments);
+                True("pinned"), True("archived"), KindOf(Text("kind")), Day(Text("dailyDate")),
+                note.TryGetProperty("labels", out var labels) ? Names(labels) : [], attachments);
         }
     }
 
@@ -386,6 +420,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             parsed.Archived || (manifest is { } mf && mf.TryGetProperty("archived", out var archived) && archived.ValueKind == JsonValueKind.True),
             Field("kind") is { } kind ? KindOf(kind) : parsed.Kind,
             parsed.DailyDate ?? Day(Field("dailyDate")),
+            parsed.Labels.Count == 0 && manifest is { } ml && ml.TryGetProperty("labels", out var listedLabels) ? Names(listedLabels) : parsed.Labels,
             attachments,
             missing);
     }
@@ -430,6 +465,35 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
     /// <summary>An ISO 8601 date and time with its offset, as exports write them.</summary>
     private static DateTimeOffset? Date(string? value) =>
         value is not null && DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed) ? parsed : null;
+
+    /// <summary>The strings of a JSON array; anything else in it, or anything but an array, is left out.</summary>
+    private static List<string> Names(JsonElement value) =>
+        value.ValueKind == JsonValueKind.Array
+            ? value.EnumerateArray().Where(name => name.ValueKind == JsonValueKind.String).Select(name => name.GetString()!).ToList()
+            : [];
+
+    /// <summary>A list of names written as a JSON array, as the exports write labels.</summary>
+    private static List<string> JsonNames(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            return Names(document.RootElement);
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    /// <summary>A label colour exactly as the exports name it ("Blue"); null for anything else.</summary>
+    private static LabelColor? ColorOf(string value) =>
+        Enum.GetValues<LabelColor>().Cast<LabelColor?>().FirstOrDefault(color => color!.Value.ToString() == value);
 
     private static string? JsonString(string value)
     {

@@ -10,6 +10,7 @@ using FalconNotes.Core.Backup.Restore;
 using FalconNotes.Core.Crypto;
 using FalconNotes.Core.Domain;
 using FalconNotes.Core.Events;
+using FalconNotes.Core.Labels;
 using FalconNotes.Core.Notes;
 using FalconNotes.Core.Platform;
 using FalconNotes.Core.Settings;
@@ -52,10 +53,10 @@ public static partial class BackupConformance
 
             using var restored = await Throwaway.CreateAsync(scratch);
             using var plan = await restored.Reader.ReadAsync([new RestoreSource("v.zip", () => Task.FromResult<Stream>(new MemoryStream(Archive(exports[i].GetProperty("entries")))))]);
-            var result = await restored.Runner.RunAsync(plan.Items);
+            var result = await restored.Runner.RunAsync(plan.Items, labelColors: plan.LabelColors);
             var ok = plan.Problems.Count == 0 && result.Failed.Count == 0 && result.Restored == plan.Items.Count;
             passed &= ok;
-            log($"restore {i + 1}: {result.Restored} notes, {result.Files} files, {plan.Problems.Count + result.Failed.Count} problems{(ok ? "" : " FAILED")}");
+            log($"restore {i + 1}: {result.Restored} notes, {result.Files} files, {result.Labels} labels, {plan.Problems.Count + result.Failed.Count} problems{(ok ? "" : " FAILED")}");
         }
 
         foreach (var demo in new[] { "maple-notes-demo-json.zip", "maple-notes-demo-markdown.zip" })
@@ -64,7 +65,7 @@ public static partial class BackupConformance
             app.Clock.Now = new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero);
             var path = Path.Combine(fixtures, demo);
             using var plan = await app.Reader.ReadAsync([new RestoreSource(demo, () => Task.FromResult<Stream>(File.OpenRead(path)))]);
-            var result = await app.Runner.RunAsync(plan.Items);
+            var result = await app.Runner.RunAsync(plan.Items, labelColors: plan.LabelColors);
             var ok = plan.Problems.Count == 0 && result.Failed.Count == 0 && result.Restored == 35 && result.Files == 8;
             passed &= ok;
             log($"{demo}: {RestoreRunner.Summary(result)}{(ok ? "" : " FAILED")}");
@@ -86,6 +87,21 @@ public static partial class BackupConformance
     private static async Task SeedAsync(Throwaway app, JsonElement root)
     {
         await app.Profile.CreateAsync(root.GetProperty("account").GetString());
+
+        // Added with manifest version 3: the labels, with their IDs and colours, before the notes that carry them.
+        await app.Storage.Database.InTransactionAsync((connection, transaction) =>
+        {
+            foreach (var label in root.GetProperty("labels").EnumerateArray())
+            {
+                using var insert = Sql.Command(connection, "INSERT INTO Labels (Id, Name, Color, CreatedAt) VALUES ($id, $name, $color, $created)", transaction);
+                insert.With("$id", Sql.Id(label.GetProperty("id").GetGuid())).With("$name", label.GetProperty("name").GetString())
+                    .With("$color", label.GetProperty("color").GetString())
+                    .With("$created", Sql.Time(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc))).ExecuteNonQuery();
+            }
+
+            return true;
+        });
+
         var notes = root.GetProperty("active").GetProperty("items").EnumerateArray().Concat(root.GetProperty("archived").GetProperty("items").EnumerateArray());
         foreach (var note in notes)
         {
@@ -129,6 +145,12 @@ public static partial class BackupConformance
                     row.With("$id", Sql.Id(attachment.Id)).With("$note", Sql.Id(id)).With("$name", attachment.FileName)
                         .With("$type", attachment.ContentType).With("$size", attachment.SizeBytes).With("$key", key)
                         .With("$created", Sql.Time(attachment.CreatedAtUtc)).ExecuteNonQuery();
+                }
+
+                foreach (var label in note.GetProperty("labelIds").EnumerateArray())
+                {
+                    using var link = Sql.Command(connection, "INSERT INTO NoteLabels (NoteId, LabelId) VALUES ($note, $label)", transaction);
+                    link.With("$note", Sql.Id(id)).With("$label", Sql.Id(label.GetGuid())).ExecuteNonQuery();
                 }
 
                 return true;
@@ -233,7 +255,7 @@ public static partial class BackupConformance
             app.Profile = new ProfileService(app.Storage, feed, app.Clock);
             app.Exporter = new NoteExporter(app.Storage, attachments, app.Profile, app.Clock, NullLogger<NoteExporter>.Instance);
             app.Reader = new RestoreReader(app, app.Clock);
-            app.Runner = new RestoreRunner(app.Storage, attachments, feed, app.Clock);
+            app.Runner = new RestoreRunner(app.Storage, attachments, new LabelService(app.Storage, feed, app.Clock), feed, app.Clock);
             return app;
         }
 

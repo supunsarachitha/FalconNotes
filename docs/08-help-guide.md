@@ -37,20 +37,25 @@ Removed: `links` (link previews), `encryption`, `password`, `https`, `admins`.
 
 ### Left out of 1.0.0
 
-The guide describes what the released app does (updated at the owner's request, 2026-10-07). Three things below are
+The guide describes what the released app does (updated at the owner's request, 2026-10-07). Two things below are
 in the plan but not built, so their text is left out until they are. Put each back, in the section named,
 with the feature:
 
 | Section | Text to put back | Waiting for |
 |---|---|---|
 | `writing` | "Choose the paperclip, or on a computer paste or drag files onto the box." | Paste and drag-and-drop in the composer (desktop) |
-| `pictures` | "To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are." | An `IImageCodec` (the SkiaSharp decision, [02](02-architecture.md#dependencies)) |
 | `appearance` | "drag an item by its handle, or move it with its arrows" | Pointer drag in `MenuOrderEditor` |
 
 Added in 1.0.0: `pictures` mentions the viewer's share button (Android, [12](12-platforms.md)).
 
 Put back with biometric unlock (2026-10-08): the `lock` section's sentence on fingerprint, face, Windows Hello and
 Touch ID.
+
+Put back with photo shrinking (1.2.0, 2026-10-08): the `pictures` section's last paragraph, on **Shrink photos before
+adding**.
+
+Changed with labels in backups (1.2.0, 2026-10-08), to the web app's wording since 1.9.0: the last line of `labels`,
+the restore paragraph of `backup`, and in `devices` labels now travel with their notes and only settings stay behind.
 
 ## 1. Writing notes (`writing`)
 
@@ -80,7 +85,7 @@ Then choose **Labels…** in a note's **⋯** menu to tick the ones it should ha
 by typing its name. A note shows its labels at the bottom, and choosing one, or a label in the side menu, lists its
 notes.
 
-Exports do not include labels yet, so labels stay on this device when you move your notes elsewhere.
+Exports list each note's labels by name, and restoring one brings them back.
 ````
 
 ## 8. Daily notes (`daily`)
@@ -99,6 +104,10 @@ and audio play in the note. Choose any other file to open it in the app you use 
 a copy.
 
 Pictures and players load as you scroll towards them, so a long timeline opens quickly however many files it has.
+
+To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are
+resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and
+camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are.
 ````
 
 Rename the Features switch to match: **Shrink photos before adding**. Its description: "Large photos are resized to
@@ -168,9 +177,9 @@ day. Keep it somewhere safe, such as a USB drive or a cloud folder you trust. Ex
 with care.
 
 **Restore** brings notes back from such a file. It also works with exports from the Maple Notes web app and its
-servers, and their restore works with yours. Notes keep their dates, pins, archive state and files, and notes you
-already have are skipped, so restoring twice does no harm. You can also add single Markdown, text or JSON files as
-notes. Labels are not part of exports yet.
+servers, and their restore works with yours. Notes keep their dates, pins, archive state, labels and files, and
+notes you already have are skipped, so restoring twice does no harm. A label is matched by name to one you
+already have, or created in the colour it had. You can also add single Markdown, text or JSON files as notes.
 
 To start over, **Delete all notes and files**, in the same place, deletes everything you wrote and added at once,
 labels and the trash included. Your name, settings and app lock stay. This cannot be undone, so export first if you
@@ -181,8 +190,8 @@ might want your notes back.
 
 ````markdown
 Falcon Notes does not sync. To move your notes to a new phone or computer, **Export** them on the old one, copy the ZIP
-across, and **Restore** it on the new one, in [Settings → Backup & data](/settings/data). Your settings and labels do
-not travel with it, so set them up again on the new device.
+across, and **Restore** it on the new one, in [Settings → Backup & data](/settings/data). Labels come with the notes
+that carry them. Your settings do not travel with it, so set them up again on the new device.
 ````
 
 ## 20. How much you store (`storage`)

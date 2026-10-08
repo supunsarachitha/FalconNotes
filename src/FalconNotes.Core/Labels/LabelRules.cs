@@ -24,9 +24,17 @@ public static class LabelRules
     /// <returns>Whether the name is taken.</returns>
     public static bool HasLabelNamed(IEnumerable<(Guid Id, string Name)> names, string name, Guid? except = null)
     {
-        var wanted = name.Trim().ToLowerInvariant();
-        return names.Any(label => label.Id != except && label.Name.Trim().ToLowerInvariant() == wanted);
+        var wanted = NameKey(name);
+        return names.Any(label => label.Id != except && NameKey(label.Name) == wanted);
     }
+
+    /// <summary>
+    /// How label names are matched: ignoring case and surrounding spaces, which two labels cannot differ by. A restore
+    /// finds a backup's labels by this key (<c>labelKey</c> in <c>web/import/importer.ts</c>).
+    /// </summary>
+    /// <param name="name">The name.</param>
+    /// <returns>The key.</returns>
+    public static string NameKey(string name) => name.Trim().ToLowerInvariant();
 
     /// <summary>
     /// A new label's colour: it cycles through every colour except Grey, by how many labels there are

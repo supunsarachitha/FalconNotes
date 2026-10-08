@@ -89,6 +89,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when the device has a fingerprint or face enrolled (one added in the device's settings shows as soon as you come
   back to the app); the prompt then opens by itself on the Lock screen, and stands in for the PIN where Settings
   asks for it. The PIN always works too. Help describes it again.
+- **Shrink photos before adding** (Settings → Features, off by default) now works on Android. Large photos are
+  resized to at most 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, upright and
+  without their location and camera details. A photo is kept as it is when it has transparent parts, when the device
+  cannot decode it, or when shrinking would save less than a tenth; so are GIFs and animated WebP and AVIF images.
+  It uses Android's own image codecs, so the app gains no library. The switch was already in Settings but did nothing.
+  Help describes it again.
+- **Labels in backups.** Every export format now lists each note's labels by name, and the manifest lists the colours
+  of the labels in use (manifest version 3, the format Maple Notes has written since 1.9.0). Restoring a backup, from
+  this app or from Maple Notes, brings each note's labels back: a label is matched by name to one already here, or
+  created in the colour it had. One that cannot be created, for example past the limit of 100, is reported and the
+  notes arrive without it. The summary adds "Added {n} labels." Older versions of either app restore these backups as
+  before, without the labels.
 
 ### Changed
 
@@ -106,6 +118,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Android app now asks for the `USE_BIOMETRIC` and `USE_FINGERPRINT` permissions, for fingerprint or face unlock.
   They are granted at install with no prompt. It still has no internet permission. The README, the website and the
   privacy policy said the app asks for no permissions, and now name this one.
+- Settings → Labels, Settings → Backup & data and Help no longer say that labels are not part of exports.
+- A note file over 4 MB inside a backup is refused before it is read, and a manifest over 64 MB is treated as
+  unreadable, as in Maple Notes since 1.11.
 - The Lock screen shows no message when a fingerprint or face prompt closes without unlocking. It used to be written
   to show "That didn't work. Please try again." under the PIN field.
 - The README is reorganised: a contents list, a section on how Falcon Notes relates to Maple Notes, and the limits

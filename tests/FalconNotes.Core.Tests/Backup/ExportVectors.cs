@@ -14,8 +14,8 @@ using FalconNotes.Core.Text;
 namespace FalconNotes.Core.Tests.Backup;
 
 /// <summary>
-/// The shared export vectors (fixtures/export-vectors.json; docs/05, Proof): the dataset the server exported and its
-/// 13 archives, entry by entry.
+/// The shared export vectors (fixtures/export-vectors.json; docs/05, Proof): the dataset the server exported, with
+/// its labels, and its 13 archives, entry by entry.
 /// </summary>
 public static partial class ExportVectors
 {
@@ -41,12 +41,34 @@ public static partial class ExportVectors
     public static IEnumerable<JsonElement> Notes() =>
         Root.GetProperty("active").GetProperty("items").EnumerateArray().Concat(Root.GetProperty("archived").GetProperty("items").EnumerateArray());
 
+    /// <summary>The names of a vector note's labels, in the ordinal order exports write them in.</summary>
+    public static List<string> LabelNames(JsonElement note)
+    {
+        var names = Root.GetProperty("labels").EnumerateArray().ToDictionary(l => l.GetProperty("id").GetGuid(), l => l.GetProperty("name").GetString()!);
+        return note.GetProperty("labelIds").EnumerateArray().Select(id => names[id.GetGuid()]).Order(StringComparer.Ordinal).ToList();
+    }
+
     public static byte[] File(Guid id) => Convert.FromBase64String(Root.GetProperty("files").GetProperty(id.ToString()).GetString()!);
 
-    /// <summary>Writes the vector dataset into an empty database: IDs, text, kinds, states, times and files exactly.</summary>
+    /// <summary>Writes the vector dataset into an empty database: IDs, text, kinds, states, times, labels and files exactly.</summary>
     public static async Task SeedAsync(TestApp app)
     {
         await app.Profile.CreateAsync(Root.GetProperty("account").GetString());
+
+        // Added with manifest version 3: the labels, with their IDs and colours, before the notes that carry them.
+        await app.Storage.Database.InTransactionAsync((connection, transaction) =>
+        {
+            foreach (var label in Root.GetProperty("labels").EnumerateArray())
+            {
+                using var insert = Sql.Command(connection, "INSERT INTO Labels (Id, Name, Color, CreatedAt) VALUES ($id, $name, $color, $created)", transaction);
+                insert.With("$id", Sql.Id(label.GetProperty("id").GetGuid())).With("$name", label.GetProperty("name").GetString())
+                    .With("$color", label.GetProperty("color").GetString())
+                    .With("$created", Sql.Time(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc))).ExecuteNonQuery();
+            }
+
+            return true;
+        });
+
         foreach (var note in Notes())
         {
             var id = note.GetProperty("id").GetGuid();
@@ -89,6 +111,12 @@ public static partial class ExportVectors
                     row.With("$id", Sql.Id(attachment.Id)).With("$note", Sql.Id(id)).With("$name", attachment.FileName)
                         .With("$type", attachment.ContentType).With("$size", attachment.SizeBytes).With("$key", key)
                         .With("$created", Sql.Time(attachment.CreatedAtUtc)).ExecuteNonQuery();
+                }
+
+                foreach (var label in note.GetProperty("labelIds").EnumerateArray())
+                {
+                    using var link = Sql.Command(connection, "INSERT INTO NoteLabels (NoteId, LabelId) VALUES ($note, $label)", transaction);
+                    link.With("$note", Sql.Id(id)).With("$label", Sql.Id(label.GetGuid())).ExecuteNonQuery();
                 }
 
                 return true;

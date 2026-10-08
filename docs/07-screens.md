@@ -81,7 +81,7 @@ storage.
 | `menu` | Side menu | unchanged | `MenuSection` |
 | `writing` | Writing | unchanged | `WritingSection`, `EditingSection` |
 | `features` | Features | unchanged | `FeaturesSection` **without Link previews**; "Shrink photos before uploading" becomes **Shrink photos before adding** ([08](08-help-guide.md#11-pictures-video-and-files-pictures)) |
-| `labels` | Labels | unchanged | `LabelSettings`. The note about end-to-end encryption is gone; keep "Exports do not include labels yet." |
+| `labels` | Labels | unchanged | `LabelSettings`. The note about end-to-end encryption is gone. The line under the list ends "Exports keep each note's labels, and restoring one brings them back.", as in the web app since 1.9.0 (2026-10-08; before that, "Exports do not include labels yet."). |
 | `data` | Backup & data | "Export, restore, the trash and starting over." | Backup & restore, Trash, Delete all notes and files |
 | `security` | Privacy & security | "App lock, and how your notes are protected." | App lock, Data protection |
 
@@ -129,9 +129,9 @@ first. Afterwards: the Welcome screen.
   system save dialog. Done: "Exported {n} notes and {m} files." (toast). Cancelled in the dialog: nothing.
 - "Dates use your time zone ({IANA zone})." is unchanged.
 - The restore intro: "Bring notes back from an export (`.zip`, any format) made by Falcon Notes, the Maple Notes web app
-  or a Maple Notes server, or add `.md`, `.txt` and `.json` files. Notes keep their dates, pins, archive state and
-  files. Notes you already have are skipped, so restoring the same export twice is safe. Labels are not part of
-  exports."
+  or a Maple Notes server, or add `.md`, `.txt` and `.json` files. Notes keep their dates, pins, archive state, labels
+  and files. Notes you already have are skipped, so restoring the same export twice is safe." (Until 1.2.0 it ended
+  "Labels are not part of exports.")
 - **Choose files…** opens the native picker.
 
 **Trash** (`TrashSection`) and **Delete all notes and files** (`DeleteContentSection`) are unchanged, except the second

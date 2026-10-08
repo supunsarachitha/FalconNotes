@@ -30,15 +30,15 @@ port with the changes in the docs · **Drop** = not in this app.
 | `lib/viewport.ts` | `UI/wwwroot/js/observe.js` + `NearViewport` component | Port |
 | `lib/links.ts` | — | Drop (link previews) |
 | `lib/media.ts` | `Core/Attachments/UploadPolicy.cs` (`CanDisplayInline`, `IsImage`) | Port |
-| `lib/shrinkPhoto.ts` | `Core/Attachments/PhotoShrinker.cs` (SkiaSharp) | Port (same rules) |
+| `lib/shrinkPhoto.ts` | `Core/Attachments/PhotoShrinker.cs` (the platform's `IImageCodec`) | Port (same rules) |
 | `lib/queries.ts` | Services + `Core/Events/ChangeFeed.cs` | Adapt (events instead of query cache) |
 | `lib/router.tsx` | Blazor `Router` / `NavigationManager` | Adapt |
 | `lib/api.ts`, `lib/apiError.ts` | — | Drop (services are called directly; errors are exceptions with user-facing messages) |
 | `lib/auth.ts`, `credentials.ts`, `e2ee.ts`, `noteCrypto.ts`, `conversion.ts`, `secureContext.ts`, `branding.ts`, `icon.ts`, `mediaWorker.ts` | — | Drop |
 | `crypto/*` | — | Drop (browser end-to-end crypto) |
 | `export/*` | — | Drop: port the **server** exporter instead (below), which these files only imitate |
-| `import/parse.ts` | `Core/Backup/Restore/RestoreReader.cs` | Port ([05](05-backup-compatibility.md#restore)) |
-| `import/importer.ts` | `Core/Backup/Restore/RestoreRunner.cs` | Adapt (local service instead of API calls; batches of 200) |
+| `import/parse.ts` | `Core/Backup/Restore/RestoreReader.cs` | Port ([05](05-backup-compatibility.md#restore)), with the labels of Maple Notes 1.9.0 and the size limits of 1.11 |
+| `import/importer.ts` | `Core/Backup/Restore/RestoreRunner.cs` | Adapt (local service instead of API calls; batches of 200), with `resolveLabels` of Maple Notes 1.9.0 |
 | `import/zip.ts` | — | Drop (`System.IO.Compression.ZipArchive`) |
 | `help/guide.ts` | `UI/Help/Guide.cs` | Adapt ([08](08-help-guide.md)) |
 | `sw/*` | `App/Services/MediaHandler.cs` | Adapt ([02](02-architecture.md#serving-attachments-to-the-webview)) |
@@ -98,7 +98,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `Features/Labels/LabelService.cs` | `Core/Labels/LabelService.cs` | Adapt |
 | `Features/Attachments/UploadPolicy.cs` | `Core/Attachments/UploadPolicy.cs` | Copy (replace `FileExtensionContentTypeProvider` with a table) |
 | `Features/Attachments/AttachmentService.cs`, `AttachmentCleanup.cs` | `Core/Attachments/AttachmentService.cs`, `Core/Maintenance/AttachmentCleanup.cs` | Adapt |
-| `Features/Export/*.cs` | `Core/Backup/Export/*.cs` | **Copy** ([05](05-backup-compatibility.md#export)) |
+| `Features/Export/*.cs` | `Core/Backup/Export/*.cs` | **Copy** ([05](05-backup-compatibility.md#export)), with the label lines of Maple Notes 1.9.0 (manifest version 3), which are not in `reference/` |
 | `Features/Storage/StorageService.cs` | `Core/Notes/StorageUsage.cs` | Adapt (no quota) |
 | `Infrastructure/Crypto/KeyMaterial.cs`, `AttachmentCipher.cs`, `DecryptingAttachmentStream.cs` | `Core/Crypto/*` | Copy (labels and owner per [03](03-data-storage-and-security.md#keys)) |
 | `Infrastructure/Storage/AttachmentStore.cs`, `LengthLimitedStream.cs` | `Core/Attachments/AttachmentStore.cs` | Copy |
