@@ -2,6 +2,7 @@
 @using FalconNotes.Core.Platform
 @using FalconNotes.Core.Settings
 @using FalconNotes.UI.State
+@implements IDisposable
 @inject AppLockState AppLock
 @inject IAppInfo AppInfo
 
@@ -56,6 +57,15 @@
     private bool _verifyingChange;
     private bool _changingExisting;
     private bool _busy;
+
+    /// <inheritdoc />
+    protected override void OnInitialized() => AppLock.Changed += OnAppLockChanged;
+
+    // Coming back from the device's settings with a fingerprint just added (or removed) shows or hides the switch.
+    private void OnAppLockChanged() => _ = InvokeAsync(StateHasChanged);
+
+    /// <inheritdoc />
+    public void Dispose() => AppLock.Changed -= OnAppLockChanged;
 
     private static string LockAfterLabel(int seconds) => seconds switch
     {

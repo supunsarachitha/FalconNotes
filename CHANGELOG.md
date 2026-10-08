@@ -86,8 +86,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `privacy.html`, and screenshots of the app in `docs/screenshots/`.
 - Fingerprint or face unlock for the app lock on Android (AndroidX `BiometricPrompt`, through the newly approved
   `Xamarin.AndroidX.Biometric`). Turn on **Unlock with fingerprint or face** in Settings → Privacy & security, shown
-  when the device has a fingerprint or face enrolled; the prompt then opens by itself on the Lock screen, and stands
-  in for the PIN where Settings asks for it. The PIN always works too. Help describes it again.
+  when the device has a fingerprint or face enrolled (one added in the device's settings shows as soon as you come
+  back to the app); the prompt then opens by itself on the Lock screen, and stands in for the PIN where Settings
+  asks for it. The PIN always works too. Help describes it again.
 
 ### Changed
 

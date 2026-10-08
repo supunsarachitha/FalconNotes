@@ -158,6 +158,39 @@ public class BiometricUnlockTests : BunitContext
     }
 
     [Fact]
+    public async Task A_fingerprint_added_in_the_devices_settings_shows_the_switch_when_the_app_comes_back()
+    {
+        using var app = await StartAsync(biometrics: false);
+        app.Biometrics.IsBiometricAvailable = false;
+        var cut = Render<AppLockSection>();
+        Assert.Empty(cut.FindAll($"button[aria-label='{UnlockWith}']"));
+
+        app.AppLock.OnBackgrounded(); // off to the device's settings to add a fingerprint…
+        app.Biometrics.IsBiometricAvailable = true;
+        app.AppLock.OnForegrounded(); // …and back before "Lock after" has passed
+
+        cut.WaitForAssertion(() => Assert.Single(cut.FindAll($"button[aria-label='{UnlockWith}']")));
+        Assert.False(app.AppLock.IsLocked);
+    }
+
+    [Fact]
+    public async Task A_fingerprint_removed_while_the_app_was_away_takes_the_Lock_screens_button_away()
+    {
+        using var app = await StartAsync(biometrics: true);
+        app.Biometrics.NextResult = false;
+        app.AppLock.LockNow();
+        var cut = Render<LockScreen>();
+        cut.WaitForAssertion(() => Assert.NotNull(Button(cut, UseBiometrics)));
+
+        app.AppLock.OnBackgrounded();
+        app.Biometrics.IsBiometricAvailable = false;
+        app.AppLock.OnForegrounded();
+
+        cut.WaitForAssertion(() => Assert.Null(Button(cut, UseBiometrics)));
+        Assert.Single(app.Biometrics.Prompts); // still once per lock
+    }
+
+    [Fact]
     public async Task Turning_the_switch_on_runs_one_check_and_saves_only_when_it_succeeds()
     {
         using var app = await StartAsync(biometrics: false);

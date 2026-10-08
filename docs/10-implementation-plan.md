@@ -328,6 +328,18 @@ installed on the `MAUI_Emulator_API_36` emulator: Welcome, Start writing, still 
 the prompt opened by itself and the fingerprint opened Home. A smoke test again, not the QA checklist. The 1.0.1
 build's output was moved to `src/FalconNotes.App/bin/Release-1.0.1/` (git-ignored) rather than deleted.
 
+A second pass the same day, at the owner's request after it "did not work" for them, found one fault. With the lock
+on and no fingerprint, the user goes to the device's settings, adds one, and comes back within "Lock after": the
+"Unlock with fingerprint or face" switch stayed hidden until Privacy & security was left and opened again, because
+nothing rendered the section on return. (The first pass missed it: it stayed away over a minute, so the app locked,
+and unlocking rendered everything afresh.) `AppLockState.OnForegrounded` now raises `Changed`, and the App lock
+section and the Lock screen render on it; two bUnit tests cover both directions. The rest of the pass, on the signed
+1.1.0 APK, went as before, and added: the PIN after a cancelled prompt; the fingerprint in place of the PIN for
+Change PIN…; "Lock after: Immediately" with a trip to the home screen; and the fingerprint removed from the device
+with the switch on (no prompt, no button, the PIN opens the app). The signed files were rebuilt with the fix as
+versionCode 4, still version 1.1.0, so that an upload cannot collide with versionCode 3 if that was already sent to
+Google Play.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
