@@ -12,6 +12,7 @@ public static class NoteFormatter
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = true,
+        NewLine = "\n", // the server writes on Linux; the default, Environment.NewLine, would give \r\n on Windows
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, // keep non-ASCII text readable in the exported files
     };
 

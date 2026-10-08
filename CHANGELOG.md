@@ -96,6 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pasting or dragging files into a note, or dragging the side menu's items, which are not built yet, and it now
   mentions the picture viewer's share button.
 - The README describes the app as built, with screenshots, instead of the plan.
+- The README and the website link to the Maple Notes website and its live demo, and say what Maple Notes adds. They no longer say the web app's backups have no labels: since Maple Notes 1.9.0 they do, and Falcon Notes
+  leaves them out on restore.
 
 ### Fixed
 
