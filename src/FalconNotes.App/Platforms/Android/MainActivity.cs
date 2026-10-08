@@ -27,6 +27,9 @@ public class MainActivity : MauiAppCompatActivity
 #if DEBUG
         DevLaunch.StartPath = Intent?.GetStringExtra("route");
 #endif
+        // Android 15 and later draw every app edge to edge. Earlier versions do not unless asked, and showed the
+        // theme's own status bar colour above the page; this makes them all the same (docs/12, Edge to edge).
+        AndroidX.Activity.EdgeToEdge.Enable(this);
         base.OnCreate(savedInstanceState);
 
         // While the app lock is on, hide this window from screenshots and the recent-apps thumbnail (docs/03, App

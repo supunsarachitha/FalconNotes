@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rather than a hand-drawn SVG: the Android adaptive icon, splash screen and in-app `Logo` (now an `<img>`, not
   inline paths) are all generated from it.
 - The app ID is `lk.stechbuzz.falconnotes` (it was `dev.falconnotes.app`), changed before the first release.
+- Android release builds shrink their Java code with R8, which Google Play asks for; the download is smaller.
 - Help describes what version 1.0.0 does: it no longer mentions fingerprint or face unlock, shrinking photos,
   pasting or dragging files into a note, or dragging the side menu's items, which are not built yet, and it now
   mentions the picture viewer's share button.
@@ -100,10 +101,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Restore: a file that is not a ZIP archive is reported as "This is not a ZIP archive." on Windows too, and its
-  temporary copy is deleted. Before, the copy stayed open, could not be deleted, and the error named the file.
-- JSON exports and the manifest end their lines with `\n` on Windows too, as the web app's do. Before, Windows wrote
-  `\r\n`, and the archive differed from the web app's.
+- Android 14 and earlier: the app draws behind the status and navigation bars, as it does on Android 15 and later.
+  Before, it showed a purple status bar and a black navigation bar there.
+- The picture viewer's buttons no longer sit under the status bar on Android.
 - Closing the Labels dialog (Cancel, Save, Esc or a tap outside) no longer leaves an empty box on the note.
 - The actions menu (the three dots) on notes, todo lists and trashed notes is shown when opened. Before, it opened
   inside the card, out of place and hidden.

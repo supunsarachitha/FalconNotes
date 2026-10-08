@@ -15,13 +15,16 @@
     <!-- Never change after the first release: a new ID is a new app, and users would lose their data (docs/12). -->
     <ApplicationId>lk.stechbuzz.falconnotes</ApplicationId>
     <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationVersion>2</ApplicationVersion>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release' And $(TargetFramework.Contains('-android'))">
     <TrimMode>partial</TrimMode>
+    <!-- R8 removes the Java code the app never calls (docs/12, Release). Without it Google Play reports the DEX code
+         as unoptimised, and the package carries about 16 MB of unused AndroidX classes. -->
+    <AndroidLinkTool>r8</AndroidLinkTool>
     <!-- The .aab goes to Google Play; the .apk is for direct installs and for testing the release build (docs/12). -->
     <AndroidPackageFormats>aab;apk</AndroidPackageFormats>
   </PropertyGroup>
