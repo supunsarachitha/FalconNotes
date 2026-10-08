@@ -359,6 +359,11 @@ with the switch on (no prompt, no button, the PIN opens the app). The signed fil
 versionCode 4, still version 1.1.0, so that an upload cannot collide with versionCode 3 if that was already sent to
 Google Play.
 
+Version 1.2.0 (versionCode 5), 2026-10-08: shrinking photos on Android (see Phase 4), on the `release-1.2.0` branch.
+The version numbers are set, but the signed AAB and APK have not been built or checked yet. Before building from
+clean, move the 1.1.0 output out of `src/FalconNotes.App/bin/Release/` as was done for 1.0.1, and repeat the
+shrinking check from Phase 4 on the release APK, since R8 and trimming have not run over the new code.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
