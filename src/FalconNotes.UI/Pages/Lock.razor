@@ -25,7 +25,7 @@
         </form>
         @if (AppLock.Settings.Biometrics && AppLock.IsBiometricAvailable)
         {
-            <Button Variant="ButtonVariant.Secondary" Class="mt-3 w-full" OnClick="() => TryBiometricAsync(false)">
+            <Button Variant="ButtonVariant.Secondary" Class="mt-3 w-full" OnClick="TryBiometricAsync">
                 <Icon Name="IconName.Fingerprint" Class="size-4" /> Use @AppLock.BiometricName
             </Button>
         }
@@ -64,6 +64,7 @@
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        AppLock.Changed += OnAppLockChanged;
         var remaining = await AppLock.LockoutRemainingAsync();
         if (remaining is { } r)
         {
@@ -77,9 +78,12 @@
         if (firstRender && !_biometricTried && AppLock.Settings.Biometrics && AppLock.IsBiometricAvailable)
         {
             _biometricTried = true;
-            await TryBiometricAsync(silent: true);
+            await TryBiometricAsync();
         }
     }
+
+    // The device's biometrics may have changed while the app was away; the button follows them.
+    private void OnAppLockChanged() => _ = InvokeAsync(StateHasChanged);
 
     private void OnTypedInput(ChangeEventArgs e) => _typed = e.Value?.ToString() ?? "";
 
@@ -116,14 +120,9 @@
         }
     }
 
-    private async Task TryBiometricAsync(bool silent)
-    {
-        var ok = await AppLock.TryBiometricAsync("Unlock Falcon Notes");
-        if (!ok && !silent)
-        {
-            _error = "That didn't work. Please try again.";
-        }
-    }
+    // Nothing to say when it does not unlock: the system's prompt has already said why (not recognised, too many
+    // tries), and closing it is the user's own choice. The PIN field is for the PIN's errors only.
+    private Task TryBiometricAsync() => AppLock.TryBiometricAsync("Unlock Falcon Notes");
 
     private void StartCountdown(TimeSpan remaining)
     {
@@ -170,6 +169,7 @@
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        AppLock.Changed -= OnAppLockChanged;
         _countdown?.Dispose();
         if (_countdownTask is not null)
         {

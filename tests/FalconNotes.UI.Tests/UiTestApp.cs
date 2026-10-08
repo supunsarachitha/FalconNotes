@@ -20,12 +20,13 @@ namespace FalconNotes.UI.Tests;
 public sealed class UiTestApp : IDisposable
 {
     private UiTestApp(
-        TestApp core, AppState state, AppLockState appLock, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener, FakeFileSaver saver,
-        FakeClipboard clipboard, FakeShare share)
+        TestApp core, AppState state, AppLockState appLock, FakeAppLock biometrics, Toasts toasts, FakeFilePicker picker, FakeFileOpener opener,
+        FakeFileSaver saver, FakeClipboard clipboard, FakeShare share)
     {
         Core = core;
         State = state;
         AppLock = appLock;
+        Biometrics = biometrics;
         Toasts = toasts;
         Picker = picker;
         Opener = opener;
@@ -42,6 +43,9 @@ public sealed class UiTestApp : IDisposable
 
     /// <summary>The app lock's session state.</summary>
     public AppLockState AppLock { get; }
+
+    /// <summary>The device's biometric prompt: set whether it exists and what it answers, and read what it was asked.</summary>
+    public FakeAppLock Biometrics { get; }
 
     /// <summary>The notifications raised during the test.</summary>
     public Toasts Toasts { get; }
@@ -123,7 +127,7 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton(new KeyLostRecovery(new DeviceKeyStore(core.Secrets), core.Directories, core.Clock));
         services.AddSingleton(new EraseAllData(new DeviceKeyStore(core.Secrets), core.Storage, core.Directories));
 
-        return new UiTestApp(core, state, appLock, toasts, picker, opener, saver, clipboard, share);
+        return new UiTestApp(core, state, appLock, fakeAppLock, toasts, picker, opener, saver, clipboard, share);
     }
 
     /// <summary>Posts a note (docs/04): used to give the calendar, tag counts and lists something to show.</summary>

@@ -169,6 +169,9 @@ public static class Guide
             asks for it when it opens, and when it comes back after being in the background for longer than you chose under **Lock
             after**. To lock straight away, choose the lock button at the bottom of the menu.
 
+            Where your device has a fingerprint reader, face recognition, Windows Hello or Touch ID, you can unlock with that
+            instead.
+
             Write your PIN down somewhere safe. It cannot be reset: if you forget it, the only way back in is to erase the app's
             data on this device and restore your notes from a backup.
             """),

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <!--
-    No permissions: the app is offline (no INTERNET), and files go through the system pickers.
+    No permissions here: the app is offline (no INTERNET), and files go through the system pickers. The AndroidX
+    biometric library's own manifest adds USE_BIOMETRIC and USE_FINGERPRINT for the app lock (docs/12, Permissions).
     Auto Backup is off: the encrypted files are useless without the Keystore key (docs/03, Lost key).
     Debug builds get INTERNET added by the .NET Android tooling for the debugger; release builds must not have it.
   -->

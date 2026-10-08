@@ -83,21 +83,22 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 
 ### Not yet available
 
-- Fingerprint or face unlock.
 - Shrinking photos before they are added.
 - Pasting or dragging files into a note.
 - Labels and settings in backups. Labels in a Maple Notes backup are left out when it is restored here.
 
 ## Privacy and security
 
-Falcon Notes has **no accounts, no sync, no analytics and no ads**, and the Android app asks for **no permissions**,
-not even internet access. Read the full [privacy policy](https://supunsarachitha.github.io/FalconNotes/privacy.html).
+Falcon Notes has **no accounts, no sync, no analytics and no ads**, and the Android app has **no internet
+permission**. The only permission it asks for lets the app lock use the device's fingerprint or face check. Read the
+full [privacy policy](https://supunsarachitha.github.io/FalconNotes/privacy.html).
 
 - **Encrypted, always.** The database is SQLite with SQLite3 Multiple Ciphers and AEGIS-256. Attached files use Maple
   Notes' chunked AES-256-GCM format. The key is random, created on the device and kept in the Android Keystore. There
   is no setting to turn encryption off.
-- **App lock.** An optional PIN, asked for when the app opens and after it has been in the background. It is a
-  privacy screen, not a second key, and a forgotten PIN cannot be reset.
+- **App lock.** An optional PIN, asked for when the app opens and after it has been in the background, with
+  fingerprint or face unlock where the device has it. It is a privacy screen, not a second key, and a forgotten PIN
+  cannot be reset.
 - **Android's automatic backup is off** for the app: the encrypted files would be useless without the key.
 - **Exports are not encrypted.** A backup ZIP can be read by anyone who gets it.
 - **Uninstalling deletes the notes** together with their key. Export first.

@@ -155,18 +155,22 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
     /// Called when the app returns to the foreground: locks again if the lock is on and the app stayed away at least
     /// as long as "Lock after" (0 means every time).
     /// </summary>
+    /// <remarks>
+    /// Raises <see cref="Changed"/> either way. What the device offers may have changed while the app was away: a
+    /// fingerprint added in the device's settings must show the "Unlock with…" switch on the screen the user comes
+    /// back to, and one removed must take the Lock screen's button away.
+    /// </remarks>
     public void OnForegrounded()
     {
         var since = _backgroundedAt;
         _backgroundedAt = null;
-        if (since is null || !Settings.Enabled || IsLocked)
+        if (since is not null && Settings.Enabled && !IsLocked &&
+            (time.GetUtcNow() - since.Value).TotalSeconds >= Settings.LockAfterSeconds)
         {
+            LockNow();
             return;
         }
 
-        if ((time.GetUtcNow() - since.Value).TotalSeconds >= Settings.LockAfterSeconds)
-        {
-            LockNow();
-        }
+        Changed?.Invoke();
     }
 }

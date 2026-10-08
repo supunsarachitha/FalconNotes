@@ -205,7 +205,9 @@ New, shown at start and after the lock delay when the app lock is on. `AuthLayou
 >
 > Forgot your PIN?
 
-- The biometric prompt opens by itself when the screen appears (once per lock).
+- The biometric prompt opens by itself when the screen appears (once per lock). When it closes without unlocking
+  (cancelled, not recognised too often, the app left), the screen shows no message: the system's prompt has already
+  said why, and the PIN field's error is for the PIN.
 - A wrong PIN: "That PIN is not right." After 5 wrong PINs: "Too many tries. Try again in {n} seconds." with the field
   disabled and a countdown ([03](03-data-storage-and-security.md#app-lock)).
 - **Forgot your PIN?** opens a dialog:

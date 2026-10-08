@@ -14,6 +14,13 @@ public sealed class FakeAppLock : IAppLock
     /// <summary>What the next call returns.</summary>
     public bool NextResult { get; set; } = true;
 
+    /// <summary>The reason given to each prompt shown, in order.</summary>
+    public List<string> Prompts { get; } = [];
+
     /// <inheritdoc />
-    public Task<bool> AuthenticateAsync(string reason) => Task.FromResult(NextResult);
+    public Task<bool> AuthenticateAsync(string reason)
+    {
+        Prompts.Add(reason);
+        return Task.FromResult(NextResult);
+    }
 }

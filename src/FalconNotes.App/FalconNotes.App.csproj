@@ -15,7 +15,7 @@
     <!-- Never change after the first release: a new ID is a new app, and users would lose their data (docs/12). -->
     <ApplicationId>lk.stechbuzz.falconnotes</ApplicationId>
     <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
-    <ApplicationVersion>2</ApplicationVersion>
+    <ApplicationVersion>4</ApplicationVersion>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
   </PropertyGroup>
@@ -50,6 +50,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
     <PackageReference Include="CommunityToolkit.Maui" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <!-- AndroidX BiometricPrompt for the app lock (docs/02, Dependencies; docs/12, Biometrics). -->
+    <PackageReference Include="Xamarin.AndroidX.Biometric" />
   </ItemGroup>
 
   <ItemGroup>

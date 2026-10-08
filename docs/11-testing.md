@@ -42,6 +42,11 @@ New tests the reference does not have:
   copy kept; a lost key leads to **Key lost** and no deletion.
 - App lock: PIN hashing and checking; the tries counter survives a restart; the delay grows; the lock cannot be skipped
   by navigation (bUnit).
+- Biometric unlock (bUnit, `BiometricUnlockTests`, with a fake prompt): the prompt opens by itself once per lock; it
+  is offered only while it is turned on and the device has biometrics; the switch turns on only after one check
+  succeeds; a cancelled prompt leaves the PIN working and shows no error; a check stands in for the PIN where
+  Settings asks for it. The real prompt (`AndroidAppLock`) can only be checked on a device or an emulator with a
+  fingerprint enrolled.
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 
