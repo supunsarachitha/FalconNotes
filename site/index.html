@@ -200,11 +200,16 @@
               Notes</a>, a self-hosted web app, and is based on its version 1.8.0. Both use the same backup format: a
               backup made in one restores in the other, with dates, pins, archive state and files. Falcon Notes does
               not sync, so moving between devices is done by export and restore. Labels and settings are not part of
-              backups yet.
+              its backups yet, and labels in a Maple Notes backup are left out.
+            </p>
+            <p>
+              To have your notes on every device, Maple Notes runs on your own server, in one Docker container, with
+              accounts and optional end-to-end encryption.
             </p>
           </div>
           <div class="actions">
             <a class="button" href="https://supunsarachitha.github.io/MapleNotes/">Maple Notes</a>
+            <a class="button" href="https://maplenotes.onrender.com/">Try its live demo</a>
           </div>
         </div>
       </div>
@@ -271,6 +276,7 @@ dotnet build src/FalconNotes.App -t:Run -f net10.0-android</code></pre>
         <a href="https://github.com/supunsarachitha/FalconNotes/blob/main/CHANGELOG.md">Changelog</a>
         <a href="https://github.com/supunsarachitha/FalconNotes/blob/main/docs/03-data-storage-and-security.md">Data and security</a>
         <a href="https://github.com/supunsarachitha/FalconNotes/blob/main/docs/05-backup-compatibility.md">Backup format</a>
+        <a href="https://supunsarachitha.github.io/MapleNotes/">Maple Notes web app</a>
       </nav>
     </div>
   </footer>
