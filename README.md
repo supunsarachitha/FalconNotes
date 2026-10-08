@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/supunsarachitha/FalconNotes/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/supunsarachitha/FalconNotes/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white">
   <img alt=".NET MAUI 10" src="https://img.shields.io/badge/.NET%20MAUI-10-512BD4?logo=dotnet&logoColor=white">
   <a href="LICENSE"><img alt="Licence: PolyForm Noncommercial 1.0.0" src="https://img.shields.io/badge/licence-PolyForm%20Noncommercial-8f1d21"></a>
@@ -18,21 +19,34 @@
 <p align="center">
   <a href="https://supunsarachitha.github.io/FalconNotes/"><b>Website</b></a> ·
   <a href="https://supunsarachitha.github.io/FalconNotes/privacy.html"><b>Privacy policy</b></a> ·
+  <a href="CHANGELOG.md"><b>Changelog</b></a> ·
   <a href="https://supunsarachitha.github.io/MapleNotes/"><b>Maple Notes web app</b></a>
 </p>
 
 ![Home on a tablet](docs/screenshots/home.png)
 
-Falcon Notes is the offline companion of the [Maple Notes](https://supunsarachitha.github.io/MapleNotes/) web app
-([source](https://github.com/supunsarachitha/MapleNotes)), with the same features and look as its version 1.8.0, under
-its own name and mark. It runs without a server: notes stay on the device, encrypted. Backups are the web app's export
-ZIPs, so notes move freely between this app, other devices and any Maple Notes server.
+## About
 
-To have your notes on every device, use Maple Notes instead or as well: it is self-hosted, in one Docker container,
-with accounts and optional end-to-end encryption, and has a [live demo](https://maplenotes.onrender.com/).
+Falcon Notes is a note-taking app that works entirely on your device. There is no server and no sign-in: notes are
+stored locally, always encrypted, and the Android app does not ask for internet access.
 
-Built with .NET 10 MAUI Blazor Hybrid. **Version 1.0.0 is for Android 8.0 and later**, on phones and tablets. Windows
-and macOS are planned ([12 Platforms](docs/12-platforms.md)).
+It is the offline companion of the [Maple Notes](https://supunsarachitha.github.io/MapleNotes/) web app, with the same
+features and look under its own name and mark. Backups use the web app's export format, so notes move freely between
+Falcon Notes, other devices and any Maple Notes server.
+
+Falcon Notes is built with .NET 10 MAUI Blazor Hybrid. It currently runs on **Android 8.0 and later**, on phones and
+tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
+
+## Contents
+
+- [Screenshots](#screenshots)
+- [Features](#features)
+- [Privacy and security](#privacy-and-security)
+- [Falcon Notes and Maple Notes](#falcon-notes-and-maple-notes)
+- [Building from source](#building-from-source)
+- [Documentation](#documentation)
+- [Repository layout](#repository-layout)
+- [Licence](#licence)
 
 ## Screenshots
 
@@ -62,14 +76,17 @@ and macOS are planned ([12 Platforms](docs/12-platforms.md)).
   full-screen viewer, where you can save a copy or share one; audio and video play in the note.
 - **Search.** Finds text in your notes and the names of attached files.
 - **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files, and restore it on any
-  device. Exports from the Maple Notes web app restore here, and this app's restore there.
+  device.
 - **Your look.** Light, dark or the device's setting, seven accent colours, and the side menu in your own order and
   text size.
 - **Help built in.** A user guide in the app explains every feature.
 
-Not in 1.0.0 yet: fingerprint or face unlock, shrinking photos before they are added, and pasting or dragging files
-into a note. Labels and settings are not part of backups, and labels in a Maple Notes backup are left out when it is
-restored here.
+### Not yet available
+
+- Fingerprint or face unlock.
+- Shrinking photos before they are added.
+- Pasting or dragging files into a note.
+- Labels and settings in backups. Labels in a Maple Notes backup are left out when it is restored here.
 
 ## Privacy and security
 
@@ -88,9 +105,23 @@ not even internet access. Read the full [privacy policy](https://supunsarachitha
 The details, and what the encryption does and does not protect against, are in
 [03 Data, storage and security](docs/03-data-storage-and-security.md).
 
+## Falcon Notes and Maple Notes
+
+[Maple Notes](https://supunsarachitha.github.io/MapleNotes/) ([source](https://github.com/supunsarachitha/MapleNotes))
+is the self-hosted web app that Falcon Notes is ported from. It runs in one Docker container, with accounts and
+optional end-to-end encryption, and has a [live demo](https://maplenotes.onrender.com/). To have your notes on every
+device, use Maple Notes instead of Falcon Notes, or alongside it.
+
+- **Moving between them.** Exports from the Maple Notes web app restore in Falcon Notes, and Falcon Notes' exports
+  restore there. The format is specified in [05 Backup compatibility](docs/05-backup-compatibility.md) and checked by
+  conformance tests against shared export vectors.
+- **The reference implementation.** Falcon Notes matches Maple Notes 1.8.0. That release's source (commit
+  [`a28db71`](https://github.com/supunsarachitha/MapleNotes/commit/a28db714a66a4021449abb98ad3bb1a5614ff1b0)) is kept
+  in `reference/maple-notes-1.8.0/` to port from. It is read-only, and is never built or shipped.
+
 ## Building from source
 
-**Requirements**
+### Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) (10.0.300 or a later 10.0 feature band) with the MAUI Android
   workload: `dotnet workload install maui-android`
@@ -99,13 +130,20 @@ The details, and what the encryption does and does not protect against, are in
 
 The first build downloads the pinned Tailwind CSS command-line tool into `tools/` and checks its SHA-256.
 
+### Test and run
+
 ```sh
 dotnet test tests/FalconNotes.Core.Tests                     # rules, storage, crypto, backups
 dotnet test tests/FalconNotes.UI.Tests                       # components (bUnit)
 dotnet build src/FalconNotes.App -t:Run -f net10.0-android   # run on a connected phone or a running emulator
 ```
 
-**A release build** (`.aab` for Google Play and `.apk` for direct installs):
+To try the app with sample data, restore one of the demo backups in `fixtures/demo-backups/` (35 notes, 8 files) from
+the Welcome screen or **Settings → Backup & data**.
+
+### Release build
+
+This makes an `.aab` for Google Play and an `.apk` for direct installs:
 
 ```sh
 dotnet publish src/FalconNotes.App -c Release -f net10.0-android
@@ -116,10 +154,9 @@ Release signing is set up in `src/FalconNotes.App/signing.local.props`, which is
 [`signing.local.props.example`](src/FalconNotes.App/signing.local.props.example), fill in your keystore's details, and
 never commit a keystore or its passwords. Without that file, a release build is signed with the debug key.
 
-## The specification
+## Documentation
 
-The app was built from the specification in `docs/`. Read it in this order. AI agents: start with
-[CLAUDE.md](CLAUDE.md).
+The specification the app is built from is in `docs/`, numbered in reading order.
 
 | Document | What it settles |
 |---|---|
@@ -151,19 +188,6 @@ benchmarks/storage/       the storage benchmark source (desktop and Android) and
 scripts/                  the licence check that writes THIRD-PARTY-NOTICES.md
 reference/                the Maple Notes web app 1.8.0: read-only, never built, never shipped
 ```
-
-To try the app with sample data, restore one of the demo backups in `fixtures/demo-backups/` (35 notes, 8 files) from
-the Welcome screen or **Settings → Backup & data**.
-
-## Where this came from
-
-The specification was written as `maui-handoff/` on the `maui-offline-plan` branch of the Maple Notes repository (commit
-`ed4a3d0`), against commit `a28db714a66a4021449abb98ad3bb1a5614ff1b0` (release 1.8.0). This repository was set up from
-it with that folder's `scripts/export-handoff.sh`, which copied the specification and wrote the reference source into
-`reference/maple-notes-1.8.0/` with `git archive`. The app was then named Falcon Notes
-([D12](docs/01-scope-and-decisions.md#decisions)).
-
-The prompts for each phase are in [KICKOFF-PROMPT.md](KICKOFF-PROMPT.md).
 
 ## Licence
 

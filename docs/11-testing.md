@@ -14,6 +14,11 @@ cases, so **port them with the code**. A rule is not done until its tests from t
 Use temporary folders per test (`TempDirectory` in the reference's test support) and a fixed clock (`TimeProvider`).
 Fake every platform interface (`ISecretStore`, `IFileSaver`, …) in tests.
 
+Both projects run their tests one at a time (`AssemblyInfo.cs`). `Microsoft.Data.Sqlite` keeps its connection pools
+for the whole process, and `SqliteConnection.ClearAllPools()`, which the test support and the app's erase, key-lost
+and upgrade steps call to let go of the database files, can close a connection that another test is opening. Run in
+parallel, about one run in ten failed at random with `ObjectDisposedException: SQLitePCL.sqlite3`.
+
 ## Porting the reference tests
 
 | Reference tests | Port to | What they protect |
