@@ -15,7 +15,7 @@
     <!-- Never change after the first release: a new ID is a new app, and users would lose their data (docs/12). -->
     <ApplicationId>lk.stechbuzz.falconnotes</ApplicationId>
     <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
-    <ApplicationVersion>2</ApplicationVersion>
+    <ApplicationVersion>3</ApplicationVersion>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
   </PropertyGroup>

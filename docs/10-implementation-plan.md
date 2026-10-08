@@ -319,6 +319,15 @@ The package name was changed the same day, before anything was released, from `d
 above were repeated with the new name. Earlier notes in this file that name `dev.falconnotes.app` describe builds
 made before the change; an emulator that still holds one keeps it as a separate app.
 
+Version 1.1.0 (versionCode 3), 2026-10-08: biometric unlock on Android (see Phase 6). `dotnet publish`, from clean,
+made the signed AAB and APK. Checked as before: the owner's upload key (the same certificate as 1.0.1; `apksigner
+verify --print-certs`, `jarsigner -verify`), `minSdkVersion` 26, `targetSdkVersion` 36, arm64-v8a and x86_64, not
+debuggable, and the permissions are `USE_BIOMETRIC` and `USE_FINGERPRINT` with no `INTERNET`. The signed APK was
+installed on the `MAUI_Emulator_API_36` emulator: Welcome, Start writing, still there after a restart, Settings shows
+1.1.0, then a PIN set, a fingerprint enrolled, "Unlock with fingerprint or face" turned on, and after a cold start
+the prompt opened by itself and the fingerprint opened Home. A smoke test again, not the QA checklist. The 1.0.1
+build's output was moved to `src/FalconNotes.App/bin/Release-1.0.1/` (git-ignored) rather than deleted.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
