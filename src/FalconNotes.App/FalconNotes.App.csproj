@@ -12,8 +12,8 @@
     <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
     <ApplicationTitle>Falcon Notes</ApplicationTitle>
-    <!-- Never change: a new ID is a new app, and users would lose their data (docs/12). -->
-    <ApplicationId>dev.falconnotes.app</ApplicationId>
+    <!-- Never change after the first release: a new ID is a new app, and users would lose their data (docs/12). -->
+    <ApplicationId>lk.stechbuzz.falconnotes</ApplicationId>
     <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
 

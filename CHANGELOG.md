@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Phase 0 skeleton, Android first: the solution (`FalconNotes.Core`, `FalconNotes.UI`, `FalconNotes.App`, and their
-  test projects), central package versions, and an Android app (`dev.falconnotes.app`) that shows a page from the
+  test projects), central package versions, and an Android app (`lk.stechbuzz.falconnotes`) that shows a page from the
   Razor class library in a `BlazorWebView`. It has no permissions and Android Auto Backup off.
 - Tailwind CSS 4.3.3 build step: the pinned standalone CLI is downloaded once and checked against its published
   SHA-256, and the stylesheet is the web app's `index.css` with Falcon Notes additions at the end.
@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The falcon mark (`fixtures/falcon-mark.png`, docs/06) replaced with a new feather design, as a transparent PNG
   rather than a hand-drawn SVG: the Android adaptive icon, splash screen and in-app `Logo` (now an `<img>`, not
   inline paths) are all generated from it.
+- The app ID is `lk.stechbuzz.falconnotes` (it was `dev.falconnotes.app`), changed before the first release.
 
 ### Fixed
 

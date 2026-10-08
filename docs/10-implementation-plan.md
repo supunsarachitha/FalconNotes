@@ -287,13 +287,18 @@ Biometric unlock and photo shrinking remain stubbed, as recorded under Phase 6.
 Android release build, signed (2026-10-07): release signing is set up as in the owner's other Android app. The
 project imports a git-ignored `src/FalconNotes.App/signing.local.props` (template next to it) and signs Release
 builds with the keystore it names; `dotnet publish src/FalconNotes.App -c Release -f net10.0-android` makes
-`dev.falconnotes.app-Signed.aab` and `-Signed.apk` in `bin/Release/net10.0-android/publish/`. Both were checked:
+`lk.stechbuzz.falconnotes-Signed.aab` and `-Signed.apk` in `bin/Release/net10.0-android/publish/`. Both were checked:
 signed with the owner's upload key (`jarsigner -verify`, `apksigner verify --print-certs`), version 1.0.0
 (versionCode 1), `minSdkVersion` 26, `targetSdkVersion` 36, arm64-v8a and x86_64, no `INTERNET` permission and not
 debuggable. The APK was installed on the `Medium_Phone_API_36.1` emulator: Welcome, Start writing, a note posted,
 and the note still there after a restart (so the encrypted database works in the trimmed build). That is a smoke
 test, not the QA checklist on the release build, and nothing was uploaded anywhere. The Windows and macOS halves of
 the release-builds box are still open, so it stays unticked.
+
+The package name was changed the same day, before anything was released, from `dev.falconnotes.app` to
+`lk.stechbuzz.falconnotes` (the owner's decision; D12 in [01](01-scope-and-decisions.md)). The build and the checks
+above were repeated with the new name. Earlier notes in this file that name `dev.falconnotes.app` describe builds
+made before the change; an emulator that still holds one keeps it as a separate app.
 
 ## Spike results
 

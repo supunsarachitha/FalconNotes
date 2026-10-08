@@ -65,7 +65,7 @@ dotnet build src/FalconNotes.App -c Release -f net10.0-android                 #
 dotnet publish src/FalconNotes.App -c Release -f net10.0-android               # signed AAB and APK for a release
                                                                               # (bin/Release/net10.0-android/publish/)
 ~/Library/Android/sdk/emulator/emulator -list-avds                            # emulators: MAUI_Emulator_API_36, Medium_Phone_API_36.1
-adb shell am start -n dev.falconnotes.app/crc64a839b5e6635a3aec.MainActivity --es route "/dev/spikes?auto=1"
+adb shell am start -n lk.stechbuzz.falconnotes/crc64a839b5e6635a3aec.MainActivity --es route "/dev/spikes?auto=1"
                                                                               # Debug builds: open a route (here the Phase 0 spikes);
                                                                               # only when this starts the app (force-stop it first)
 ```
