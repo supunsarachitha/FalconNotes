@@ -11,7 +11,9 @@ starts a new phase. Afterwards, re-read the documents your task touches. The [RE
 settles.
 
 The web app is the **reference implementation**, in `reference/maple-notes-1.8.0/`. When the docs do not say how
-something behaves, the reference does. [docs/09-port-map.md](docs/09-port-map.md) says where every reference file goes.
+something behaves, the reference does. That copy is release 1.8.0; what the app took from 1.9.0 to 1.15.0 came from
+the Maple Notes repository (<https://github.com/supunsarachitha/MapleNotes>), which is the place to look for anything
+newer. [docs/09-port-map.md](docs/09-port-map.md) says where every reference file goes.
 
 ## Ground rules
 

@@ -269,8 +269,9 @@ release that carries this, the README's and the website's "no permissions" lines
 
 - [ ] Platform details in [12-platforms.md](12-platforms.md): icons, splash, manifests and entitlements, single
       instance on Windows, window sizes, keyboard on macOS, Android insets, keyboard resize, Back.
-- [ ] `THIRD-PARTY-NOTICES.md` and a licence check script (port `reference/.../scripts/check-licenses.py` to read
-      `packages.lock.json` / `deps.json` and the copied Lucide icons).
+- [ ] `THIRD-PARTY-NOTICES.md` and a licence check script (port the web app's `scripts/check-licenses.py` to read
+      `packages.lock.json` / `deps.json` and the copied Lucide icons). The port is `scripts/check-licenses.py`; the
+      reference's own `scripts/` folder was removed on 2026-10-08, at the owner's request.
 - [ ] Release builds: Android AAB/APK signed, Windows MSIX signed, macOS app signed and notarized (or an unsigned
       build for personal use, by decision).
 - [ ] The full manual QA checklist on every platform, the performance budgets, and an accessibility pass (keyboard

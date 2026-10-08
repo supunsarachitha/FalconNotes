@@ -143,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `reference/maple-notes-1.8.0/scripts/`, the web app's licence check, which this project ported to `scripts/`.
 - `KICKOFF-PROMPT.md`, the prompts used to start each phase of the build, and the Android project template's
   `AboutResources.txt` in the storage benchmark. Neither was used by anything.
 - The generated stylesheet `src/FalconNotes.UI/wwwroot/css/app.css` is no longer in the repository. It was already
