@@ -25,6 +25,8 @@ tools/
 benchmarks/**/data*/
 
 # --- Signing material ---
+# The local signing settings hold the keystore passwords.
+signing.local.props
 *.keystore
 *.jks
 *.pfx

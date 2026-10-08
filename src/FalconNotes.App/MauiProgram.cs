@@ -77,6 +77,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<RestoreReader>();
         builder.Services.AddSingleton<RestoreRunner>();
         builder.Services.AddSingleton<EraseAllData>();
+        builder.Services.AddSingleton<KeyLostRecovery>();
 
         // UI-wide state (docs/02, Runtime model): lives as long as the BlazorWebView, so it is a singleton too.
         builder.Services.AddSingleton<AppState>();

@@ -73,4 +73,22 @@ public class WelcomeTests : BunitContext
         cut.WaitForAssertion(() => Assert.Equal("Restore from a backup", cut.Find("h1").TextContent));
         Assert.NotNull(app.State.Profile);
     }
+
+    [Fact]
+    public async Task The_restore_flow_opened_at_once_shows_what_the_chosen_file_holds()
+    {
+        using var app = await StartAsync();
+        app.Picker.Enqueue(new Core.Platform.PickedFile("trip.md", "text/markdown", async () =>
+        {
+            await Task.Delay(50, Xunit.TestContext.Current.CancellationToken); // a real file does not open at once
+            return new MemoryStream("Pack the tent"u8.ToArray());
+        }));
+
+        // On its own, as Welcome shows it: the picker opens after the first render, not from a click, so nothing
+        // else re-renders when reading ends.
+        var cut = Render<Components.RestoreFlow>(p => p.Add(f => f.StartPicking, true));
+
+        cut.WaitForAssertion(
+            () => Assert.Contains(cut.FindAll("button"), b => b.TextContent.Trim() == "Restore 1 note"), TimeSpan.FromSeconds(5));
+    }
 }

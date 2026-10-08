@@ -256,6 +256,50 @@ macOS half still to do; what Android's half needed is done:
   regression check — still comfortably inside budget — but Phase 7's own ask (4× the Mac budgets, on the slowest
   phone supported) still needs that phone (S6 in Phase 0 was deferred the same way).
 
+QA pass on the `release/1.0.0` branch (2026-10-07, Android emulator, API 36, Debug build driven through the WebView's
+developer tools, phone and 1,280 dp landscape, light and dark, airplane mode on for the last part): the Android half
+of [11 → Manual QA](11-testing.md#manual-qa) was run item by item. Seven faults were found and fixed, each in its own
+commit with a test where one could be written:
+
+- Theme and accent did not follow Settings → Appearance or the device: they were applied once, before the preferences
+  had loaded.
+- Turning note titles on or off left stale text in the cards already on screen (the Markdown cache key).
+- Forgot your PIN → Erase left the Lock screen up until a restart; the app lock's state is now read again after
+  either erase.
+- Welcome → Restore from a backup… never showed the chosen file's summary.
+- Key lost opened blank: `KeyLostRecovery` was not registered in `MauiProgram`. Nothing tests the App project's
+  registrations, so a missing one only shows on a device.
+- The actions menu on note, todo and trash cards opened hidden: `content-visibility: auto` on `.note-card` made the
+  card the containing block of the menu's `position: fixed` and clipped it. Found by the owner after the pass, which
+  had clicked the menus by script; menus and dialogs must be checked with real taps (`adb shell input tap`) and a
+  screenshot.
+- Closing the Labels dialog left an empty box on the card: its `flex` class overrode `display: none` for a closed
+  `<dialog>` (now `open:flex`). Also found by the owner. The drawer, the image viewer and a confirmation dialog were
+  then re-checked with real taps and screenshots.
+
+`MainActivity` is now single-top ([12](12-platforms.md)); the `--es route` extra is read in `OnCreate` only, so it
+applies when the command starts the app, not when the app is already running.
+
+Not checked in this pass, still open: TalkBack; a real phone; the daily note's midnight rollover with the clock
+changed; an export restored in the Maple Notes web app itself (the conformance vectors pass); Windows and macOS.
+Biometric unlock and photo shrinking remain stubbed, as recorded under Phase 6.
+
+Android release build, signed (2026-10-07): release signing is set up as in the owner's other Android app. The
+project imports a git-ignored `src/FalconNotes.App/signing.local.props` (template next to it) and signs Release
+builds with the keystore it names; `dotnet publish src/FalconNotes.App -c Release -f net10.0-android` makes
+`lk.stechbuzz.falconnotes-Signed.aab` and `-Signed.apk` in `bin/Release/net10.0-android/publish/`. Both were checked:
+signed with the owner's upload key (`jarsigner -verify`, `apksigner verify --print-certs`), version 1.0.0
+(versionCode 1), `minSdkVersion` 26, `targetSdkVersion` 36, arm64-v8a and x86_64, no `INTERNET` permission and not
+debuggable. The APK was installed on the `Medium_Phone_API_36.1` emulator: Welcome, Start writing, a note posted,
+and the note still there after a restart (so the encrypted database works in the trimmed build). That is a smoke
+test, not the QA checklist on the release build, and nothing was uploaded anywhere. The Windows and macOS halves of
+the release-builds box are still open, so it stays unticked.
+
+The package name was changed the same day, before anything was released, from `dev.falconnotes.app` to
+`lk.stechbuzz.falconnotes` (the owner's decision; D12 in [01](01-scope-and-decisions.md)). The build and the checks
+above were repeated with the new name. Earlier notes in this file that name `dev.falconnotes.app` describe builds
+made before the change; an emulator that still holds one keeps it as a separate app.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._

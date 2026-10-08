@@ -114,6 +114,10 @@
         _plan = await Reader.ReadAsync(files.Select(f => new RestoreSource(f.FileName, f.OpenReadAsync)));
         _label = files.Count == 1 ? files[0].FileName : Plural(files.Count, "file");
         _step = Step.Ready;
+
+        // Not only a click's handler: with StartPicking this runs after the first render, and nothing else would
+        // show the summary then.
+        StateHasChanged();
     }
 
     private async Task RestoreAsync()

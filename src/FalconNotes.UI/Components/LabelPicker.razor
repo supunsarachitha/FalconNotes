@@ -11,8 +11,10 @@
 @inject AppState State
 @inject Toasts Toasts
 
+@* open:flex, not flex: a display class on a <dialog> overrides the browser's display: none for a closed one, which
+   left an empty box on the card after the dialog closed. *@
 <dialog @ref="_dialog" aria-label="Labels"
-        class="m-auto flex max-h-[min(36rem,calc(100dvh-2rem))] w-[calc(100%-2rem)] max-w-sm flex-col rounded-2xl bg-white p-5 shadow-xl backdrop:bg-black/50 backdrop:backdrop-blur-sm dark:bg-stone-900">
+        class="m-auto open:flex max-h-[min(36rem,calc(100dvh-2rem))] w-[calc(100%-2rem)] max-w-sm flex-col rounded-2xl bg-white p-5 shadow-xl backdrop:bg-black/50 backdrop:backdrop-blur-sm dark:bg-stone-900">
     @if (Open)
     {
         <h2 class="text-lg font-semibold">Labels</h2>

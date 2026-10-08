@@ -12,8 +12,8 @@
     <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
     <ApplicationTitle>Falcon Notes</ApplicationTitle>
-    <!-- Never change: a new ID is a new app, and users would lose their data (docs/12). -->
-    <ApplicationId>dev.falconnotes.app</ApplicationId>
+    <!-- Never change after the first release: a new ID is a new app, and users would lose their data (docs/12). -->
+    <ApplicationId>lk.stechbuzz.falconnotes</ApplicationId>
     <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
 
@@ -22,6 +22,18 @@
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release' And $(TargetFramework.Contains('-android'))">
     <TrimMode>partial</TrimMode>
+    <!-- The .aab goes to Google Play; the .apk is for direct installs and for testing the release build (docs/12). -->
+    <AndroidPackageFormats>aab;apk</AndroidPackageFormats>
+  </PropertyGroup>
+
+  <!--
+    Release signing. The keystore details stay out of source control: they are in signing.local.props (git-ignored;
+    see signing.local.props.example) or come from the command line, e.g. -p:AndroidSigningStorePass=env:KEYSTORE_PASS.
+    Without them (as in CI) a Release build is signed with the debug key, which no store accepts.
+  -->
+  <Import Project="signing.local.props" Condition="Exists('signing.local.props')" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(AndroidSigningKeyStore)' != ''">
+    <AndroidKeyStore>true</AndroidKeyStore>
   </PropertyGroup>
 
   <ItemGroup>

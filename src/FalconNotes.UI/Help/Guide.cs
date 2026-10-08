@@ -24,8 +24,7 @@ public static class Guide
             - **Formatting.** Use the toolbar under the text box for bold, italic, headings, lists, checklists, quotes, code and
               links, or type [Markdown](https://commonmark.org/help/) yourself. Ctrl/⌘+B, I and K are shortcuts for bold, italic
               and links.
-            - **Pictures and files.** Choose the paperclip, or on a computer paste or drag files onto the box. They are added while
-              you write.
+            - **Pictures and files.** Choose the paperclip and pick them. They are added while you write.
             - **Checklists.** Tick a checklist's boxes right in the note; the change is saved straight away.
             - **Changing a note.** Open a note's **⋯** menu to edit it, pin it to the top, label it, copy its text, archive it or
               delete it. Editing starts with the cursor at the end of the note, ready to carry on. Archived notes wait in the
@@ -119,22 +118,19 @@ public static class Guide
 
         new("pictures", "Pictures, video and files", """
             Choose a picture to open it full screen. Move between a note's pictures with the arrows, the arrow keys or a swipe,
-            keep a copy with the save button, and close with Esc or ✕. Videos and audio play in the note. Choose any other file to
-            open it in the app you use for that kind of file, or to save a copy.
+            keep a copy with the save button, send it to another app with the share button, and close with Esc or ✕. Videos
+            and audio play in the note. Choose any other file to open it in the app you use for that kind of file, or to save
+            a copy.
 
             Pictures and players load as you scroll towards them, so a long timeline opens quickly however many files it has.
-
-            To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are resized to 2560
-            pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and camera details are
-            left out. The full-size original is not kept, and photos you added earlier stay as they are.
             """),
 
         new("appearance", "Appearance", """
             Under [Settings → Appearance](/settings/appearance), choose **Light**, **Dark**, or **Device** to follow your phone
             or computer, pick an accent colour, and choose the day your weeks start on in the calendars.
 
-            Under [Settings → Side menu](/settings/menu), put the menu's items in the order you use them: drag an item by its
-            handle, or move it with its arrows. You can also make the menu's text smaller or larger.
+            Under [Settings → Side menu](/settings/menu), put the menu's items in the order you use them, moving each one
+            with its arrows. You can also make the menu's text smaller or larger.
             """),
 
         new("features", "Choosing your features", """
@@ -171,8 +167,7 @@ public static class Guide
         new("lock", "The app lock", """
             Turn on **Lock Falcon Notes** in [Settings → Privacy & security](/settings/security) and choose a PIN. Falcon Notes then
             asks for it when it opens, and when it comes back after being in the background for longer than you chose under **Lock
-            after**. Where your device has a fingerprint reader, face recognition, Windows Hello or Touch ID, you can unlock with
-            that instead. To lock straight away, choose the lock button at the bottom of the menu.
+            after**. To lock straight away, choose the lock button at the bottom of the menu.
 
             Write your PIN down somewhere safe. It cannot be reset: if you forget it, the only way back in is to erase the app's
             data on this device and restore your notes from a backup.

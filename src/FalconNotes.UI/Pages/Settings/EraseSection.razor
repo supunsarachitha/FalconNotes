@@ -77,6 +77,10 @@
         State.Clear();
         var module = await Appearance.ModuleAsync(JS);
         await module.InvokeVoidAsync("forget");
+
+        // The lock went with the data: reading it again from the new database unlocks, and makes the router show
+        // Welcome in place of the Lock screen.
+        await AppLock.LoadAsync();
         Navigation.NavigateTo("/welcome", replace: true);
     }
 }

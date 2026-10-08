@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Phase 0 skeleton, Android first: the solution (`FalconNotes.Core`, `FalconNotes.UI`, `FalconNotes.App`, and their
-  test projects), central package versions, and an Android app (`dev.falconnotes.app`) that shows a page from the
+  test projects), central package versions, and an Android app (`lk.stechbuzz.falconnotes`) that shows a page from the
   Razor class library in a `BlazorWebView`. It has no permissions and Android Auto Backup off.
 - Tailwind CSS 4.3.3 build step: the pinned standalone CLI is downloaded once and checked against its published
   SHA-256, and the stylesheet is the web app's `index.css` with Falcon Notes additions at the end.
@@ -79,14 +79,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   builds with against the licence policy and regenerates `THIRD-PARTY-NOTICES.md` from the exact dependency
   versions; it also added the Lucide icon licence that file had been missing. `WindowSoftInputMode = AdjustResize`
   on `MainActivity`, so the composer and dialogs stay above the keyboard.
+- Android release signing: a Release build is signed with the keystore named in the git-ignored
+  `src/FalconNotes.App/signing.local.props`, and `dotnet publish` makes a signed AAB for Google Play and a signed
+  APK for direct installs.
+- A website for GitHub Pages (`site/`, published by the Website workflow from `main`), with a privacy policy page at
+  `privacy.html`, and screenshots of the app in `docs/screenshots/`.
 
 ### Changed
 
 - The falcon mark (`fixtures/falcon-mark.png`, docs/06) replaced with a new feather design, as a transparent PNG
   rather than a hand-drawn SVG: the Android adaptive icon, splash screen and in-app `Logo` (now an `<img>`, not
   inline paths) are all generated from it.
+- The app ID is `lk.stechbuzz.falconnotes` (it was `dev.falconnotes.app`), changed before the first release.
+- Help describes what version 1.0.0 does: it no longer mentions fingerprint or face unlock, shrinking photos,
+  pasting or dragging files into a note, or dragging the side menu's items, which are not built yet, and it now
+  mentions the picture viewer's share button.
+- The README describes the app as built, with screenshots, instead of the plan.
 
 ### Fixed
 
+- Closing the Labels dialog (Cancel, Save, Esc or a tap outside) no longer leaves an empty box on the note.
+- The actions menu (the three dots) on notes, todo lists and trashed notes is shown when opened. Before, it opened
+  inside the card, out of place and hidden.
+- Key lost: the screen is shown when the device key is missing. Before, the app opened to a blank page, because the
+  service behind its two buttons was not registered in the app.
+- Welcome → Restore from a backup… now shows what the chosen file holds. Before, the button kept spinning after
+  the file was chosen and the restore could not be started from there.
+- Forgot your PIN → Erase and start over now goes to Welcome. Before, the Lock screen stayed until the app was
+  restarted. Erase all data in Settings also turns the app lock's screenshot blocking off at once.
+- Android: starting the app a second time returns to the open window. Before, it could stack a second window that
+  did not respond, which with the app lock on left a Lock screen that took no PIN.
+- Turning note titles on or off now updates the notes already on screen. Before, a note could show its title twice,
+  or lose it, until the app was restarted.
+- Settings → Appearance: choosing a theme or an accent colour, and the device switching between light and dark,
+  now change the app at once. Before, the appearance was set only once, before the saved settings had loaded.
 - `Placeholders.razor` kept `@page` routes for Todo, Habits and Tags after Phase 5 ported real pages for them, which
   made Blazor's router throw "ambiguous routes" on start-up and left the WebView blank.

@@ -30,10 +30,12 @@ public sealed partial class MarkdownRenderer
         .DisableHtml()
         .Build();
 
-    private readonly ConcurrentDictionary<(Guid Id, long Revision, bool Interactive), string> _cache = new();
+    private readonly ConcurrentDictionary<(Guid Id, long Revision, int Length, bool Interactive), string> _cache = new();
 
     /// <summary>
-    /// Renders a note, cached by its ID and revision so long lists do not render the same Markdown again.
+    /// Renders a note, cached by its ID and revision so long lists do not render the same Markdown again. The text's
+    /// length is part of the key because one revision is shown two ways: whole, or without its title line when note
+    /// titles are on, and the setting can change while the note is cached.
     /// </summary>
     /// <param name="noteId">The note.</param>
     /// <param name="revision">Its revision.</param>
@@ -47,7 +49,7 @@ public sealed partial class MarkdownRenderer
             _cache.Clear();
         }
 
-        return _cache.GetOrAdd((noteId, revision, interactive), _ => Render(content, interactive));
+        return _cache.GetOrAdd((noteId, revision, content.Length, interactive), _ => Render(content, interactive));
     }
 
     /// <summary>Renders Markdown, wrapped in <c>&lt;div class="markdown"&gt;</c>.</summary>

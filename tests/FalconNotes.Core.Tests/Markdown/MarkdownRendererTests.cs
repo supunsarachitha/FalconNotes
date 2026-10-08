@@ -122,6 +122,17 @@ public partial class MarkdownRendererTests
         Assert.Contains("two", renderer.Render(id, 2, "two", true), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void A_note_is_cached_apart_with_and_without_its_title_line()
+    {
+        var renderer = new MarkdownRenderer();
+        var id = Guid.NewGuid();
+
+        // Note titles off shows the whole text; turning them on shows the body alone, at the same revision.
+        Assert.Contains("Shopping", renderer.Render(id, 1, "Shopping\n\nmilk", true), StringComparison.Ordinal);
+        Assert.DoesNotContain("Shopping", renderer.Render(id, 1, "milk", true), StringComparison.Ordinal);
+    }
+
     private static List<string> Checkboxes(string html) => CheckboxPattern().Matches(html).Select(m => m.Value).ToList();
 
     private static string Attribute(string element, string name) =>

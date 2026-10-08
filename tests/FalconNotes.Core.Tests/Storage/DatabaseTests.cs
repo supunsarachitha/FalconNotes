@@ -102,7 +102,7 @@ public class DatabaseTests
         Assert.Throws<ArgumentException>(() => new Database("x.db", new byte[16]));
 
     [Theory]
-    [InlineData("/data/user/0/dev.falconnotes.app/files/falcon.db", "/data/user/0/dev.falconnotes.app/files/falcon.db")]
+    [InlineData("/data/user/0/lk.stechbuzz.falconnotes/files/falcon.db", "/data/user/0/lk.stechbuzz.falconnotes/files/falcon.db")]
     [InlineData(@"C:\Users\Me\falcon.db", "/C:/Users/Me/falcon.db")]
     [InlineData("/a/100%/b?c#d.db", "/a/100%25/b%3fc%23d.db")]
     public void Paths_become_safe_uri_paths(string path, string expected) =>

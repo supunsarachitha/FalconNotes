@@ -148,7 +148,8 @@ Port `web/components/Markdown.tsx` with **Markdig**:
   `^(?:[-*+]|\d{1,9}[.)])[ \t]+\[([ xX])\]`. Flip `x`↔space in the box, and do nothing when it does not match. The note
   card adds the length of the title part before the body to the offset.
 - Wrap the output in `<div class="markdown">`. Cache rendered HTML by `(note id, revision)`, so long lists do not
-  re-render Markdown.
+  re-render Markdown. The key also has the length of the text rendered, because the same revision is shown whole or
+  without its title line, depending on the note titles setting.
 
 ## Markdown editing
 
