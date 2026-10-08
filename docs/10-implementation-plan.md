@@ -258,7 +258,7 @@ macOS half still to do; what Android's half needed is done:
 
 QA pass on the `release/1.0.0` branch (2026-10-07, Android emulator, API 36, Debug build driven through the WebView's
 developer tools, phone and 1,280 dp landscape, light and dark, airplane mode on for the last part): the Android half
-of [11 → Manual QA](11-testing.md#manual-qa) was run item by item. Five faults were found and fixed, each in its own
+of [11 → Manual QA](11-testing.md#manual-qa) was run item by item. Six faults were found and fixed, each in its own
 commit with a test where one could be written:
 
 - Theme and accent did not follow Settings → Appearance or the device: they were applied once, before the preferences
@@ -269,6 +269,10 @@ commit with a test where one could be written:
 - Welcome → Restore from a backup… never showed the chosen file's summary.
 - Key lost opened blank: `KeyLostRecovery` was not registered in `MauiProgram`. Nothing tests the App project's
   registrations, so a missing one only shows on a device.
+- The actions menu on note, todo and trash cards opened hidden: `content-visibility: auto` on `.note-card` made the
+  card the containing block of the menu's `position: fixed` and clipped it. Found by the owner after the pass, which
+  had clicked the menus by script; menus and dialogs must be checked with real taps (`adb shell input tap`) and a
+  screenshot.
 
 `MainActivity` is now single-top ([12](12-platforms.md)); the `--es route` extra is read in `OnCreate` only, so it
 applies when the command starts the app, not when the app is already running.

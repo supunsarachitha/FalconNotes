@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The actions menu (the three dots) on notes, todo lists and trashed notes is shown when opened. Before, it opened
+  inside the card, out of place and hidden.
 - Key lost: the screen is shown when the device key is missing. Before, the app opened to a blank page, because the
   service behind its two buttons was not registered in the app.
 - Welcome → Restore from a backup… now shows what the chosen file holds. Before, the button kept spinning after
