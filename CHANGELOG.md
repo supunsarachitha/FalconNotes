@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Closing the Labels dialog (Cancel, Save, Esc or a tap outside) no longer leaves an empty box on the note.
 - The actions menu (the three dots) on notes, todo lists and trashed notes is shown when opened. Before, it opened
   inside the card, out of place and hidden.
 - Key lost: the screen is shown when the device key is missing. Before, the app opened to a blank page, because the
