@@ -37,9 +37,9 @@ Removed: `links` (link previews), `encryption`, `password`, `https`, `admins`.
 
 ### Left out of 1.0.0
 
-The guide describes what the released app does (updated at the owner's request, 2026-10-07). Four things below are in the plan
-but not in 1.0.0, so their text is left out until they are built. Put each back, in the section named, with the
-feature:
+The guide describes what the released app does (updated at the owner's request, 2026-10-07). Four things below are
+in the plan but not in 1.0.0, so their text is left out until they are built. Put each back, in the section named,
+with the feature:
 
 | Section | Text to put back | Waiting for |
 |---|---|---|
