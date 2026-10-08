@@ -198,7 +198,7 @@ Three deliberate simplifications, not blocking the phase:
 - **Biometric unlock is stubbed off** (`AndroidAppLock.IsBiometricAvailable => false`). It needs AndroidX's
   `BiometricPrompt`, which is not yet an approved dependency (docs/02, Dependencies) — the same open question as
   `SkiaSharp` for photo shrinking from Phase 4. The PIN is the only way in meanwhile, which the design already
-  requires to work on its own.
+  requires to work on its own. **Built 2026-10-08**, see below.
 - **The menu-order editor reorders by its arrow buttons only.** Pointer drag needs its own JS interop (pointer
   capture, per-row bounding rectangles) beyond what `gestures.js` has; the arrows are fully keyboard- and
   screen-reader-accessible meanwhile.
@@ -211,6 +211,25 @@ Windows and macOS key-store names (`DataProtectionSection`'s "Windows' protected
 (Phase 0, Android first). UI-level bUnit coverage for the new Lock/App lock screens themselves was not added in this
 pass — only `AppLockService` (Core) is unit tested; the manual emulator run is the only check on `Lock.razor`,
 `AppLockSection.razor` and the PIN dialogs so far.
+
+Biometric unlock on Android (2026-10-08): the owner approved `Xamarin.AndroidX.Biometric` (docs/02), and
+`AndroidAppLock` now shows AndroidX's `BiometricPrompt` ([12](12-platforms.md), Biometrics). The screens were already
+written to `IAppLock`; one thing changed in them: the Lock screen no longer puts "That didn't work. Please try again."
+under the PIN field when a prompt opened from its button closes without unlocking, which a real prompt showed after
+a plain Cancel ([07](07-screens.md#lock)). Checked on the API 36 emulator with an enrolled fingerprint
+(`adb emu finger touch 1`), in a Debug build and in an R8-shrunk Release build: the switch is hidden until a
+fingerprint is enrolled; turning it on asks for one check, and Cancel leaves it off; the prompt opens by itself at a
+cold start and after Lock now; an unknown finger keeps the prompt open and the enrolled one opens Home; Cancel, and
+leaving the app with the prompt open, both return to the Lock screen with the PIN and the "Use fingerprint or face"
+button working. The lock's `FLAG_SECURE` also blacks out the prompt in screenshots, so the check read the screen
+through `uiautomator dump`. `BiometricUnlockTests` (bUnit, a fake prompt) covers the screens' side; that is the first
+UI-level coverage of `Lock.razor`, `AppLockSection.razor` and `VerifyPinDialog.razor`. The release APK asks for
+`USE_BIOMETRIC` and `USE_FINGERPRINT` and still for no network permission.
+
+Not checked, still open: a real phone; face unlock; Android 8.0 to 9, where AndroidX draws its own fingerprint dialog
+in place of the system's; TalkBack on the prompt. Windows Hello and Touch ID wait for those heads. Before the
+release that carries this, the README's and the website's "no permissions" lines have to be true again
+(`site/index.html`, `site/privacy.html`; changed in the same commit).
 
 ## Phase 7: platforms, packaging, QA
 

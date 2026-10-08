@@ -52,6 +52,11 @@
     <PackageReference Include="CommunityToolkit.Maui" />
   </ItemGroup>
 
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <!-- AndroidX BiometricPrompt for the app lock (docs/02, Dependencies; docs/12, Biometrics). -->
+    <PackageReference Include="Xamarin.AndroidX.Biometric" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\FalconNotes.Core\FalconNotes.Core.csproj" />
     <ProjectReference Include="..\FalconNotes.UI\FalconNotes.UI.csproj" />

@@ -6,7 +6,7 @@ namespace FalconNotes.Core.Platform;
 /// </summary>
 public interface IAppLock
 {
-    /// <summary>Whether the device offers biometrics the app can use.</summary>
+    /// <summary>Whether the device offers biometrics the app can use now: a sensor, with a finger or face enrolled.</summary>
     bool IsBiometricAvailable { get; }
 
     /// <summary>What to call it: "fingerprint or face", "Windows Hello" or "Touch ID".</summary>

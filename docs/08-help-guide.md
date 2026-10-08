@@ -37,8 +37,8 @@ Removed: `links` (link previews), `encryption`, `password`, `https`, `admins`.
 
 ### Left out of 1.0.0
 
-The guide describes what the released app does (updated at the owner's request, 2026-10-07). Four things below are
-in the plan but not in 1.0.0, so their text is left out until they are built. Put each back, in the section named,
+The guide describes what the released app does (updated at the owner's request, 2026-10-07). Three things below are
+in the plan but not built, so their text is left out until they are. Put each back, in the section named,
 with the feature:
 
 | Section | Text to put back | Waiting for |
@@ -46,9 +46,11 @@ with the feature:
 | `writing` | "Choose the paperclip, or on a computer paste or drag files onto the box." | Paste and drag-and-drop in the composer (desktop) |
 | `pictures` | "To save space, turn on **Shrink photos before adding** in [Settings → Features](/settings/features): large photos are resized to 2560 pixels on their longest side and saved as JPEG, often a tenth of the size, and their location and camera details are left out. The full-size original is not kept, and photos you added earlier stay as they are." | An `IImageCodec` (the SkiaSharp decision, [02](02-architecture.md#dependencies)) |
 | `appearance` | "drag an item by its handle, or move it with its arrows" | Pointer drag in `MenuOrderEditor` |
-| `lock` | "Where your device has a fingerprint reader, face recognition, Windows Hello or Touch ID, you can unlock with that instead." | Biometric unlock (`IAppLock`) |
 
 Added in 1.0.0: `pictures` mentions the viewer's share button (Android, [12](12-platforms.md)).
+
+Put back with biometric unlock (2026-10-08): the `lock` section's sentence on fingerprint, face, Windows Hello and
+Touch ID.
 
 ## 1. Writing notes (`writing`)
 
@@ -142,6 +144,9 @@ To keep people who pick up your device out of the app, turn on the [app lock](/s
 Turn on **Lock Falcon Notes** in [Settings → Privacy & security](/settings/security) and choose a PIN. Falcon Notes then
 asks for it when it opens, and when it comes back after being in the background for longer than you chose under **Lock
 after**. To lock straight away, choose the lock button at the bottom of the menu.
+
+Where your device has a fingerprint reader, face recognition, Windows Hello or Touch ID, you can unlock with that
+instead.
 
 Write your PIN down somewhere safe. It cannot be reset: if you forget it, the only way back in is to erase the app's
 data on this device and restore your notes from a backup.

@@ -84,6 +84,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   APK for direct installs.
 - A website for GitHub Pages (`site/`, published by the Website workflow from `main`), with a privacy policy page at
   `privacy.html`, and screenshots of the app in `docs/screenshots/`.
+- Fingerprint or face unlock for the app lock on Android (AndroidX `BiometricPrompt`, through the newly approved
+  `Xamarin.AndroidX.Biometric`). Turn on **Unlock with fingerprint or face** in Settings → Privacy & security, shown
+  when the device has a fingerprint or face enrolled; the prompt then opens by itself on the Lock screen, and stands
+  in for the PIN where Settings asks for it. The PIN always works too. Help describes it again.
 
 ### Changed
 
@@ -98,6 +102,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The README describes the app as built, with screenshots, instead of the plan.
 - The README and the website link to the Maple Notes website and its live demo, and say what Maple Notes adds. They no longer say the web app's backups have no labels: since Maple Notes 1.9.0 they do, and Falcon Notes
   leaves them out on restore.
+- The Android app now asks for the `USE_BIOMETRIC` and `USE_FINGERPRINT` permissions, for fingerprint or face unlock.
+  They are granted at install with no prompt. It still has no internet permission. The README, the website and the
+  privacy policy said the app asks for no permissions, and now name this one.
+- The Lock screen shows no message when a fingerprint or face prompt closes without unlocking. It used to be written
+  to show "That didn't work. Please try again." under the PIN field.
 - The README is reorganised: a contents list, a section on how Falcon Notes relates to Maple Notes, and the limits
   as a list. It no longer describes how the repository was set up or points to the prompts used to build it.
 

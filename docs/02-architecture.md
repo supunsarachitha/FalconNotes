@@ -260,7 +260,7 @@ Only these, unless a decision is recorded here first. Every one must be on the a
 | `Markdig` | BSD-2-Clause | Markdown rendering |
 | `SkiaSharp` (+ native assets per platform) | MIT, but see below | Shrinking photos. **Not added; decision pending (2026-10-01).** Its native library bundles code under other terms: Adobe's DNG SDK (a custom licence), the GIF decoder (MPL 1.1 / GPL / LGPL), FreeType (FTL, an advertising clause), and it lists libmicrohttpd (LGPL). The licence policy puts custom, MPL and LGPL terms under "review first". The alternative is each platform's own codec (Android `ImageDecoder` and `Bitmap.compress`, Windows `BitmapDecoder`/`BitmapEncoder`, Apple ImageIO) behind `IImageCodec`, with no third-party code. |
 | `CommunityToolkit.Maui` | MIT | File saver, status bar colour |
-| `Xamarin.AndroidX.Biometric` | Apache-2.0 | Biometric unlock (`IAppLock` on Android). **Not added; decision pending (2026-10-07).** `AndroidAppLock` reports `IsBiometricAvailable => false` until it is approved; the PIN is the only way into the app lock meanwhile. |
+| `Xamarin.AndroidX.Biometric` 1.1.0.30 | MIT (the binding) and Apache-2.0 (AndroidX) | Biometric unlock (`IAppLock` on Android). **Approved by the owner, 2026-10-08.** The version is pinned to the one built against the AndroidX versions MAUI 10.0.110 brings, so it adds one package and changes no other; raise it together with MAUI. Its manifest adds two permissions ([12](12-platforms.md)). |
 | Tailwind CSS 4 standalone CLI | MIT | Build-time only, generates `app.css` |
 | Lucide icons (SVG paths, copied into `Icon.razor`) | ISC | Icons |
 | `Microsoft.Extensions.Logging.Abstractions` | MIT | Logging interfaces in Core (already part of MAUI) |
