@@ -287,10 +287,12 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `calendar` | true | `theme` | `System` (System, Light, Dark) |
 | `habitTracker` | false | `accent` | `Falcon` (Falcon, Ocean, Forest, Teal, Plum, Amber, Slate) |
 | `menuTextSize` | `Medium` (Small, Medium, Large) | `weekStart` | `Auto` (Auto, Sunday, Monday, Saturday) |
-| `menuOrder` | `""` | | |
+| `menuOrder` | `""` | `background` | `None` (None, Halloween, Christmas, NewYear, Valentine, Easter, Diwali, Vesak, Eid, LunarNewYear) |
 
 - `Falcon` is the web app's `Maple` accent under this app's name, with the same colours (D12). Preferences are not
   part of backups, so nothing needs mapping.
+- `background` is this app's own ([06](06-design-system.md#backgrounds)): the web app's `Preferences` has no such
+  key, and a value this app does not offer reads as `None`, like every other preference.
 - A change shows at once and is saved in the background. If saving fails, it is rolled back with "Your setting could
   not be saved. Please try again."
 - Turning a feature off hides its page or tool and deletes nothing. A page whose feature is off shows "{Feature} is

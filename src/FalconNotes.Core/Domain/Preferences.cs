@@ -38,6 +38,43 @@ public enum Accent
     Slate,
 }
 
+/// <summary>
+/// What is behind the page (docs/06, Backgrounds): the plain colour, or one of the festival patterns drawn for this
+/// app. The web app has no such choice.
+/// </summary>
+public enum Background
+{
+    /// <summary>The default: the plain page colour.</summary>
+    None,
+
+    /// <summary>Pumpkins, bats and ghosts.</summary>
+    Halloween,
+
+    /// <summary>Trees, snowflakes and presents.</summary>
+    Christmas,
+
+    /// <summary>Fireworks, balloons and confetti.</summary>
+    NewYear,
+
+    /// <summary>Hearts and love letters.</summary>
+    Valentine,
+
+    /// <summary>Painted eggs, flowers and a rabbit.</summary>
+    Easter,
+
+    /// <summary>Oil lamps and rangoli.</summary>
+    Diwali,
+
+    /// <summary>Paper lanterns, lotus flowers and bodhi leaves.</summary>
+    Vesak,
+
+    /// <summary>Crescents, stars and lanterns.</summary>
+    Eid,
+
+    /// <summary>Red lanterns, blossom and coins.</summary>
+    LunarNewYear,
+}
+
 /// <summary>The side menu's text size.</summary>
 public enum MenuTextSize
 {
@@ -151,6 +188,9 @@ public sealed record Preferences
 
     /// <summary>The accent colour.</summary>
     public Accent Accent { get; init; } = Accent.Falcon;
+
+    /// <summary>What is behind the page: plain, or a festival pattern.</summary>
+    public Background Background { get; init; } = Background.None;
 
     /// <summary>The side menu's text size.</summary>
     public MenuTextSize MenuTextSize { get; init; } = MenuTextSize.Medium;

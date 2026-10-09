@@ -3,15 +3,18 @@
 
 const KEY = "falcon-notes:appearance";
 
-export function apply(dark, accent) {
+export function apply(dark, accent, background) {
   const root = document.documentElement;
   root.classList.toggle("dark", dark);
   root.classList.toggle("light", !dark);
   root.style.colorScheme = dark ? "dark" : "light";
   if (accent === "falcon") delete root.dataset.accent;
   else root.dataset.accent = accent;
+  // The festival backgrounds are this app's own (docs/06, Backgrounds): absent for the plain page.
+  if (!background || background === "none") delete root.dataset.background;
+  else root.dataset.background = background;
   try {
-    localStorage.setItem(KEY, JSON.stringify({ dark, accent }));
+    localStorage.setItem(KEY, JSON.stringify({ dark, accent, background }));
   } catch {
     // The choice still applies now; it is just not remembered for the first paint.
   }

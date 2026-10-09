@@ -69,6 +69,12 @@ New tests the reference does not have:
   cancelled picker leaves it off, the choices are saved, a failure shows in Settings and on Home until one works,
   and a platform without `IBackupFolders` shows neither. The real folder (`AndroidBackupFolders`) can only be
   checked on a device or an emulator.
+- Festival backgrounds: the preference's default and that a value not offered reads as plain (`SettingsTests`); the
+  page is told the background by name, and only when it changes (`AppearanceServiceTests`); Settings offers every
+  background by name with its small picture and saves the choice, and every background in the enum has its name, its
+  colours in `app.css` and a tile for each theme that reaches for nothing outside itself (bUnit, `BackgroundTests`).
+  **Remove background** is covered there too. How they look is for the eye: the script's contact sheet and a device
+  ([10](10-implementation-plan.md), Phase 3, has what was looked at and the scrolling measurements).
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 
@@ -152,7 +158,8 @@ in light and dark mode:
 - [ ] Habits: add, tick today and an earlier week, chart (weeks and months, one habit), calendar, archive and restore.
 - [ ] Daily notes: the Today card; the first words become the note; it rolls over at midnight (change the clock).
 - [ ] Settings: every switch hides and shows its feature without losing data; menu order by drag and by arrows; text
-      sizes; accents; week start.
+      sizes; accents; week start. Each background in the light and the dark theme: headings and empty states that lie
+      on it stay easy to read, a long list scrolls smoothly, and None and **Remove background** take it away.
 - [ ] Backup: export in each format → restore in the web app; web export → restore here; restore twice skips.
 - [ ] Automatic backups: turn on and choose a folder → a `falcon-notes-auto-….zip` appears there and restores; **Back
       up now** twice in a minute leaves one file; with Keep at 3, a fourth backup deletes the oldest and leaves a file

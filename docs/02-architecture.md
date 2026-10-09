@@ -225,7 +225,7 @@ concern:
 
 | Module | Does | Ported from |
 |---|---|---|
-| `appearance.js` | Sets `dark`/`light` classes, `data-accent`, `color-scheme`; remembers them in `localStorage` for the next start | `lib/appearance.ts` |
+| `appearance.js` | Sets `dark`/`light` classes, `data-accent`, `data-background` (this app's own, [06](06-design-system.md#backgrounds)), `color-scheme`; remembers them in `localStorage` for the next start | `lib/appearance.ts` |
 | `editor.js` | Autosize a textarea (max 480 px), focus at end, read the selection, apply an `Edit` with `execCommand('insertText')` so Undo works (fall back to setting the value), caret coordinates for the tag popup | `lib/focus.ts`, `lib/caret.ts`, `components/FormatToolbar.tsx`, `components/Composer.tsx` |
 | `files.js` | Paste and drop of files: stream each `File` to .NET | `components/Composer.tsx` |
 | `observe.js` | `nearViewport(element, margin, dotnet)`: fires once when an element comes within 600 or 800 px; the infinite-scroll sentinel | `lib/viewport.ts`, `components/NoteList.tsx` |

@@ -85,7 +85,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `pages/HabitsPage.tsx` | `UI/Pages/Habits.razor` |
 | `pages/TagsPage.tsx` | `UI/Pages/Tags.razor` + `Core/Text/TagTree.cs` |
 | `pages/TrashPage.tsx` | `UI/Pages/Trash.razor` |
-| `pages/SettingsPage.tsx` | `UI/Pages/Settings/Settings.razor`, `ProfileSection.razor`, `StorageRow.razor`, `TrashSection.razor`, `DeleteContentSection.razor` (Adapt) + new `AppLockSection.razor`, `DataProtectionSection.razor`, `EraseSection.razor`, `AutoBackupSection.razor` (and `Components/AutoBackupNotice.razor` on Home) |
+| `pages/SettingsPage.tsx` | `UI/Pages/Settings/Settings.razor`, `ProfileSection.razor`, `StorageRow.razor`, `TrashSection.razor`, `DeleteContentSection.razor` (Adapt) + new `AppLockSection.razor`, `DataProtectionSection.razor`, `EraseSection.razor`, `AutoBackupSection.razor` (and `Components/AutoBackupNotice.razor` on Home). `AppearanceSection.razor` gains Background, with `wwwroot/img/backgrounds/*` and `scripts/make-backgrounds.py`, none of them from the web app |
 | `pages/HelpPage.tsx` | `UI/Pages/Help.razor` |
 | `pages/AuthPage.tsx`, `UnlockPage.tsx`, `RecoverPage.tsx` | Drop (new `Welcome.razor`, `Lock.razor`, `KeyLost.razor`) |
 

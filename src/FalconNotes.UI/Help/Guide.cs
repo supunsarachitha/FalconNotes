@@ -139,7 +139,9 @@ public static class Guide
 
         new("appearance", "Appearance", """
             Under [Settings → Appearance](/settings/appearance), choose **Light**, **Dark**, or **Device** to follow your phone
-            or computer, pick an accent colour, and choose the day your weeks start on in the calendars.
+            or computer, pick an accent colour, and choose the day your weeks start on in the calendars. For a festive look, choose
+            a **Background**, such as Halloween, Christmas, Diwali, Vesak or Eid: a pattern behind your notes, in light and dark.
+            **None**, or **Remove background**, takes it away again.
 
             Under [Settings → Side menu](/settings/menu), put the menu's items in the order you use them, moving each one
             with its arrows. You can also make the menu's text smaller or larger.

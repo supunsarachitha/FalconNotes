@@ -82,8 +82,8 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 - **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files and each note's labels,
   and restore it on any device. Optionally, a backup is saved by itself to a folder you choose, every day, week or
   month.
-- **Your look.** Light, dark or the device's setting, seven accent colours, and the side menu in your own order and
-  text size.
+- **Your look.** Light, dark or the device's setting, seven accent colours, festive backgrounds such as Halloween,
+  Diwali, Vesak and Eid, and the side menu in your own order and text size.
 - **Help built in.** A user guide in the app explains every feature.
 
 ### Not yet available
@@ -134,7 +134,7 @@ device, use Maple Notes instead of Falcon Notes, or alongside it.
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) (10.0.300 or a later 10.0 feature band) with the MAUI Android
   workload: `dotnet workload install maui-android`
 - The Android SDK with API 36, and JDK 21
-- Python 3, only for `scripts/check-licenses.py`
+- Python 3, only for `scripts/check-licenses.py` and `scripts/make-backgrounds.py`
 
 The first build downloads the pinned Tailwind CSS command-line tool into `tools/` and checks its SHA-256.
 
@@ -194,7 +194,7 @@ docs/                     the specification, and docs/screenshots/ for this READ
 site/                     the website, published to GitHub Pages by .github/workflows/pages.yml
 fixtures/                 the shared export vectors, two demo backups, the falcon mark
 benchmarks/storage/       the storage benchmark source (desktop and Android) and its raw results
-scripts/                  the licence check that writes THIRD-PARTY-NOTICES.md
+scripts/                  the licence check that writes THIRD-PARTY-NOTICES.md, and the drawing of the backgrounds
 reference/                the Maple Notes web app's 1.8.0 documents and screenshots (its source is on GitHub)
 ```
 

@@ -226,3 +226,167 @@ body {
 .note-card:has([aria-haspopup="menu"][aria-expanded="true"]) {
   content-visibility: visible;
 }
+
+/* Festival backgrounds (docs/06, Backgrounds): this app's own, chosen in Settings → Appearance. The page's root gets
+   data-background, and two fixed layers go behind everything: a wash of the festival's colour that fades into the
+   usual page colour, and the pattern over it. Fixed layers, not a fixed background image, which scrolls badly in
+   Android's WebView. The shell is made see-through so they show; cards stay solid, so notes read as before.
+   The tiles are drawn by scripts/make-backgrounds.py, one for each theme. */
+[data-background] {
+  --background-end: #f5f5f4;
+  --background-strength: 0.7;
+}
+.dark [data-background],
+.dark[data-background] {
+  --background-end: #0c0a09;
+}
+/* A wide screen shows far more of the pattern, and Settings lays its list and headings straight on it: fainter
+   there, so a drawing behind a word does not get in its way (found on a tablet-sized screen, docs/10). */
+@media (min-width: 64rem) {
+  [data-background] {
+    --background-strength: 0.42;
+  }
+}
+
+:root[data-background] body::before,
+:root[data-background] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+:root[data-background] body::before {
+  background: linear-gradient(180deg, var(--background-top) 0%, var(--background-middle) 45%, var(--background-end) 100%);
+}
+:root[data-background] body::after {
+  background: var(--background-tile) 0 0 / 300px 300px repeat;
+  opacity: var(--background-strength);
+}
+:root[data-background] #app > .min-h-dvh {
+  background-color: transparent;
+}
+
+/* The picture of a background in Settings → Appearance: the same wash and tile, small. */
+.background-preview {
+  background:
+    var(--background-tile, none) center / 150px 150px repeat,
+    linear-gradient(180deg, var(--background-top, #f5f5f4), var(--background-middle, #f5f5f4));
+}
+.dark .background-preview {
+  background:
+    var(--background-tile, none) center / 150px 150px repeat,
+    linear-gradient(180deg, var(--background-top, #0c0a09), var(--background-middle, #0c0a09));
+}
+
+/* None, in Settings: the empty swatch with a line across it that everyone reads as "nothing". */
+.background-preview-none {
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), currentColor calc(50% - 1px), currentColor calc(50% + 1px), transparent calc(50% + 1px)),
+    #f5f5f4;
+}
+.dark .background-preview-none {
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), currentColor calc(50% - 1px), currentColor calc(50% + 1px), transparent calc(50% + 1px)),
+    #0c0a09;
+}
+
+[data-background="halloween"] {
+  --background-tile: url("../img/backgrounds/halloween-light.svg");
+  --background-top: #ffedd5;
+  --background-middle: #fff7ed;
+}
+.dark [data-background="halloween"],
+.dark[data-background="halloween"] {
+  --background-tile: url("../img/backgrounds/halloween-dark.svg");
+  --background-top: #2a1245;
+  --background-middle: #160d26;
+}
+[data-background="christmas"] {
+  --background-tile: url("../img/backgrounds/christmas-light.svg");
+  --background-top: #dcfce7;
+  --background-middle: #f0fdf4;
+}
+.dark [data-background="christmas"],
+.dark[data-background="christmas"] {
+  --background-tile: url("../img/backgrounds/christmas-dark.svg");
+  --background-top: #0f2a1d;
+  --background-middle: #0b1a14;
+}
+[data-background="newyear"] {
+  --background-tile: url("../img/backgrounds/newyear-light.svg");
+  --background-top: #ede9fe;
+  --background-middle: #f5f3ff;
+}
+.dark [data-background="newyear"],
+.dark[data-background="newyear"] {
+  --background-tile: url("../img/backgrounds/newyear-dark.svg");
+  --background-top: #1e1b4b;
+  --background-middle: #0f0e2a;
+}
+[data-background="valentine"] {
+  --background-tile: url("../img/backgrounds/valentine-light.svg");
+  --background-top: #ffe4e6;
+  --background-middle: #fff1f2;
+}
+.dark [data-background="valentine"],
+.dark[data-background="valentine"] {
+  --background-tile: url("../img/backgrounds/valentine-dark.svg");
+  --background-top: #4c0519;
+  --background-middle: #2a0a14;
+}
+[data-background="easter"] {
+  --background-tile: url("../img/backgrounds/easter-light.svg");
+  --background-top: #fce7f3;
+  --background-middle: #fefce8;
+}
+.dark [data-background="easter"],
+.dark[data-background="easter"] {
+  --background-tile: url("../img/backgrounds/easter-dark.svg");
+  --background-top: #2e1f3a;
+  --background-middle: #1a1522;
+}
+[data-background="diwali"] {
+  --background-tile: url("../img/backgrounds/diwali-light.svg");
+  --background-top: #ffedd5;
+  --background-middle: #fff7ed;
+}
+.dark [data-background="diwali"],
+.dark[data-background="diwali"] {
+  --background-tile: url("../img/backgrounds/diwali-dark.svg");
+  --background-top: #3b0a2a;
+  --background-middle: #1f0a1a;
+}
+[data-background="vesak"] {
+  --background-tile: url("../img/backgrounds/vesak-light.svg");
+  --background-top: #fef9c3;
+  --background-middle: #fefce8;
+}
+.dark [data-background="vesak"],
+.dark[data-background="vesak"] {
+  --background-tile: url("../img/backgrounds/vesak-dark.svg");
+  --background-top: #0c1e3d;
+  --background-middle: #0a1326;
+}
+[data-background="eid"] {
+  --background-tile: url("../img/backgrounds/eid-light.svg");
+  --background-top: #ccfbf1;
+  --background-middle: #f0fdfa;
+}
+.dark [data-background="eid"],
+.dark[data-background="eid"] {
+  --background-tile: url("../img/backgrounds/eid-dark.svg");
+  --background-top: #042f2e;
+  --background-middle: #041c1c;
+}
+[data-background="lunarnewyear"] {
+  --background-tile: url("../img/backgrounds/lunarnewyear-light.svg");
+  --background-top: #fee2e2;
+  --background-middle: #fef2f2;
+}
+.dark [data-background="lunarnewyear"],
+.dark[data-background="lunarnewyear"] {
+  --background-tile: url("../img/backgrounds/lunarnewyear-dark.svg");
+  --background-top: #450a0a;
+  --background-middle: #240808;
+}

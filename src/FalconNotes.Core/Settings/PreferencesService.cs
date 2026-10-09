@@ -46,6 +46,7 @@ public sealed class PreferencesService(StorageContext storage, ChangeFeed feed)
         DateFormat = DateFormats.All.Contains(preferences.DateFormat) ? preferences.DateFormat : "yyyy-MM-dd",
         Theme = Enum.IsDefined(preferences.Theme) ? preferences.Theme : Theme.System,
         Accent = Enum.IsDefined(preferences.Accent) ? preferences.Accent : Accent.Falcon,
+        Background = Enum.IsDefined(preferences.Background) ? preferences.Background : Background.None,
         MenuTextSize = Enum.IsDefined(preferences.MenuTextSize) ? preferences.MenuTextSize : MenuTextSize.Medium,
         WeekStart = Enum.IsDefined(preferences.WeekStart) ? preferences.WeekStart : WeekStart.Auto,
         PhotoSize = Enum.IsDefined(preferences.PhotoSize) ? preferences.PhotoSize : PhotoSize.Large,

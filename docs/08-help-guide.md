@@ -57,6 +57,9 @@ adding**.
 Changed with labels in backups (1.2.0, 2026-10-08), to the web app's wording since 1.9.0: the last line of `labels`,
 the restore paragraph of `backup`, and in `devices` labels now travel with their notes and only settings stay behind.
 
+Added with the festival backgrounds (2026-10-08): the sentences on **Background** in `appearance`. They are this app's
+own.
+
 Added with automatic backups (2026-10-08): the second paragraph of `backup`. It is this app's own; the web app has no
 such feature.
 
@@ -135,7 +138,9 @@ pixels).
 
 ````markdown
 Under [Settings → Appearance](/settings/appearance), choose **Light**, **Dark**, or **Device** to follow your phone
-or computer, pick an accent colour, and choose the day your weeks start on in the calendars.
+or computer, pick an accent colour, and choose the day your weeks start on in the calendars. For a festive look, choose
+a **Background**, such as Halloween, Christmas, Diwali, Vesak or Eid: a pattern behind your notes, in light and dark.
+**None**, or **Remove background**, takes it away again.
 
 Under [Settings → Side menu](/settings/menu), put the menu's items in the order you use them, moving each one
 with its arrows. You can also make the menu's text smaller or larger.
