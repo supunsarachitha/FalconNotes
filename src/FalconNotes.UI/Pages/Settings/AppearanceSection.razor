@@ -1,4 +1,5 @@
-@* Port of AppearanceSection in components/PreferenceSections.tsx (docs/07, Settings: unchanged). *@
+@* Port of AppearanceSection in components/PreferenceSections.tsx (docs/07, Settings), plus Background, which is
+   this app's own (docs/06, Backgrounds). *@
 @using System.Globalization
 @using FalconNotes.Core.Domain
 @using FalconNotes.UI.State
@@ -38,6 +39,34 @@
         </div>
     </fieldset>
 
+    <fieldset class="mt-5">
+        <legend class="mb-2 text-sm font-medium">Background</legend>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            @foreach (var background in Backgrounds)
+            {
+                var active = State.Preferences.Background == background;
+                <label class="@Classes.Join("flex cursor-pointer flex-col gap-1.5 rounded-xl border p-1.5 text-xs transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-maple-500",
+                                             active ? "border-maple-600 bg-maple-50 font-medium text-maple-700 dark:border-maple-500 dark:bg-maple-600/15 dark:text-maple-400" : "border-stone-200 text-stone-600 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800")">
+                    <input type="radio" name="background" value="@background" checked="@active" @onchange="() => SaveAsync(p => p with { Background = background })" class="sr-only" />
+                    <span aria-hidden="true" data-background="@(background == Background.None ? null : AppearanceService.BackgroundName(background))"
+                          class="@Classes.Join("background-preview block h-14 rounded-lg border border-stone-200 dark:border-stone-700", background == Background.None ? "background-preview-none text-stone-400 dark:text-stone-500" : "")"></span>
+                    <span class="px-1 pb-0.5 text-center">@BackgroundLabels[background]</span>
+                </label>
+            }
+        </div>
+        <p class="mt-1.5 text-sm text-stone-600 dark:text-stone-300">A festive pattern behind your notes. It follows the light or dark theme. Choose None for no background.</p>
+        @if (State.Preferences.Background != Background.None)
+        {
+            @* The same as choosing None, said outright: an empty first tile was not found to be the way back. *@
+            <div class="mt-3">
+                <Button Variant="ButtonVariant.Secondary" OnClick="@(() => SaveAsync(p => p with { Background = Background.None }))">
+                    <Icon Name="Components.Ui.IconName.X" Class="size-4" />
+                    Remove background
+                </Button>
+            </div>
+        }
+    </fieldset>
+
     <div class="mt-5">
         <label for="@_weekId" class="mb-2 block text-sm font-medium">Week starts on</label>
         <select id="@_weekId" value="@State.Preferences.WeekStart" @onchange="OnWeekStartChanged"
@@ -55,6 +84,22 @@
     private static readonly IReadOnlyList<Theme> Themes = [Theme.System, Theme.Light, Theme.Dark];
     private static readonly IReadOnlyList<Accent> Accents = Enum.GetValues<Accent>();
     private static readonly IReadOnlyList<WeekStart> WeekStarts = Enum.GetValues<WeekStart>();
+    private static readonly IReadOnlyList<Background> Backgrounds = Enum.GetValues<Background>();
+
+    /// <summary>Each background's name in Settings (docs/07).</summary>
+    public static readonly IReadOnlyDictionary<Background, string> BackgroundLabels = new Dictionary<Background, string>
+    {
+        [Background.None] = "None",
+        [Background.Halloween] = "Halloween",
+        [Background.Christmas] = "Christmas",
+        [Background.NewYear] = "New Year",
+        [Background.Valentine] = "Valentine's Day",
+        [Background.Easter] = "Easter",
+        [Background.Diwali] = "Diwali",
+        [Background.Vesak] = "Vesak",
+        [Background.Eid] = "Eid",
+        [Background.LunarNewYear] = "Lunar New Year",
+    };
 
     private static readonly IReadOnlyDictionary<Theme, Components.Ui.IconName> ThemeIcons = new Dictionary<Theme, Components.Ui.IconName>
     {

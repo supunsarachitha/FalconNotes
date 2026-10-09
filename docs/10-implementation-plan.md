@@ -122,6 +122,33 @@ not run again); a backup made here restored in a running Maple Notes, and one ma
 **Acceptance**: side-by-side screenshots of the empty shell match `reference/.../docs/screenshots/*` in light and dark,
 at 375 px and 1,280 px wide, apart from the name and mark.
 
+Added afterwards (2026-10-08, at the owner's request): **festival backgrounds** ([06](06-design-system.md#backgrounds)),
+after a Halloween sample was tried on the emulator and approved. A `Background` preference, nine patterns drawn by
+`scripts/make-backgrounds.py` for the light and the dark theme, two fixed layers in `app.css`, and the choice in
+Settings → Appearance. Checked on the emulator (API 36), with the demo notes restored:
+
+- **Both themes**: all nine behind Home in the light and in the dark theme, the choices with their small pictures, and
+  None and **Remove background** taking the background away. The first choice was called "Plain" and showed an empty
+  box; the owner did not find it to be the way back, so it became "None" with a line across it, and the button was
+  added.
+- **A tablet-sized screen** (the emulator set to 2560 × 1600 at 320 dpi, which is 1,280 × 800 CSS pixels and the
+  sidebar layout; not a real tablet). Far more of the pattern shows there, and Settings lays its list of sections and
+  its headings straight on it, so drawings sat behind words. The pattern is now fainter everywhere, and fainter again
+  at 1,024 px and wider ([06](06-design-system.md#backgrounds)); checked again afterwards.
+- **Scrolling**: Home (about 7,800 px of notes) flung up and down ten times, measuring the page's animation frames
+  and Android's frame statistics (`dumpsys gfxinfo`), for None, Halloween and Vesak in both themes, twice each. The
+  background made no difference that could be measured:
+
+  | Emulator | No background | With a background |
+  |---|---|---|
+  | As usual (4 cores, the Mac's GPU) | median frame 17 ms, 1.2–2.0% slow frames | 17–18 ms, 1.2–1.8% |
+  | The page's CPU slowed 4× (DevTools) | 17 ms, 1.1–3.5% | 17 ms, 1.2–1.4% |
+  | 1 core and software graphics | 65–81 ms, 78–85% | 69–81 ms, 80–85% |
+
+  The last row is far slower than any phone, and equally slow with and without a background. None of this is a real
+  slow phone: an emulator on a fast Mac cannot stand in for a budget phone's graphics chip, so that check is still
+  owed, as S6 is.
+
 Status (2026-10-07): built on the Android emulator — Welcome, the gated redirect to it when there is no profile, the
 drawer/sidebar with search, menu, calendar and profile footer, and Key lost's two ways out all run correctly (checked
 against docs/07 by hand; see docs/10's spike results style below for the next session). The falcon mark is approved

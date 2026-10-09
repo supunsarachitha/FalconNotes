@@ -30,6 +30,25 @@ public class AppearanceServiceTests : BunitContext
         Assert.Equal([false, true], device.Chrome);
     }
 
+    // New: the backgrounds are this app's own (docs/06, Backgrounds).
+    [Fact]
+    public async Task Applies_the_background_by_its_name_and_plain_as_none()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex");
+        var module = JSInterop.SetupModule("./_content/FalconNotes.UI/js/appearance.js");
+        module.SetupVoid("apply", _ => true).SetVoidResult();
+        var appearance = new AppearanceService(new FakeThemeSource(), app.State);
+
+        await appearance.ApplyAsync(JSInterop.JSRuntime);
+        await app.State.UpdatePreferencesAsync(p => p with { Background = Background.LunarNewYear });
+        await appearance.ApplyAsync(JSInterop.JSRuntime);
+        await appearance.ApplyAsync(JSInterop.JSRuntime); // nothing changed: not applied again
+        await app.State.UpdatePreferencesAsync(p => p with { Background = Background.None });
+        await appearance.ApplyAsync(JSInterop.JSRuntime);
+
+        Assert.Equal(["none", "lunarnewyear", "none"], module.Invocations["apply"].Select(i => i.Arguments[2]).ToList());
+    }
+
     [Fact]
     public async Task Device_theme_follows_the_device()
     {

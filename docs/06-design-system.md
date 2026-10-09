@@ -85,11 +85,42 @@ report the device setting reliably, so the app resolves it in C#:
 
 1. `IThemeSource` reports the device theme (`Application.Current.RequestedTheme`) and raises an event when it changes.
 2. `AppearanceService` computes the effective theme. `appearance.js` then sets **exactly one** of `.dark`/`.light` on
-   `<html>`, `style.colorScheme`, and `data-accent` (absent for Falcon), and stores `{theme, accent}` in
-   `localStorage['falcon-notes:appearance']`.
+   `<html>`, `style.colorScheme`, `data-accent` (absent for Falcon) and `data-background` (absent for the plain page,
+   [Backgrounds](#backgrounds)), and stores `{dark, accent, background}` in `localStorage['falcon-notes:appearance']`.
 3. `index.html` runs `appearance.js`'s `applySaved()` before Blazor starts, so the first paint uses the last appearance.
 4. Native chrome follows: Android status and navigation bar colours (CommunityToolkit `StatusBarBehavior`), the
    `MainPage` background, and the Windows and macOS title bar theme.
+
+## Backgrounds
+
+New in this app (2026-10-08, at the owner's request); the web app has none. **Settings → Appearance → Background**
+puts a festival pattern behind the page: None (the default), Halloween, Christmas, New Year, Valentine's Day, Easter,
+Diwali, Vesak, Eid or Lunar New Year. It is a background only: the accent, the icons and every card stay as they are,
+so notes read exactly as before.
+
+- **How it is applied.** `appearance.js` sets `data-background` on `<html>` (`halloween`, `newyear`, `lunarnewyear`, …;
+  absent for None), and the boot script restores it before the first paint. In `app.css`, two fixed layers then sit
+  behind everything (`body::before` and `::after`, `z-index: -1`): a wash of the festival's colour that fades into the
+  usual page colour (stone-100, or stone-950 in dark), and the pattern over it, repeated at 300 px. They are fixed
+  layers, not a fixed background image, which scrolls badly in Android's WebView. The shell (`#app > .min-h-dvh`,
+  which is `AppShell` and `AuthLayout`) becomes transparent so they show. Welcome and Lock show the background too.
+- **Each background** is two custom properties for the wash (`--background-top`, `--background-middle`) and one for the
+  tile (`--background-tile`), set for light and again for `.dark`. The same rules give the small pictures in Settings
+  (`.background-preview` on an element with its own `data-background`). None's picture is an empty swatch with a line
+  across it (`.background-preview-none`).
+- **The tiles** are `wwwroot/img/backgrounds/{name}-{light|dark}.svg`: seamless 480 px tiles, about 5 kB each, drawn
+  by `scripts/make-backgrounds.py`, which holds every shape. Nine large drawings and fifteen small ones are spread
+  unevenly and repeated across the edges, so the repeat does not read as a grid. Colours are Tailwind's, shown at
+  about a third of their strength (`--background-strength` over the tiles' own opacity) so that text lying directly
+  on the background (headings, empty states) stays easy to read, and at about a fifth at 1,024 px and wider, where far
+  more of the pattern shows and Settings lays its list of sections straight on it.
+  `python3 scripts/make-backgrounds.py --preview sheet.svg` writes a contact sheet of them all to look at.
+- **The drawings are original to Falcon Notes**: written out as shapes in that script, with nothing copied or traced,
+  so they need no entry in `THIRD-PARTY-NOTICES.md`. They are bundled; nothing is fetched (D3).
+- **Adding one**: a value in the `Background` enum, its name in `AppearanceSection.BackgroundLabels`, its drawings in
+  the script, and its six lines in `app.css`. `BackgroundTests` fails until all four are there.
+- **Not done, by decision**: changing the colours or icons with the festival, choosing one automatically by date, and
+  backgrounds or themes from a file.
 
 ## Typography
 

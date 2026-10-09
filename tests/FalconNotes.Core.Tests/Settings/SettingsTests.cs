@@ -43,6 +43,28 @@ public class SettingsTests
         Assert.True(preferences.TodoLists); // missing: the default
     }
 
+    // New: the web app has no backgrounds (docs/06, Backgrounds).
+    [Fact]
+    public async Task The_background_is_plain_until_one_is_chosen_and_one_this_app_does_not_offer_is_plain_again()
+    {
+        using var app = await TestApp.StartAsync();
+        Assert.Equal(Background.None, (await app.Preferences.GetAsync()).Background);
+
+        await app.Preferences.SaveAsync(new Preferences { Background = Background.LunarNewYear });
+        Assert.Equal(Background.LunarNewYear, (await app.Preferences.GetAsync()).Background);
+        var stored = await app.Storage.Database.ReadAsync(connection => SettingsStore.GetRaw(connection, "preferences"));
+        Assert.Contains("\"background\":\"LunarNewYear\"", stored, StringComparison.Ordinal);
+
+        await app.Storage.Database.InTransactionAsync((connection, transaction) =>
+        {
+            using var command = Sql.Command(connection, "UPDATE Settings SET Value = $json WHERE Key = 'preferences'", transaction)
+                .With("$json", """{"background":"Midsummer"}""");
+            return command.ExecuteNonQuery();
+        });
+        Assert.Equal(Background.None, (await app.Preferences.GetAsync()).Background);
+        Assert.Equal(Background.None, (await app.Preferences.SaveAsync(new Preferences { Background = (Background)99 })).Background);
+    }
+
     // Ported from the server's PreferencesTests.cs (Maple Notes 1.9.0 to 1.15.0). There a value that is not offered
     // is refused; here it falls back to its default, as every preference does.
     [Fact]

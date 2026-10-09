@@ -6,7 +6,8 @@
     root.classList.add(saved.dark ? "dark" : "light");
     root.style.colorScheme = saved.dark ? "dark" : "light";
     if (saved.accent && saved.accent !== "falcon") root.dataset.accent = saved.accent;
+    if (saved.background && saved.background !== "none") root.dataset.background = saved.background;
   } catch (e) {
-    // No storage: the defaults (light, Falcon) until the app applies the user's choice.
+    // No storage: the defaults (light, Falcon, a plain page) until the app applies the user's choice.
   }
 })();

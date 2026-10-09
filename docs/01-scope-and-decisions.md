@@ -50,7 +50,7 @@ screens in [07-screens.md](07-screens.md).
 | Search | Text and attachment file names, active notes of enabled kinds |
 | Calendar | Side-menu month calendar with dots, day filter |
 | Archive, Trash | Archive page; Trash page from Settings with Restore, Delete forever, Empty trash, 30-day purge |
-| Settings | Appearance (theme, accent, week start), Side menu (order, text size), Writing (titles, dates, tag suggestions, double-tap), Features (page and tool switches), Labels, Backup & data (export, restore, automatic backups, trash, delete all), storage use |
+| Settings | Appearance (theme, accent, background, week start), Side menu (order, text size), Writing (titles, dates, tag suggestions, double-tap), Features (page and tool switches), Labels, Backup & data (export, restore, automatic backups, trash, delete all), storage use |
 | Help | The user guide, adapted ([08-help-guide.md](08-help-guide.md)) |
 | Layout | Phone layout with drawer; ≥1,024 px with fixed sidebar; light, dark and device themes; seven accents; keyboard shortcuts; accessibility (labels, focus, live regions) |
 
@@ -85,6 +85,7 @@ screens in [07-screens.md](07-screens.md).
 | Help in the menu, turned off | The guide stays at its address, `/help` | The guide is opened from a **Help** link at the foot of Settings |
 | Delete all notes and files | Confirmed with the password | Confirmed in a dialog, and with the app lock when it is on |
 | Export | Browser download | A save dialog (Android: the system's "save to" picker), with progress |
+| Appearance | Theme and accent colour | The same, plus a **Background**: None, or one of nine festival patterns drawn for this app, off by default (2026-10-08, at the owner's request; [06](06-design-system.md#backgrounds)) |
 | Automatic backups | None: the server keeps the notes, and its administrator backs it up | **Automatic backups** to a folder the user chooses, off by default ([05](05-backup-compatibility.md#automatic-backups)) |
 | Restore | Browser file input | The system file picker, several files at once |
 | Attachments: download | Browser download | **Save a copy…** (save dialog) and **Open** (the system's default app, from a decrypted temporary copy deleted on next start) |
@@ -97,6 +98,7 @@ screens in [07-screens.md](07-screens.md).
 | Labels in backups | **Done in 1.2.0** (2026-10-08, at the owner's request): manifest version 3, exactly as Maple Notes 1.9.0 defined it and 1.15.0 still writes it. See [05](05-backup-compatibility.md#labels-in-backups). |
 | Settings in backups | Still open. The web app's format has no place for them, so this needs a new manifest version there first ([05](05-backup-compatibility.md#settings-in-backups)). |
 | Automatic backups to a chosen folder | **Done** (2026-10-08, at the owner's request): Settings → Backup & data → Automatic backups, off by default because the backups are not encrypted. The archive is the ordinary export, so the format is untouched. See [05](05-backup-compatibility.md#automatic-backups). |
+| Festival backgrounds | **Done** (2026-10-08, at the owner's request, after trying a Halloween sample on the emulator): Settings → Appearance → Background. This app's own; Maple Notes has none. See [06](06-design-system.md#backgrounds). Themes that also change the colours and icons, and themes from a file, were discussed and not built. |
 | Backup reminder | A local app has no other copy of the notes. Proposal: Settings → Backup & data shows "Last export: …", and Home shows a dismissible reminder after 30 days without one. Off by default. |
 | Share into Falcon Notes (Android share sheet, macOS Share menu) | Turns shared text, links and images into a new note. |
 | iOS | D1 keeps it possible. |

@@ -109,6 +109,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it.
 - **Help in the menu** (Settings → Features, on by default): turn it off to hide Help from the side menu. The guide is
   then opened from a Help link at the foot of Settings.
+- **Backgrounds** (Settings → Appearance). Choose a festive pattern to sit behind your notes: Halloween, Christmas,
+  New Year, Valentine's Day, Easter, Diwali, Vesak, Eid or Lunar New Year, each drawn for Falcon Notes in a light and
+  a dark version. Your notes, the accent colour and the icons stay as they are, and **None** or **Remove background**
+  takes the pattern away. Help describes it.
 - **Automatic backups** (Settings → Backup & data, off by default). Turn on **Back up automatically** and choose a
   folder, and Falcon Notes saves a backup of everything there every day, week or month: all your notes, archived
   ones too, with their files, as the same ZIP an export makes. It keeps the newest 3, 5 or 10 and deletes the older
@@ -146,7 +150,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Lock screen shows no message when a fingerprint or face prompt closes without unlocking. It used to be written
   to show "That didn't work. Please try again." under the PIN field.
 - The README links to Buy me a coffee, at the top and in a new Support section, as the Maple Notes README does.
-- The README, the website and the privacy policy describe automatic backups.
+- The README, the website and the privacy policy describe automatic backups, and the README and the website the
+  backgrounds.
 - The README is reorganised: a contents list, a section on how Falcon Notes relates to Maple Notes, and the limits
   as a list. It no longer describes how the repository was set up or points to the prompts used to build it.
 
