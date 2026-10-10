@@ -24,6 +24,22 @@ public class BackgroundTests : BunitContext
         return folder?.FullName ?? throw new InvalidOperationException("The repository was not found above the tests.");
     }
 
+    /// <summary>Polls the store with a plain await (as HabitsPageTests does): a choice is shown at once and saved in
+    /// the background, so the store can still hold the old value when the page already shows the new one.</summary>
+    private static async Task WaitUntilAsync(Func<Task<bool>> condition)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (!await condition())
+        {
+            if (DateTime.UtcNow > deadline)
+            {
+                throw new TimeoutException("Condition was not met in time.");
+            }
+
+            await Task.Delay(10);
+        }
+    }
+
     [Fact]
     public async Task None_is_chosen_at_first_and_every_background_is_offered_by_name()
     {
@@ -51,7 +67,7 @@ public class BackgroundTests : BunitContext
         cut.WaitForAssertion(() => Assert.Equal(Background.None, app.State.Preferences.Background));
         cut.WaitForAssertion(() => Assert.Equal("None", cut.Find("input[name=background][checked]").GetAttribute("value")));
         Assert.DoesNotContain(cut.FindAll("button"), b => b.TextContent.Trim() == "Remove background");
-        Assert.Equal(Background.None, (await app.Core.Preferences.GetAsync()).Background);
+        await WaitUntilAsync(async () => (await app.Core.Preferences.GetAsync()).Background == Background.None);
     }
 
     [Fact]
@@ -64,7 +80,7 @@ public class BackgroundTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Equal(Background.Vesak, app.State.Preferences.Background));
         cut.WaitForAssertion(() => Assert.Equal("Vesak", cut.Find("input[name=background][checked]").GetAttribute("value")));
-        Assert.Equal(Background.Vesak, (await app.Core.Preferences.GetAsync()).Background);
+        await WaitUntilAsync(async () => (await app.Core.Preferences.GetAsync()).Background == Background.Vesak);
 
         cut.Find("input[name=background][value=None]").Change(true);
 
