@@ -109,6 +109,71 @@ public class LabelServiceTests
     }
 
     [Fact]
+    public async Task A_label_can_hide_its_notes_from_home_and_quick_notes_but_not_from_its_own_page()
+    {
+        using var app = await TestApp.StartAsync();
+        await app.Preferences.SaveAsync(new Preferences { Labels = true });
+        var hidden = await app.Labels.CreateAsync("Private");
+        Assert.True(await app.Labels.UpdateAsync(hidden.Id, hideNotes: true));
+        var other = await app.Labels.CreateAsync("Work");
+        var secret = await NewNoteAsync("Surprise party plans");
+        var plain = await NewNoteAsync("Groceries");
+        var pinned = await NewNoteAsync("Gift list");
+        var quick = await NewNoteAsync("Call the florist", NoteKind.Quick);
+        var todo = await NewNoteAsync("# Party\n\n- [ ] cake", NoteKind.Todo);
+        await app.Notes.PatchAsync(secret.Id, new NotePatch(LabelIds: [hidden.Id, other.Id]));
+        await app.Notes.PatchAsync(pinned.Id, new NotePatch(IsPinned: true, LabelIds: [hidden.Id]));
+        await app.Notes.PatchAsync(quick.Id, new NotePatch(LabelIds: [hidden.Id]));
+        await app.Notes.PatchAsync(todo.Id, new NotePatch(LabelIds: [hidden.Id]));
+
+        Assert.Equal([plain.Id], await IdsAsync(new NoteQuery(NoteState.Feed, [NoteKind.Note])));
+        Assert.Empty(await IdsAsync(new NoteQuery(NoteState.Pinned, [NoteKind.Note])));
+        Assert.Empty(await IdsAsync(new NoteQuery(NoteState.Feed, [NoteKind.Quick])));
+        Assert.Equal([todo.Id], await IdsAsync(new NoteQuery(NoteState.Feed, [NoteKind.Todo]))); // todo lists keep their tab
+        Assert.Equal([secret.Id], await IdsAsync(new NoteQuery(NoteState.Active, Enabled, Label: other.Id)));
+        Assert.Equal(
+            [quick.Id, pinned.Id, secret.Id],
+            await IdsAsync(new NoteQuery(NoteState.Active, [NoteKind.Note, NoteKind.Quick], Label: hidden.Id))); // the label's page
+        Assert.Equal([secret.Id], await IdsAsync(new NoteQuery(NoteState.Active, Enabled, Search: "party plans"))); // search still finds it
+        Assert.Equal([("Private", true), ("Work", false)], (await app.Labels.ListAsync(Enabled)).Select(l => (l.Label.Name, l.Label.HideNotes)));
+
+        // Taking the label off a note brings it back; so does turning the option off, or labels altogether.
+        await app.Notes.PatchAsync(secret.Id, new NotePatch(LabelIds: [other.Id]));
+        Assert.Equal([plain.Id, secret.Id], await IdsAsync(new NoteQuery(NoteState.Feed, [NoteKind.Note])));
+        Assert.True(await app.Labels.UpdateAsync(hidden.Id, hideNotes: false));
+        Assert.Equal([quick.Id], await IdsAsync(new NoteQuery(NoteState.Feed, [NoteKind.Quick])));
+        Assert.True(await app.Labels.UpdateAsync(hidden.Id, hideNotes: true));
+        await app.Preferences.SaveAsync(new Preferences { Labels = false });
+        Assert.Equal([pinned.Id], await IdsAsync(new NoteQuery(NoteState.Pinned, [NoteKind.Note])));
+
+        async Task<Note> NewNoteAsync(string content, NoteKind kind = NoteKind.Note)
+        {
+            var note = await app.Notes.CreateAsync(content, kind);
+            app.Clock.Advance(TimeSpan.FromSeconds(1)); // lists are newest first
+            return note;
+        }
+
+        async Task<IEnumerable<Guid>> IdsAsync(NoteQuery query) => (await app.Notes.ListAsync(query)).Items.Select(n => n.Id);
+    }
+
+    [Fact]
+    public async Task Hiding_a_label_s_notes_reloads_the_lists_and_renaming_it_does_not()
+    {
+        using var app = await TestApp.StartAsync();
+        var label = await app.Labels.CreateAsync("Private");
+        var reloads = 0;
+        app.Feed.NotesChanged += () => reloads++;
+
+        await app.Labels.UpdateAsync(label.Id, name: "Secret", color: LabelColor.Pink);
+        Assert.Equal(0, reloads);
+        await app.Labels.UpdateAsync(label.Id, hideNotes: true);
+
+        Assert.Equal(1, reloads);
+        var saved = (await app.Labels.ListAsync(Enabled)).Single().Label;
+        Assert.Equal(("Secret", LabelColor.Pink, true), (saved.Name, saved.Color, saved.HideNotes)); // each change leaves the others
+    }
+
+    [Fact]
     public async Task A_note_carries_at_most_20_labels_and_only_labels_that_exist()
     {
         using var app = await TestApp.StartAsync();

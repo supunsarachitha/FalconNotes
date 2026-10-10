@@ -162,7 +162,7 @@ the system Back button goes back in the WebView's history and leaves the app onl
 - Repositories hold the SQL as constants, always use parameters, and map rows by hand. Run multi-statement changes
   in a transaction through `Database.InTransactionAsync(Func<SqliteConnection, SqliteTransaction, Task>)`.
 - Migrations are numbered C# methods. `PRAGMA user_version` records the last one applied. Migration 1 creates the
-  schema in [03](03-data-storage-and-security.md#schema).
+  schema in [03](03-data-storage-and-security.md#schema). Migration 2 adds `Labels.HideNotes`.
 - Keep queries index-only where the benchmark showed it matters. Lists, counts and filters must not read `NoteBodies`
   except for the notes they return.
 

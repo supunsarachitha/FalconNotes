@@ -1,6 +1,7 @@
 using FalconNotes.Core.Attachments;
 using FalconNotes.Core.Domain;
 using FalconNotes.Core.Events;
+using FalconNotes.Core.Settings;
 using FalconNotes.Core.Storage;
 using FalconNotes.Core.Text;
 using Microsoft.Data.Sqlite;
@@ -45,15 +46,20 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
         query = Normalise(query);
         return Db.ReadAsync(connection =>
         {
+            // Notes with a label set to hide them stay out of Home and Quick notes (the feed and pinned lists), but not
+            // out of the label's own page, and not while labels are turned off, where they could not be found again.
+            var hideLabelled = query.State is NoteState.Feed or NoteState.Pinned && query.Label is null
+                && NoteRepository.AnyLabelHidesNotes(connection)
+                && (SettingsStore.Get<Preferences>(connection, PreferencesService.Key)?.Labels ?? false);
             if (query.Search is not { } search)
             {
-                var rows = NoteRepository.ListRows(connection, query, cursor, pageSize + 1);
+                var rows = NoteRepository.ListRows(connection, query, cursor, pageSize + 1, hideLabelled);
                 var page = NoteRepository.Load(connection, rows.Take(pageSize).ToList());
                 return new NotePage(page, rows.Count > pageSize ? CursorAfter(rows[pageSize - 1], query.State) : null);
             }
 
             var names = NoteRepository.AttachmentNames(connection);
-            var (matches, ended) = NoteRepository.Scan(connection, query, cursor, pageSize, (row, content) =>
+            var (matches, ended) = NoteRepository.Scan(connection, query, cursor, pageSize, hideLabelled, (row, content) =>
                 content.Contains(search, StringComparison.OrdinalIgnoreCase)
                 || names.GetValueOrDefault(row.Id, []).Any(name => name.Contains(search, StringComparison.OrdinalIgnoreCase)),
                 cancellationToken);

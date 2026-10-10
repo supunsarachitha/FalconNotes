@@ -77,6 +77,11 @@ public static class Migrations
         );
         CREATE INDEX IX_Attachments_Note ON Attachments (NoteId, CreatedAt);
         """,
+
+        // 2: a label can keep its notes out of Home and Quick notes (docs/04, Labels). Off for every label there is.
+        """
+        ALTER TABLE Labels ADD COLUMN HideNotes INTEGER NOT NULL DEFAULT 0;
+        """,
     ];
 
     /// <summary>Reads the schema version of an open database (0 for a new one).</summary>

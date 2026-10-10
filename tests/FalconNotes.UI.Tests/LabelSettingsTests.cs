@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Components.Web;
 namespace FalconNotes.UI.Tests;
 
 /// <summary>New tests (docs/11): LabelSettings has no dedicated reference test. Covers the "Use labels" switch, and
-/// creating, renaming, recolouring and deleting labels, against the real database.</summary>
+/// creating, renaming, recolouring and deleting labels, against the real database. Hiding a label's notes is the port
+/// of the case SettingsPage.test.tsx gained in Maple Notes 1.16.0.</summary>
 public class LabelSettingsTests : BunitContext
 {
     private void SetUpDialogsJs()
@@ -124,6 +125,31 @@ public class LabelSettingsTests : BunitContext
         cut.FindAll("button[role=menuitemradio]").First(b => b.GetAttribute("aria-label") == "Blue").Click();
 
         await WaitUntilAsync(async () => (await app.Core.Labels.ListAsync(NoteKinds.All)).Single().Label.Color == LabelColor.Blue);
+    }
+
+    [Fact]
+    public async Task Hides_a_labels_notes_from_home_and_quick_notes_and_shows_them_again()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { Labels = true });
+        await app.Core.Labels.CreateAsync("Private", LabelColor.Purple);
+        var cut = Render<LabelSettings>();
+        cut.WaitForAssertion(() => cut.Find("button[aria-label='Hide notes labelled Private from Home and Quick notes']"));
+        Assert.Contains("The eye hides a label's notes from Home and Quick notes", cut.Markup, StringComparison.Ordinal);
+
+        var hide = cut.Find("button[aria-label='Hide notes labelled Private from Home and Quick notes']");
+        Assert.Equal("false", hide.GetAttribute("aria-pressed"));
+        Assert.DoesNotContain("Notes hidden", cut.Markup, StringComparison.Ordinal);
+        hide.Click();
+
+        await WaitUntilAsync(async () => (await app.Core.Labels.ListAsync(NoteKinds.All)).Single().Label.HideNotes);
+        cut.WaitForAssertion(() => Assert.Contains("Notes hidden", cut.Markup, StringComparison.Ordinal));
+        var show = cut.Find("button[aria-label='Show notes labelled Private on Home and in Quick notes']");
+        Assert.Equal("true", show.GetAttribute("aria-pressed"));
+        show.Click();
+
+        await WaitUntilAsync(async () => !(await app.Core.Labels.ListAsync(NoteKinds.All)).Single().Label.HideNotes);
+        cut.WaitForAssertion(() => Assert.DoesNotContain("Notes hidden", cut.Markup, StringComparison.Ordinal));
+        Assert.Equal(LabelColor.Purple, (await app.Core.Labels.ListAsync(NoteKinds.All)).Single().Label.Color); // nothing else changed
     }
 
     [Fact]

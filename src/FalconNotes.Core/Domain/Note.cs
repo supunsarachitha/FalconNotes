@@ -56,7 +56,11 @@ public sealed record Attachment(
 /// <param name="Name">Its name, 1–40 characters.</param>
 /// <param name="Color">Its colour.</param>
 /// <param name="CreatedAtUtc">When it was created.</param>
-public sealed record Label(Guid Id, string Name, LabelColor Color, DateTime CreatedAtUtc);
+/// <param name="HideNotes">
+/// Whether notes and quick notes with this label are left out of Home and the Quick notes tab, and shown only on the
+/// label's own page. Removing the label from a note, or turning this off, brings the note back.
+/// </param>
+public sealed record Label(Guid Id, string Name, LabelColor Color, DateTime CreatedAtUtc, bool HideNotes = false);
 
 /// <summary>Which notes a list holds (docs/04, Lists).</summary>
 public enum NoteState

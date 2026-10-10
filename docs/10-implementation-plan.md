@@ -93,7 +93,7 @@ which runs the same checks inside the app: 13 exports match, 13 restores clean, 
 5.2 s). Windows waits for the Windows head. A 10,000-note restore takes 0.4 s on the Mac (budget 5 s).
 
 Labels in backups (2026-10-08, for 1.2.0, at the owner's request): the format is now **manifest version 3**, as Maple
-Notes has written it since 1.9.0 and still does in 1.15.0, its latest ([05](05-backup-compatibility.md#labels-in-backups)).
+Notes has written it since 1.9.0 and still does in 1.16.0, its latest ([05](05-backup-compatibility.md#labels-in-backups)).
 The Maple Notes repository was read at `main` (commit `3343d10`): nothing in its export has changed since 1.9.0, and
 its restore gained only size limits, which are ported too. The exporter's label lines are the server's, the restore's
 are `parse.ts` and `importer.ts`, and `fixtures/export-vectors.json` is that repository's current file, whose labels
@@ -148,6 +148,15 @@ Settings → Appearance. Checked on the emulator (API 36), with the demo notes r
   The last row is far slower than any phone, and equally slow with and without a background. None of this is a real
   slow phone: an emulator on a fast Mac cannot stand in for a budget phone's graphics chip, so that check is still
   owed, as S6 is.
+
+Fixed afterwards (2026-10-08): the owner found, on a Pixel 8 Pro with three-button navigation, that the drawer's last
+row (the name and **Lock now**) could not be reached. It lay under the navigation bar: the drawer and the sidebar
+used the top inset only ([12](12-platforms.md), Edge to edge). Reproduced on an emulator at that phone's screen size
+with three-button navigation (a 48 px bar): 32 of the row's 53 px were behind the bar. With the fix the row ends at
+933 px and the bar starts at 949 px, with the app lock on and off; on a tablet-sized screen the sidebar's row ends
+12 px above a 56 px bar. Every emulator check before this used gesture navigation, which is why it was missed; the
+manual checklist now names three-button navigation ([11](11-testing.md)). Not checked: a phone in landscape with the
+bar at the side, which the emulator did not produce.
 
 Status (2026-10-07): built on the Android emulator — Welcome, the gated redirect to it when there is no profile, the
 drawer/sidebar with search, menu, calendar and profile footer, and Key lost's two ways out all run correctly (checked
@@ -455,6 +464,14 @@ Phase 2), on the `release-1.2.0` branch, merged into `main` as pull request #9. 
 The version numbers are set, but the signed AAB and APK have not been built or checked yet. Before building from
 clean, move the 1.1.0 output out of `src/FalconNotes.App/bin/Release/` as was done for 1.0.1, and repeat the
 shrinking check from Phase 4 on the release APK, since R8 and trimming have not run over the new code.
+
+Brought up to Maple Notes 1.16.0 (2026-10-10, at the owner's request): a label can hide its notes from Home and Quick
+notes, the one feature of that release, ported from its repository at `main` (commit `941f656`) with its tests, on
+the `maple-notes-1.16.0` branch. It is the first change to the schema since the first release: migration 2 adds
+`Labels.HideNotes`, and the database is copied before it, as before any upgrade. Checked by the Core and component
+tests and by the performance budgets (on 50,000 notes with a label hiding its notes, a feed page takes 0.24 ms and
+the pinned list 0.26 ms). Not checked: an emulator or a phone, where a database made by an earlier version must
+upgrade ([11](11-testing.md), manual checklist).
 
 ## Spike results
 

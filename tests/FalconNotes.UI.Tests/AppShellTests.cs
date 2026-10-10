@@ -15,6 +15,24 @@ public class AppShellTests : BunitContext
 
     private static IEnumerable<string> Labels(IEnumerable<AngleSharp.Dom.IElement> links) => links.Select(a => a.TextContent.Trim());
 
+    // New: found on a Pixel 8 Pro with three-button navigation (docs/12, Edge to edge). The page draws behind the
+    // system bars, so the drawer and the sidebar must keep clear of both, or their last row (the name, and Lock) is
+    // under the navigation bar and cannot be tapped.
+    [Fact]
+    public async Task The_drawer_and_the_sidebar_keep_clear_of_the_status_and_navigation_bars()
+    {
+        using var app = await StartAsync();
+        var cut = Render<AppShell>(p => p.Add(s => s.Body, Content));
+
+        var drawer = cut.Find("dialog[aria-label=Navigation]").ClassList;
+        Assert.Contains("pt-[var(--safe-top,0px)]", drawer);
+        Assert.Contains("pb-[var(--safe-bottom,0px)]", drawer);
+
+        var sidebar = cut.Find("aside").ClassList;
+        Assert.Contains("top-[var(--safe-top,0px)]", sidebar);
+        Assert.Contains("h-[calc(100dvh-var(--safe-top,0px)-var(--safe-bottom,0px))]", sidebar);
+    }
+
     [Fact]
     public async Task Shows_archive_and_tags_unless_they_are_turned_off()
     {

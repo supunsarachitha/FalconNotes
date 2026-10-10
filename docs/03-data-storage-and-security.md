@@ -75,7 +75,7 @@ gets the encrypted files without the Keystore key: notes that can never be opene
 
 ## Schema
 
-Migration 1. Times are UTC `DateTime.Ticks` (INTEGER), IDs are lower-case canonical UUID text (`Guid.ToString("D")`),
+Migration 1, and migration 2, which added `Labels.HideNotes` with Maple Notes 1.16.0. Times are UTC `DateTime.Ticks` (INTEGER), IDs are lower-case canonical UUID text (`Guid.ToString("D")`),
 and kinds are integers (0 Note, 1 Todo, 2 Quick, 3 Habit). Note text lives in `NoteBodies`, so lists and counts never
 decrypt pages of text ([13](13-storage-benchmark.md#reading-the-results)).
 
@@ -122,7 +122,8 @@ CREATE TABLE Labels (
   Id        TEXT    NOT NULL PRIMARY KEY,       -- UUID v7
   Name      TEXT    NOT NULL,                   -- 1–40 characters, trimmed
   Color     TEXT    NOT NULL,                   -- Grey Red Orange Amber Green Teal Blue Indigo Purple Pink
-  CreatedAt INTEGER NOT NULL
+  CreatedAt INTEGER NOT NULL,
+  HideNotes INTEGER NOT NULL DEFAULT 0         -- 1: its notes stay out of Home and Quick notes (migration 2)
 );
 CREATE TABLE NoteLabels (
   NoteId  TEXT NOT NULL REFERENCES Notes(Id)  ON DELETE CASCADE,

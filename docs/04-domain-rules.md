@@ -2,7 +2,7 @@
 
 Every rule the app enforces, with the reference file that defines it. Port the rule, not just its effect: tests in the
 reference show the edge cases (see [11-testing.md](11-testing.md)). Paths are relative to the
-[Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0) at release 1.15.0; `web/` means `src/maple-web/src/` and `server/` means
+[Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.16.0) at release 1.16.0; `web/` means `src/maple-web/src/` and `server/` means
 `src/MapleNotes.Server/`.
 
 ## Notes
@@ -25,8 +25,8 @@ later pages.
 
 | State | Which notes | Used by |
 |---|---|---|
-| `feed` | not pinned, not archived, not in the trash | Home, Todo, Quick notes (each with its kind) |
-| `pinned` | pinned, not archived, not in the trash | "Pinned" above the feed |
+| `feed` | not pinned, not archived, not in the trash, not hidden by a label ([Labels](#labels)) | Home, Todo, Quick notes (each with its kind) |
+| `pinned` | pinned, not archived, not in the trash, not hidden by a label | "Pinned" above the feed |
 | `active` | not archived, not in the trash | Search, tag, label and day filters |
 | `archived` | archived, not in the trash (pinned or not) | Archive page, Archived habits |
 | `trash` | in the trash | Trash page |
@@ -262,12 +262,22 @@ day(s)". Confirmation texts are in [07-screens.md](07-screens.md).
   IgnoreNonSpace`), then by ID.
 - A label's count covers active notes of the enabled kinds that carry it.
 - Deleting a label takes it off its notes; the notes stay.
+- A label can hide its notes (`HideNotes`, off for a new label; the web app since 1.16.0). The `feed` and `pinned`
+  lists then leave out timeline notes and quick notes that carry such a label: they are gone from Home and Quick
+  notes. Todo lists and habits keep their tabs. A list filtered by a label hides nothing, so the label's page shows
+  them, and so do the other `active` lists (search, tags, days), the archive and the trash. Counts do not change. A
+  note with several labels is hidden when any one of them hides.
+- Nothing is hidden while the Labels preference is off: the label pages are gone then, and a hidden note could not
+  be found again. Taking the label off a note, or turning the option off, brings the note back.
+- The rule is decided in `NoteService.ListAsync`, as on the server, not by the screens. Lists skip the condition
+  when no label hides its notes, so they read as they did before. Changing the option raises `NotesChanged` as well
+  as `LabelsChanged`, because lists reload on the first alone.
 - The picker shows every label to tick, a find-or-create box, and "Create label “{typed}”" when the typed name is new
   and valid. Save applies the ticked set in the list's order, dropping labels deleted meanwhile. An unchanged set
   closes without saving.
 - Backups keep each note's labels by name, and the colours of the labels in use; a restore matches a label by name,
   ignoring case and surrounding spaces, or creates it ([05](05-backup-compatibility.md#labels-in-backups)). A label on
-  no note is not in a backup.
+  no note is not in a backup. A backup does not say whether a label hides its notes: a restored label does not.
 
 ## Preferences
 

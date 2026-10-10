@@ -57,6 +57,11 @@ New tests the reference does not have:
   New here: `FeaturesSectionTests` (the web app tests these inside its whole Settings page), including the Help link
   at the foot of Settings; and that the Labels dialog asks for the focus itself (`LabelPickerTests`), since moving it
   is `dialogs.js`'s work and only runs in a browser.
+- Brought over with Maple Notes 1.16.0, from its tests: a label hiding its notes, with every list the server's case
+  names (`LabelServiceTests`); the eye in Settings (`LabelSettingsTests`); the line on the label's page (`HomeTests`).
+  New here: Home dropping a note and taking it back as the eye turns (`HomeTests`), the mark in the side menu
+  (`LabelLinksTests`), a version 1 database upgrading with nothing hidden and a copy kept (`DatabaseStartupTests`),
+  and budgets for the feed and pinned lists with a label hiding its notes.
 - Labels in backups: where a note's labels are read from in each format, and what is not a label
   (`RestoreConformanceTests`); at most 20 labels on a restored note and the limit of 100 (`RestoreRunnerTests`); the
   restore flow passes the manifest's colours on and says "Added {n} labels." (bUnit, `WelcomeTests`).
@@ -75,6 +80,8 @@ New tests the reference does not have:
   colours in `app.css` and a tile for each theme that reaches for nothing outside itself (bUnit, `BackgroundTests`).
   **Remove background** is covered there too. How they look is for the eye: the script's contact sheet and a device
   ([10](10-implementation-plan.md), Phase 3, has what was looked at and the scrolling measurements).
+- The drawer and the sidebar keep clear of the status and navigation bars (`AppShellTests`): by their classes, since
+  bUnit has no screen; the real check is the manual one below, with three-button navigation.
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 
@@ -133,7 +140,7 @@ phone supported, against 4× these budgets:
 | Operation | Budget (Mac, release build) |
 |---|---|
 | Open database + first feed page | 20 ms |
-| Feed page, pinned list, habits page, calendar month | 5 ms |
+| Feed page and pinned list (also with a label hiding its notes), habits page, calendar month | 5 ms |
 | Tag counts, label counts | 80 ms |
 | First page of a tag or label filter | 100 ms |
 | Search with no match | 250 ms (first page of matches shown as soon as found) |
@@ -157,6 +164,9 @@ in light and dark mode:
 - [ ] Todo: add, tick, edit, remove, Edit as Markdown, clear completed, pin, archive.
 - [ ] Habits: add, tick today and an earlier week, chart (weeks and months, one habit), calendar, archive and restore.
 - [ ] Daily notes: the Today card; the first words become the note; it rolls over at midnight (change the clock).
+- [ ] Labels that hide their notes: a database made by an earlier version opens after the update with no note
+      hidden. Turn the eye on for a label: its notes leave Home and Quick notes, stay on the label's page and in
+      search, and todo lists stay in their tab. Turn Labels off: the notes are back.
 - [ ] Settings: every switch hides and shows its feature without losing data; menu order by drag and by arrows; text
       sizes; accents; week start. Each background in the light and the dark theme: headings and empty states that lie
       on it stay easy to read, a long list scrolls smoothly, and None and **Remove background** take it away.
@@ -166,6 +176,9 @@ in light and dark mode:
       of another name alone; set the clock a day on and reopen the app → a new backup; delete the folder in the
       Files app → Settings and Home say it failed, and **Change…** mends it; a folder on a memory card or USB drive;
       turning it off leaves the backups.
+- [ ] Android, with **three-button navigation** and again with gesture navigation: the drawer's last row (the name, and
+      **Lock now** with the app lock on) is above the navigation bar and can be tapped; the same for the sidebar on a
+      tablet; toasts and the picture viewer's buttons are clear of the bars; a phone in landscape.
 - [ ] App lock: set, lock after delay, biometrics, wrong PIN ×5, Lock now, background cover, screenshots blocked
       (Android), Forgot PIN → erase.
 - [ ] Erase all data → Welcome. Removing the device key with the Debug-only developer action leads to Key lost, where

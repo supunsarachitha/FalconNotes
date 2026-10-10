@@ -24,10 +24,10 @@ internal static class NoteRepository
         "n.Id, n.Kind, n.DailyDate, n.IsPinned, n.ArchivedAt, n.TrashedAt, n.CreatedAt, n.UpdatedAt, n.Revision";
 
     /// <summary>Reads a page of rows of a list, newest first (the trash: most recently deleted first).</summary>
-    public static List<NoteRow> ListRows(SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count)
+    public static List<NoteRow> ListRows(SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count, bool hideLabelled)
     {
         using var command = connection.CreateCommand();
-        var where = Where(command, query, cursor, kindsByIndex: true, out var orderColumn);
+        var where = Where(command, query, cursor, kindsByIndex: true, hideLabelled, out var orderColumn);
         command.CommandText = $"""
             SELECT {Columns} FROM Notes n
             WHERE {where}
@@ -45,12 +45,12 @@ internal static class NoteRepository
     /// </summary>
     /// <returns>The accepted rows with their text, and whether the list ended before the page filled.</returns>
     public static (List<(NoteRow Row, string Content)> Rows, bool Ended) Scan(
-        SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count,
+        SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count, bool hideLabelled,
         Func<NoteRow, string, bool> accept, CancellationToken cancellationToken)
     {
         using var command = connection.CreateCommand();
         // Kinds are not matched through an index here, so SQLite walks the time index in order instead of sorting.
-        var where = Where(command, query, cursor, kindsByIndex: false, out var orderColumn);
+        var where = Where(command, query, cursor, kindsByIndex: false, hideLabelled, out var orderColumn);
         command.CommandText = $"""
             SELECT {Columns}, b.Content FROM Notes n
             JOIN NoteBodies b ON b.NoteId = n.Id
@@ -102,7 +102,18 @@ internal static class NoteRepository
         return names;
     }
 
-    private static string Where(SqliteCommand command, NoteQuery query, NoteCursor? cursor, bool kindsByIndex, out string orderColumn)
+    /// <summary>
+    /// Whether any label hides its notes. Most databases have none, and then lists skip the condition and read as they
+    /// always did.
+    /// </summary>
+    public static bool AnyLabelHidesNotes(SqliteConnection connection)
+    {
+        using var command = Sql.Command(connection, "SELECT EXISTS (SELECT 1 FROM Labels WHERE HideNotes = 1)");
+        return Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0;
+    }
+
+    private static string Where(
+        SqliteCommand command, NoteQuery query, NoteCursor? cursor, bool kindsByIndex, bool hideLabelled, out string orderColumn)
     {
         var where = new List<string>();
         if (query.Kinds.Distinct().Count() < NoteKinds.All.Count)
@@ -153,6 +164,16 @@ internal static class NoteRepository
         {
             where.Add("n.Id IN (SELECT NoteId FROM NoteLabels WHERE LabelId = $label)");
             command.With("$label", Sql.Id(label));
+        }
+
+        if (hideLabelled)
+        {
+            // Only timeline notes and quick notes: todo lists and habits keep their own tabs.
+            where.Add($"""
+                (n.Kind NOT IN ({(int)NoteKind.Note}, {(int)NoteKind.Quick})
+                 OR NOT EXISTS (SELECT 1 FROM NoteLabels nl JOIN Labels l ON l.Id = nl.LabelId
+                                WHERE nl.NoteId = n.Id AND l.HideNotes = 1))
+                """);
         }
 
         orderColumn = query.State == NoteState.Trash ? "n.TrashedAt" : "n.CreatedAt";

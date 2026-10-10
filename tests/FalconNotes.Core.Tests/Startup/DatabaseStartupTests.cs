@@ -56,6 +56,46 @@ public class DatabaseStartupTests
     }
 
     [Fact]
+    public async Task A_database_from_before_labels_could_hide_notes_is_upgraded_with_nothing_hidden()
+    {
+        using var dir = new TempDirectory();
+        var secrets = new FakeSecretStore();
+        var first = new StorageContext();
+        var (_, created) = await Create(dir, secrets, first).RunAsync();
+        await using (var connection = await created!.OpenAsync(TestContext.Current.CancellationToken))
+        {
+            // Back to schema version 1, with a label as that version wrote it.
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                ALTER TABLE Labels DROP COLUMN HideNotes;
+                INSERT INTO Labels (Id, Name, Color, CreatedAt) VALUES ('0199a1b2-0000-7000-8000-000000000001', 'Work', 'Blue', 0);
+                PRAGMA user_version = 1;
+                """;
+            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+
+        first.Close();
+        SqliteConnection.ClearAllPools();
+
+        var second = new StorageContext();
+        var (outcome, upgraded) = await Create(dir, secrets, second).RunAsync();
+
+        Assert.Equal(StartupOutcome.Ready, outcome);
+        await using (var connection = await upgraded!.OpenAsync(TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(Migrations.Latest, Migrations.ReadVersion(connection));
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT Name, HideNotes FROM Labels";
+            await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+            Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
+            Assert.Equal(("Work", 0L), (reader.GetString(0), reader.GetInt64(1)));
+        }
+
+        Assert.Single(Directory.GetFiles(Path.Combine(dir.Path, "data", "backups"))); // the copy kept before an upgrade
+        second.Close();
+    }
+
+    [Fact]
     public async Task The_database_is_opened_with_a_key_derived_from_the_device_key()
     {
         using var dir = new TempDirectory();

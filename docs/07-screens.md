@@ -29,7 +29,9 @@ Never mention passwords, encryption modes, recovery keys, sessions, administrato
   now") locks at once. There is no Sign out.
 - **App name**: always "Falcon Notes" with the falcon mark (D12), wherever the reference shows `appName` or
   `BrandMark`. There is no branding.
-- The search box, menu items (with the Tags count), labels list and calendar are unchanged.
+- The search box, menu items (with the Tags count), labels list and calendar are unchanged. Since web 1.16.0 a label
+  that hides its notes carries a small `EyeOff` icon in the labels list, named "hidden from Home and Quick notes".
+  Here the name is on a `role="img"` wrapper, because `Icon` is always decorative.
 
 ## Home and filters
 
@@ -48,7 +50,8 @@ these:
   Home, not on the filtered views, "The last automatic backup failed. {reason}" with a link **Open Backup & data**
   (`/settings/data`), in the colours of `ErrorMessage`, as a `status`. It stays until a backup works, or automatic
   backups are turned off. A backup that fails where nobody looks is worse than none, because it is relied on.
-- **Filtered views** (`?tag`, `?q`, `?day`, `?label`) and their empty states are unchanged.
+- **Filtered views** (`?tag`, `?q`, `?day`, `?label`) and their empty states are unchanged. Since web 1.16.0 the page
+  of a label that hides its notes says so under its heading, with a link to Settings → Labels.
 
 ## Composer
 
@@ -90,12 +93,12 @@ storage.
 | `menu` | Side menu | unchanged | `MenuSection` |
 | `writing` | Writing | unchanged | `WritingSection`, `EditingSection` |
 | `features` | Features | unchanged | `FeaturesSection` as in web 1.15.0, **without Link previews**; "Shrink photos before uploading" becomes **Shrink photos before adding** ([08](08-help-guide.md#11-pictures-video-and-files-pictures)), with the **Photo size** choice under it while it is on; the **Daily-note template** line under Daily notes while they are on, without the web app's "could not be loaded" case; **Help in the menu**, whose description ends "the guide is then opened from the foot of Settings." where the web app says "the guide stays at /help." |
-| `labels` | Labels | unchanged | `LabelSettings`. The note about end-to-end encryption is gone. The line under the list ends "Exports keep each note's labels, and restoring one brings them back.", as in the web app since 1.9.0 (2026-10-08; before that, "Exports do not include labels yet."). |
+| `labels` | Labels | unchanged | `LabelSettings`. The note about end-to-end encryption is gone. The line under the list ends "Exports keep each note's labels, and restoring one brings them back.", as in the web app since 1.9.0 (2026-10-08; before that, "Exports do not include labels yet."). Since web 1.16.0 each label has an eye button that hides its notes from Home and Quick notes, with "Notes hidden" under its name while it does, and the line under the list starts with the sentence about the eye. |
 | `data` | Backup & data | "Export, restore, the trash and starting over." | Backup & restore, Trash, Delete all notes and files |
 | `security` | Privacy & security | "App lock, and how your notes are protected." | App lock, Data protection |
 
-The foot of the list shows "Falcon Notes {version}". On a second line in smaller text: "Based on Maple Notes 1.15.0"
-(1.8.0 until Falcon Notes 1.1.0). With **Help in the menu** off, a **Help** link to `/help` stands above them, in the
+The foot of the list shows "Falcon Notes {version}". On a second line in smaller text: "Based on Maple Notes 1.16.0"
+(1.8.0 until Falcon Notes 1.1.0, 1.15.0 in 1.2.0). With **Help in the menu** off, a **Help** link to `/help` stands above them, in the
 accent colour: the web app's guide keeps an address that can be typed, and an app has none.
 
 ### Settings → Profile

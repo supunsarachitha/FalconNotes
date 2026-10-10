@@ -1,7 +1,7 @@
 # Third-party licensing policy
 
 > **For Falcon Notes.** This is the Maple Notes web app's policy, copied whole from `docs/licensing.md` in its
-> repository (the same text in every release from 1.8.0 to 1.15.0), because Falcon Notes follows it (D11 in
+> repository (the same text in every release from 1.8.0 to 1.16.0), because Falcon Notes follows it (D11 in
 > [01](01-scope-and-decisions.md)). What applies here unchanged: the rules, the licence categories, the known traps and
 > the audit of the SQLite3 Multiple Ciphers binary. The parts about the web app's own pieces (its password
 > derivation, its container image, its icon) are kept for the record only. Falcon Notes' dependencies and the decisions

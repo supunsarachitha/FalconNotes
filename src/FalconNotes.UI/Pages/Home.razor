@@ -30,6 +30,13 @@ else if (_labelId is { } labelId)
         <FilterHeader IconName="IconName.Tag" Label="@LabelName">
             <Marker><LabelDot Color="currentLabel.Color" Class="size-3.5" /></Marker>
         </FilterHeader>
+        @if (currentLabel.HideNotes)
+        {
+            <p class="-mt-2 mb-4 text-sm text-stone-600 dark:text-stone-300">
+                These notes are hidden from Home and Quick notes and show only here.
+                <a href="/settings/labels" class="font-medium text-maple-700 underline dark:text-maple-400">Change in Settings</a>
+            </p>
+        }
     }
     else
     {

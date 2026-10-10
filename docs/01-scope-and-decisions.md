@@ -3,12 +3,12 @@
 ## The product
 
 **Falcon Notes** for Android, Windows and macOS: a fully offline app for quick notes, with the same features and look as
-the Maple Notes web app version 1.15.0 (1.8.0 until Falcon Notes 1.1.0), under its own name and mark, minus everything that exists only because there is a
+the Maple Notes web app version 1.16.0 (1.8.0 until Falcon Notes 1.1.0, 1.15.0 in 1.2.0), under its own name and mark, minus everything that exists only because there is a
 server. Notes stay on the device, encrypted. Backups are ZIP files in exactly the web app's export format, so notes move
 freely between this app, another device running it, and any Maple Notes server.
 
-The web app is the **reference implementation**: the [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes) at release 1.15.0 (tag
-`v1.15.0`). When this documentation does not say how something behaves, the reference does: port its behaviour, its
+The web app is the **reference implementation**: the [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes) at release 1.16.0 (tag
+`v1.16.0`). When this documentation does not say how something behaves, the reference does: port its behaviour, its
 copy text and its Tailwind classes. Until 2026-10-08 a copy of its 1.8.0 source, which this plan was written against,
 sat in `reference/maple-notes-1.8.0/`; the source and tests were removed once the app had moved on to 1.15.0, and
 what is left there is that release's documents and screenshots (see the [README](../README.md)).

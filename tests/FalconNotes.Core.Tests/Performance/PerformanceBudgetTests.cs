@@ -78,6 +78,13 @@ public sealed class PerformanceBudgetTests(ITestOutputHelper output)
         await Measure("Edit a note", 5, () => app.Notes.UpdateAsync(posted!.Id, "Edited #home"));
         await Measure("Pin a note", 5, () => app.Notes.PatchAsync(posted!.Id, new NotePatch(IsPinned: true)));
 
+        // Last, because it changes what the lists above read: with labels on and one label hiding its notes, Home's
+        // lists check every note's labels (docs/04, Labels).
+        await app.Preferences.SaveAsync(new Preferences { Labels = true });
+        await app.Labels.UpdateAsync(labels[0].Label.Id, hideNotes: true);
+        await Measure("Feed page, a label hiding its notes", 5, () => app.Notes.ListAsync(feed, middle));
+        await Measure("Pinned list, a label hiding its notes", 5, () => app.Notes.ListAsync(new NoteQuery(NoteState.Pinned, [NoteKind.Note])));
+
         // Restore of 10,000 notes without files, into an empty database: 5 s.
         using (var empty = await TestApp.StartAsync())
         {

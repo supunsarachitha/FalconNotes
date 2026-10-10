@@ -21,6 +21,11 @@
                class="@Classes.Join("flex min-h-9 items-center gap-3 rounded-xl px-3 text-sm transition-colors", current ? "bg-maple-50 font-medium text-maple-700 dark:bg-maple-600/15 dark:text-maple-400" : "text-stone-700 hover:bg-stone-100 dark:text-stone-200 dark:hover:bg-stone-800")">
                 <LabelDot Color="item.Label.Color" Class="ml-1 size-3" />
                 <span class="min-w-0 flex-1 truncate">@item.Label.Name</span>
+                @if (item.Label.HideNotes)
+                {
+                    @* Icon is decorative, so the name the web app gives the icon goes on a wrapper. *@
+                    <span role="img" aria-label="hidden from Home and Quick notes" class="shrink-0 text-stone-400"><Icon Name="IconName.EyeOff" Class="size-3.5" /></span>
+                }
                 @if (item.NoteCount > 0)
                 {
                     <span class="text-xs text-stone-400">@item.NoteCount</span>

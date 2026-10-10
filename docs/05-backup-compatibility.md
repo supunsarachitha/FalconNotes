@@ -3,7 +3,7 @@
 Backups made by this app must restore in the web app and on any Maple Notes server, and backups made there must restore
 here. The format is the web app's **export ZIP, manifest version 3**, unchanged: version 2 as in Maple Notes 1.8.0,
 plus the labels Maple Notes 1.9.0 added ([Labels in backups](#labels-in-backups)). It is the format of the latest
-Maple Notes, 1.15.0 (checked 2026-10-08).
+Maple Notes, 1.16.0 (checked 2026-10-10).
 
 **Never change this format in only one of the two projects.** Any change needs a new manifest version, implemented and
 released in the web app first, with its vectors, and then here.
@@ -36,7 +36,8 @@ for manual and smoke tests. They are manifest version 2 archives, from before la
 (`demo-backup-samples/` in its repository).
 
 The file here is a copy of `src/maple-web/src/export/export-vectors.json` in the Maple Notes repository, last taken
-from its `main` at commit `3343d10` (2026-10-08, release 1.15.0), where it is the same as in release 1.9.0.
+from its `main` at commit `941f656` (2026-10-10, release 1.16.0). Its notes and archives are the same as in release
+1.9.0; in 1.16.0 each label of the dataset gained `hideNotes`, which the tests here do not read.
 
 ## Export
 
@@ -282,9 +283,13 @@ Both ways, and across versions:
 An earlier sketch in this document had label IDs in the manifest. The web app chose names instead, so that is the
 format.
 
+Whether a label hides its notes (Maple Notes 1.16.0) is not in a backup, in either app: the manifest gives a label's
+name and colour only. A restored label does not hide its notes until its eye is turned on again in Settings → Labels.
+Carrying it needs a new manifest version in the web app first.
+
 ## Settings in backups
 
 Not built, and not possible in this project alone. Maple Notes has no place for preferences in its export, in any
-version up to 1.15.0, and its restore would ignore one. Adding it here would change the format in one project only,
+version up to 1.16.0, and its restore would ignore one. Adding it here would change the format in one project only,
 which this document forbids. It needs a new manifest version in the web app first, with its vectors, and then the
 port here. Until then preferences, the profile's name and the app lock are set up again on a new device.

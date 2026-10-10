@@ -1,5 +1,5 @@
-@* Port of LabelRow in components/LabelSettings.tsx: a label's colour, name, note count and actions (rename,
-   delete). Colour and name changes save at once through LabelService; the list reloads itself from
+@* Port of LabelRow in components/LabelSettings.tsx: a label's colour, name, note count and actions (hide or show
+   its notes, rename, delete). Changes save at once through LabelService; the list reloads itself from
    ChangeFeed.LabelsChanged (LabelSettings), so this component only triggers the change. *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Labels
@@ -19,12 +19,23 @@
     }
     else
     {
-        <span class="min-w-0 flex-1 truncate text-sm font-medium">@LabelCount.Label.Name</span>
+        <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-medium">@LabelCount.Label.Name</span>
+            @if (LabelCount.Label.HideNotes)
+            {
+                <span class="block text-xs text-stone-500 dark:text-stone-400">Notes hidden</span>
+            }
+        </span>
     }
     <a href="@($"/?label={Uri.EscapeDataString(LabelCount.Label.Id.ToString())}")"
        class="shrink-0 rounded-full px-2 py-1 text-xs tabular-nums text-stone-500 hover:bg-stone-100 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100">
         @(LabelCount.NoteCount == 1 ? "1 note" : $"{LabelCount.NoteCount} notes")
     </a>
+    <IconButton Label="@(LabelCount.Label.HideNotes ? $"Show notes labelled {LabelCount.Label.Name} on Home and in Quick notes" : $"Hide notes labelled {LabelCount.Label.Name} from Home and Quick notes")"
+                aria-pressed="@(LabelCount.Label.HideNotes ? "true" : "false")"
+                Class="@Classes.Join("size-9", LabelCount.Label.HideNotes ? "text-maple-700 dark:text-maple-400" : null)" OnClick="ToggleHideNotesAsync">
+        <Icon Name="@(LabelCount.Label.HideNotes ? IconName.EyeOff : IconName.Eye)" Class="size-4" />
+    </IconButton>
     <IconButton Label="@($"Rename {LabelCount.Label.Name}")" Class="size-9" OnClick="StartRename"><Icon Name="IconName.Pencil" Class="size-4" /></IconButton>
     <IconButton Label="@($"Delete {LabelCount.Label.Name}")" Class="size-9" OnClick="@(() => _confirming = true)"><Icon Name="IconName.Trash2" Class="size-4" /></IconButton>
     <ConfirmDialog Open="_confirming" OpenChanged="open => _confirming = open" Title="@($"Delete the label “{LabelCount.Label.Name}”?")"
@@ -123,6 +134,18 @@
         catch (Exception)
         {
             Toasts.Error("Could not change the colour.");
+        }
+    }
+
+    private async Task ToggleHideNotesAsync()
+    {
+        try
+        {
+            await Labels.UpdateAsync(LabelCount.Label.Id, hideNotes: !LabelCount.Label.HideNotes);
+        }
+        catch (Exception)
+        {
+            Toasts.Error("Could not change where the label's notes show.");
         }
     }
 

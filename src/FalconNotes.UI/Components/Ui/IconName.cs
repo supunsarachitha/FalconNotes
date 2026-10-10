@@ -63,6 +63,12 @@ public enum IconName
     /// <summary>Lucide <c>external-link</c>.</summary>
     ExternalLink,
 
+    /// <summary>Lucide <c>eye</c>.</summary>
+    Eye,
+
+    /// <summary>Lucide <c>eye-off</c>.</summary>
+    EyeOff,
+
     /// <summary>Lucide <c>file-text</c>.</summary>
     FileText,
 

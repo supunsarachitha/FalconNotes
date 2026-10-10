@@ -1,8 +1,8 @@
 # 9. Port map
 
 Every file of the reference and where it goes. Work file by file: open the source, port it, then port its tests.
-`web/` = `src/maple-web/src/`, `server/` = `src/MapleNotes.Server/`, in the [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0)
-at release 1.15.0. The map was drawn from 1.8.0, so files that only later releases have are not in it: of those, the
+`web/` = `src/maple-web/src/`, `server/` = `src/MapleNotes.Server/`, in the [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.16.0)
+at release 1.16.0. The map was drawn from 1.8.0, so files that only later releases have are not in it: of those, the
 app has none but the label, photo-size and daily-template parts named in the rows below, since the rest serve the web
 app's accounts and its offline mode.
 
@@ -70,7 +70,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `components/AttachmentGallery.tsx` | `UI/Components/AttachmentGallery.razor` (Adapt: Open / Save a copy) |
 | `components/ImageViewer.tsx` | `UI/Components/ImageViewer.razor` (Adapt: Save a copy, Share) |
 | `components/Labels.tsx` | `UI/Components/LabelDot.razor`, `LabelChips.razor`, `LabelPicker.razor` |
-| `components/LabelSettings.tsx` | `UI/Pages/Settings/LabelSettings.razor` |
+| `components/LabelSettings.tsx` | `UI/Pages/Settings/LabelSettings.razor`, `LabelRow.razor`, `LabelColorPicker.razor` (with the eye that hides a label's notes, web 1.16.0) |
 | `components/TodoCard.tsx` | `UI/Components/TodoCard.razor`, `ItemsEditor.razor` |
 | `components/HabitRow.tsx`, `HabitChart.tsx`, `HabitCalendar.tsx` | `UI/Components/Habits/*.razor` |
 | `components/Calendar.tsx` | `UI/Components/Calendar.razor` |
@@ -98,7 +98,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `Features/Notes/TagParser.cs` | `Core/Text/TagParser.cs` | Copy |
 | `Features/Notes/NoteCursor.cs` | `Core/Notes/NoteCursor.cs` | Adapt (an in-memory record, no string encoding needed) |
 | `Features/Notes/TrashCleanup.cs` | `Core/Maintenance/TrashPurge.cs` | Adapt |
-| `Features/Labels/LabelService.cs` | `Core/Labels/LabelService.cs` | Adapt |
+| `Features/Labels/LabelService.cs` | `Core/Labels/LabelService.cs` | Adapt, with `HideNotes` of Maple Notes 1.16.0; the list rule it drives is the server's `NoteService`'s, in `Core/Notes/NoteService.cs` and `NoteRepository.cs` |
 | `Features/Attachments/UploadPolicy.cs` | `Core/Attachments/UploadPolicy.cs` | Copy (replace `FileExtensionContentTypeProvider` with a table) |
 | `Features/Attachments/AttachmentService.cs`, `AttachmentCleanup.cs` | `Core/Attachments/AttachmentService.cs`, `Core/Maintenance/AttachmentCleanup.cs` | Adapt |
 | `Features/Export/*.cs` | `Core/Backup/Export/*.cs` | **Copy** ([05](05-backup-compatibility.md#export)), with the label lines of Maple Notes 1.9.0 (manifest version 3) |

@@ -64,6 +64,11 @@ public static class Guide
             by typing its name. A note shows its labels at the bottom, and choosing one, or a label in the side menu, lists its
             notes.
 
+            To keep some notes out of the way, choose the eye next to a label in [Settings → Labels](/settings/labels): notes and
+            quick notes with that label no longer show on Home or in Quick notes, only on the label's page and in searches. Todo
+            lists stay in their tab. Take the label off a note, or turn the eye off, and the note is back where it was. While
+            labels are turned off, nothing is hidden.
+
             Exports list each note's labels by name, and restoring one brings them back.
             """),
 

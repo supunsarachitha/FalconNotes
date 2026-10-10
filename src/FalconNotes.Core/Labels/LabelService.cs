@@ -11,7 +11,7 @@ namespace FalconNotes.Core.Labels;
 public sealed record LabelCount(Label Label, int NoteCount);
 
 /// <summary>
-/// Creates, renames, recolours and deletes labels (docs/04, Labels). Adapted from the server's <c>LabelService</c>.
+/// Creates, renames, recolours and deletes labels, and hides their notes (docs/04, Labels). Adapted from the server's <c>LabelService</c>.
 /// Labels go on notes through <see cref="Notes.NoteService.PatchAsync"/>.
 /// </summary>
 /// <param name="storage">The open database.</param>
@@ -31,7 +31,7 @@ public sealed class LabelService(StorageContext storage, ChangeFeed feed, TimePr
         {
             using var command = connection.CreateCommand();
             command.CommandText = $"""
-                SELECT l.Id, l.Name, l.Color, l.CreatedAt,
+                SELECT l.Id, l.Name, l.Color, l.CreatedAt, l.HideNotes,
                        (SELECT COUNT(*) FROM NoteLabels nl JOIN Notes n ON n.Id = nl.NoteId
                         WHERE nl.LabelId = l.Id AND n.ArchivedAt IS NULL AND n.TrashedAt IS NULL
                           AND n.Kind IN ({command.InList("$kind", kinds.Select(k => (object)(int)k))}))
@@ -42,8 +42,8 @@ public sealed class LabelService(StorageContext storage, ChangeFeed feed, TimePr
             while (reader.Read())
             {
                 labels.Add(new LabelCount(
-                    new Label(reader.GetId(0), reader.GetString(1), ParseColor(reader.GetString(2)), reader.GetTime(3)),
-                    reader.GetInt32(4)));
+                    new Label(reader.GetId(0), reader.GetString(1), ParseColor(reader.GetString(2)), reader.GetTime(3), reader.GetInt32(4) != 0),
+                    reader.GetInt32(5)));
             }
 
             return labels.OrderBy(l => l.Label.Name, NameOrder).ThenBy(l => l.Label.Id.ToString("D"), StringComparer.Ordinal).ToList();
@@ -82,13 +82,14 @@ public sealed class LabelService(StorageContext storage, ChangeFeed feed, TimePr
         return label;
     }
 
-    /// <summary>Renames and/or recolours a label.</summary>
+    /// <summary>Renames or recolours a label, or hides or shows its notes.</summary>
     /// <param name="id">The label.</param>
     /// <param name="name">The new name, or null to keep it.</param>
     /// <param name="color">The new colour, or null to keep it.</param>
+    /// <param name="hideNotes">Whether its notes are left out of Home and Quick notes, or null to keep that.</param>
     /// <returns>False when there is no such label.</returns>
     /// <exception cref="UserFacingException">The name is empty, too long or taken.</exception>
-    public async Task<bool> UpdateAsync(Guid id, string? name = null, LabelColor? color = null)
+    public async Task<bool> UpdateAsync(Guid id, string? name = null, LabelColor? color = null, bool? hideNotes = null)
     {
         var clean = name is null ? null : ValidateName(name);
         var found = await storage.Database.InTransactionAsync((connection, transaction) =>
@@ -99,13 +100,20 @@ public sealed class LabelService(StorageContext storage, ChangeFeed feed, TimePr
             }
 
             using var update = Sql.Command(connection,
-                "UPDATE Labels SET Name = COALESCE($name, Name), Color = COALESCE($color, Color) WHERE Id = $id", transaction);
-            return update.With("$id", Sql.Id(id)).With("$name", clean).With("$color", color?.ToString()).ExecuteNonQuery() > 0;
+                "UPDATE Labels SET Name = COALESCE($name, Name), Color = COALESCE($color, Color), HideNotes = COALESCE($hide, HideNotes) WHERE Id = $id",
+                transaction);
+            return update.With("$id", Sql.Id(id)).With("$name", clean).With("$color", color?.ToString())
+                .With("$hide", hideNotes is { } hide ? (hide ? 1 : 0) : null).ExecuteNonQuery() > 0;
         });
 
         if (found)
         {
             feed.RaiseLabelsChanged();
+            if (hideNotes is not null)
+            {
+                // Home and Quick notes list different notes now, and lists reload on this event alone.
+                feed.RaiseNotesChanged();
+            }
         }
 
         return found;

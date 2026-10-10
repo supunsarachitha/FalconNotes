@@ -122,9 +122,9 @@ device, use Maple Notes instead of Falcon Notes, or alongside it.
   restore there, with each note's labels (Maple Notes 1.9.0 or later; older versions restore the notes without
   them). The format is specified in [05 Backup compatibility](docs/05-backup-compatibility.md) and checked by
   conformance tests against shared export vectors.
-- **The reference implementation.** Falcon Notes matches Maple Notes 1.15.0, apart from what needs a server. It was
-  first ported from 1.8.0 and brought up to 1.15.0 in Falcon Notes 1.2.0. The source to port from is the
-  [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.15.0) at that release; `reference/maple-notes-1.8.0/` keeps only the 1.8.0
+- **The reference implementation.** Falcon Notes matches Maple Notes 1.16.0, apart from what needs a server. It was
+  first ported from 1.8.0, brought up to 1.15.0 in Falcon Notes 1.2.0, and then to 1.16.0. The source to port from is the
+  [Maple Notes repository](https://github.com/supunsarachitha/MapleNotes/tree/v1.16.0) at that release; `reference/maple-notes-1.8.0/` keeps only the 1.8.0
   documents and screenshots the specification was written against.
 
 ## Building from source

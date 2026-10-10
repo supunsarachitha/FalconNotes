@@ -91,6 +91,6 @@ public class FeaturesSectionTests : BunitContext
         await app.State.UpdatePreferencesAsync(p => p with { HelpMenu = false });
 
         cut.WaitForAssertion(() => Assert.Equal("Help", cut.Find("a[href='/help']").TextContent.Trim()));
-        Assert.Contains("Based on Maple Notes 1.15.0", cut.Markup, StringComparison.Ordinal);
+        Assert.Contains("Based on Maple Notes 1.16.0", cut.Markup, StringComparison.Ordinal);
     }
 }

@@ -7,7 +7,7 @@ with the note Markdown renderer. Tag examples are in `code`, because plain `#wor
 The guide names the app "Falcon Notes" itself. Do not port `HelpPage.tsx`'s `replaceAll("Maple Notes", appName)`: the
 guide's mentions of the Maple Notes web app must stay as written.
 
-Sections marked **as in web** are copied from the reference without change (they are the same in 1.8.0 and 1.15.0). The others are given in full here.
+Sections marked **as in web** are copied from the reference without change (they are the same in 1.8.0 and 1.16.0). The others are given in full here.
 
 | # | Id | Title | Source |
 |---|---|---|---|
@@ -85,6 +85,9 @@ are at the top.
   **Double-tap to edit** in [Settings → Writing](/settings/writing), then double-tap the note (or double-click it).
 ````
 
+Brought up to Maple Notes 1.16.0 (2026-10-10): `labels` gains the paragraph on the eye that hides a label's notes,
+word for word.
+
 ## 4. Labels (`labels`)
 
 ````markdown
@@ -95,6 +98,11 @@ Turn on **Labels** in [Settings → Labels](/settings/labels), where you also cr
 Then choose **Labels…** in a note's **⋯** menu to tick the ones it should have; you can create a new label right there
 by typing its name. A note shows its labels at the bottom, and choosing one, or a label in the side menu, lists its
 notes.
+
+To keep some notes out of the way, choose the eye next to a label in [Settings → Labels](/settings/labels): notes and
+quick notes with that label no longer show on Home or in Quick notes, only on the label's page and in searches. Todo
+lists stay in their tab. Take the label off a note, or turn the eye off, and the note is back where it was. While
+labels are turned off, nothing is hidden.
 
 Exports list each note's labels by name, and restoring one brings them back.
 ````

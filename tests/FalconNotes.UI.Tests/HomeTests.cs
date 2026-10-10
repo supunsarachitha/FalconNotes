@@ -194,6 +194,55 @@ public class HomeTests : BunitContext
         cut.WaitForAssertion(() => Assert.Equal("Work", cut.Find("h1").TextContent), TimeSpan.FromSeconds(5));
         cut.Find("span[aria-hidden=true].rounded-full"); // the label's colour dot
         cut.WaitForAssertion(() => Assert.Contains("labelled note", cut.Markup, StringComparison.Ordinal), TimeSpan.FromSeconds(5));
+        Assert.DoesNotContain("hidden from Home and Quick notes", cut.Markup, StringComparison.Ordinal);
+    }
+
+    // Port of "says on a label's page when its notes are hidden from Home and Quick notes" (Labels.test.tsx, Maple Notes 1.16.0).
+    [Fact]
+    public async Task Says_on_a_labels_page_when_its_notes_are_hidden_from_home_and_quick_notes()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { Labels = true });
+        SetUpJs();
+        var work = await app.Core.Labels.CreateAsync("Work");
+        await app.Core.Labels.UpdateAsync(work.Id, hideNotes: true);
+        var note = await app.PostAsync("Quarterly report");
+        await app.Core.Notes.PatchAsync(note.Id, new Core.Notes.NotePatch(LabelIds: [work.Id]));
+        var navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo($"/?label={work.Id}");
+
+        var cut = Render<Home>();
+
+        cut.WaitForAssertion(
+            () => Assert.Contains("These notes are hidden from Home and Quick notes and show only here.", cut.Markup, StringComparison.Ordinal),
+            TimeSpan.FromSeconds(5));
+        Assert.Equal("/settings/labels", cut.FindAll("a").Single(a => a.TextContent.Trim() == "Change in Settings").GetAttribute("href"));
+        cut.WaitForAssertion(() => Assert.Contains("Quarterly report", cut.Markup, StringComparison.Ordinal), TimeSpan.FromSeconds(5)); // still listed here
+    }
+
+    [Fact]
+    public async Task A_note_leaves_home_when_its_label_hides_its_notes_and_returns_when_it_stops()
+    {
+        using var app = await UiTestApp.StartAsync(Services, "Alex", new Preferences { Labels = true, DailyNotes = false });
+        SetUpJs();
+        var label = await app.Core.Labels.CreateAsync("Private");
+        var secret = await app.PostAsync("Surprise party plans");
+        await app.PostAsync("Groceries");
+        await app.Core.Notes.PatchAsync(secret.Id, new Core.Notes.NotePatch(LabelIds: [label.Id]));
+        var cut = Render<Home>();
+        cut.WaitForAssertion(() => Assert.Contains("Surprise party plans", cut.Markup, StringComparison.Ordinal), TimeSpan.FromSeconds(5));
+
+        await app.Core.Labels.UpdateAsync(label.Id, hideNotes: true);
+
+        // Together: the lists are empty for a moment while they reload.
+        cut.WaitForAssertion(
+            () =>
+            {
+                Assert.Contains("Groceries", cut.Markup, StringComparison.Ordinal);
+                Assert.DoesNotContain("Surprise party plans", cut.Markup, StringComparison.Ordinal);
+            },
+            TimeSpan.FromSeconds(5));
+        await app.Core.Labels.UpdateAsync(label.Id, hideNotes: false);
+        cut.WaitForAssertion(() => Assert.Contains("Surprise party plans", cut.Markup, StringComparison.Ordinal), TimeSpan.FromSeconds(5));
     }
 
     [Fact]

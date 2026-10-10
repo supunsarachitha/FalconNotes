@@ -1,6 +1,8 @@
 @* Port of components/AppShell.tsx: phones get a top bar with a slide-in drawer; at 1,024 px and wider a fixed sidebar
    sits beside a centred reading column. The drawer is a <dialog> instead of Radix (docs/06). Safe areas come from the
-   natively measured --safe-* variables first (docs/12). *@
+   natively measured --safe-* variables first (docs/12): the top for the status bar, and for the drawer and the sidebar
+   the bottom too, or their last row (the name, and Lock) lies under Android's navigation bar, out of reach with
+   three-button navigation. *@
 @inherits LayoutComponentBase
 @implements IAsyncDisposable
 @using FalconNotes.UI.State
@@ -20,7 +22,7 @@
     </header>
 
     <div class="mx-auto flex max-w-6xl lg:pt-[var(--safe-top,0px)]">
-        <aside class="sticky top-[var(--safe-top,0px)] hidden h-[calc(100dvh-var(--safe-top,0px))] w-72 shrink-0 border-r border-stone-200 bg-white lg:block dark:border-stone-800 dark:bg-stone-900">
+        <aside class="sticky top-[var(--safe-top,0px)] hidden h-[calc(100dvh-var(--safe-top,0px)-var(--safe-bottom,0px))] w-72 shrink-0 border-r border-stone-200 bg-white lg:block dark:border-stone-800 dark:bg-stone-900">
             <Sidebar LockEnabled="AppLock.Settings.Enabled" OnLock="AppLock.LockNow" />
         </aside>
         <main id="main" class="min-w-0 flex-1 px-4 pb-24 pt-4 lg:px-10 lg:pt-8">
@@ -29,7 +31,7 @@
     </div>
 
     <dialog @ref="_drawer" aria-label="Navigation"
-            class="fixed inset-y-0 left-0 m-0 h-full max-h-none w-[min(20rem,85vw)] bg-white pt-[var(--safe-top,0px)] text-stone-900 shadow-xl backdrop:bg-black/40 lg:hidden dark:bg-stone-900 dark:text-stone-100">
+            class="fixed inset-y-0 left-0 m-0 h-full max-h-none w-[min(20rem,85vw)] bg-white pb-[var(--safe-bottom,0px)] pt-[var(--safe-top,0px)] text-stone-900 shadow-xl backdrop:bg-black/40 lg:hidden dark:bg-stone-900 dark:text-stone-100">
         @if (_drawerOpen)
         {
             <IconButton Label="Close navigation" Class="absolute right-2 top-[calc(var(--safe-top,0px)+0.75rem)]" OnClick="CloseDrawerAsync">

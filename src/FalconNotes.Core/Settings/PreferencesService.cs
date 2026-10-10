@@ -13,7 +13,8 @@ namespace FalconNotes.Core.Settings;
 /// <param name="feed">Change events.</param>
 public sealed class PreferencesService(StorageContext storage, ChangeFeed feed)
 {
-    private const string Key = "preferences";
+    /// <summary>The key of the preferences in the <c>Settings</c> table.</summary>
+    internal const string Key = "preferences";
 
     /// <summary>The saved preferences, or the defaults.</summary>
     /// <returns>The preferences.</returns>

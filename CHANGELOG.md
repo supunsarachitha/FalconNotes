@@ -120,6 +120,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it cannot run while closed. **Back up now** makes one at once. If a backup fails, for example because the folder
   was deleted, Settings and Home say so until one works. These backups are not encrypted, so choose a folder only
   you can open. Android only for now; it needs no new permission. Help describes it.
+- **Hide a label's notes** (Maple Notes 1.16.0): in Settings → Labels, the eye next to a label keeps notes and quick
+  notes with that label out of Home and the Quick notes tab. They show on the label's page, where a line says they
+  are hidden, and in searches, and todo lists keep their tab. Taking the label off a note, or turning the eye off,
+  brings the note back, and nothing is hidden while labels are turned off. The side menu marks such labels. The
+  database gains a column for it (schema version 2), and a copy is kept before the upgrade. Backups do not carry the
+  setting, so a restored label does not hide its notes.
 
 ### Changed
 
@@ -139,6 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   privacy policy said the app asks for no permissions, and now name this one.
 - Falcon Notes now follows Maple Notes 1.15.0 (it followed 1.8.0), apart from what needs a server; Settings and Help
   say "Based on Maple Notes 1.15.0". Help describes the daily-note template, the photo sizes and Help in the menu.
+- Falcon Notes now follows Maple Notes 1.16.0 (it followed 1.15.0); Settings says "Based on Maple Notes 1.16.0".
 - Opening **Labels…** from a note's ⋯ menu no longer puts the cursor in the find-or-create field, so the keyboard
   stays down until you tap the field.
 - A note shows only its own attached files as images; any other image in its Markdown shows its description.
@@ -168,6 +175,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Android: the last row of the side menu, with your name and the **Lock now** button, no longer lies under the
+  system's navigation bar. With three-button navigation it was hidden and could not be tapped; with gesture
+  navigation it was clipped. The sidebar on tablets is fixed the same way.
 - A file whose name holds invisible text-reordering characters, which can make `invoice…exe` read as a PDF, is added
   under its name without them.
 - A link written as `//host/…` in a note opens as another site, not as a page of the app.

@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Falcon Notes is an **offline** .NET 10 MAUI Blazor Hybrid app for Android, Windows and macOS: a port of the Maple
-Notes web app (1.15.0 since Falcon Notes 1.2.0; first ported from 1.8.0) under its own name and mark. It has the same features and look, no server, encrypted local
+Notes web app (1.16.0; first ported from 1.8.0, and brought up to 1.15.0 in Falcon Notes 1.2.0) under its own name and mark. It has the same features and look, no server, encrypted local
 storage, and backups compatible with the web app.
 
 ## Read first
@@ -10,8 +10,8 @@ The specification is in `docs/`. Read **all of it, in order (01 → 13)**, befor
 starts a new phase. Afterwards, re-read the documents your task touches. The [README](README.md) lists what each one
 settles.
 
-The web app is the **reference implementation**: the Maple Notes repository (<https://github.com/supunsarachitha/MapleNotes>) at release 1.15.0 (tag
-`v1.15.0`). When the docs do not say how something behaves, the reference does. Its source is not in this repository
+The web app is the **reference implementation**: the Maple Notes repository (<https://github.com/supunsarachitha/MapleNotes>) at release 1.16.0 (tag
+`v1.16.0`). When the docs do not say how something behaves, the reference does. Its source is not in this repository
 any more (a 1.8.0 copy was removed on 2026-10-08): clone it somewhere outside the project, such as a scratch folder,
 and read it there. `reference/maple-notes-1.8.0/` keeps only that release's documents and screenshots.
 [docs/09-port-map.md](docs/09-port-map.md) says where every reference file goes.
