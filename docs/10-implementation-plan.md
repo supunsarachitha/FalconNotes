@@ -470,8 +470,17 @@ notes, the one feature of that release, ported from its repository at `main` (co
 the `maple-notes-1.16.0` branch. It is the first change to the schema since the first release: migration 2 adds
 `Labels.HideNotes`, and the database is copied before it, as before any upgrade. Checked by the Core and component
 tests and by the performance budgets (on 50,000 notes with a label hiding its notes, a feed page takes 0.24 ms and
-the pinned list 0.26 ms). Not checked: an emulator or a phone, where a database made by an earlier version must
-upgrade ([11](11-testing.md), manual checklist).
+the pinned list 0.26 ms). Checked on an emulator (API 36, 1080 × 2400) the same day, over the Debug build of
+2026-10-08 with its notes: the database upgraded on first start and `backups/falcon-…-v1.db` was kept; with the eye
+on, a labelled note left Home and a labelled quick note left Quick notes, both showed on the label's page under the
+line that says so, the side menu marked the label, and search found the note; turning Labels off, and then the eye
+off, brought them back. Not checked: a todo list with a hiding label on the emulator (the Core test covers it), a
+Release build and a real phone.
+
+One thing is as in the reference and looks unfinished there: the pressed eye is meant to take the accent colour
+(`text-maple-700`), but `IconButton`'s own `text-stone-600` comes later in the stylesheet, in both apps, so the icon
+stays grey. The icon itself changes (`Eye` to `EyeOff`), which is what tells the two states apart. Left as it is
+until the web app changes it.
 
 ## Spike results
 
