@@ -482,6 +482,13 @@ One thing is as in the reference and looks unfinished there: the pressed eye is 
 stays grey. The icon itself changes (`Eye` to `EyeOff`), which is what tells the two states apart. Left as it is
 until the web app changes it.
 
+Version 1.3.0 (versionCode 6), 2026-10-11: everything on `main` since 1.2.0. The Core and component tests pass, and
+`dotnet publish`, from clean, made the signed AAB and APK; the 1.2.0 output was moved to
+`src/FalconNotes.App/bin/Release-1.2.0/` (git-ignored) first. Checked: the owner's upload key (the same certificate
+as 1.2.0; `apksigner verify --print-certs`, `jarsigner -verify`), `minSdkVersion` 26, `targetSdkVersion` 36,
+arm64-v8a and x86_64, not debuggable, and the permissions are `USE_BIOMETRIC` and `USE_FINGERPRINT` with no
+`INTERNET`. Not checked: the release build was not installed or run on an emulator or a phone.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
