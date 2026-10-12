@@ -599,6 +599,24 @@ run.** The update over the release-signed 1.3.0 was checked with the earlier 1.4
 were checked in a Debug build; the 1.3.0 output kept aside in `bin/Release-1.3.0/` was no longer there to repeat it
 with.
 
+**Google Play's edge-to-edge warnings** (reported by the owner from the Play Console, 2026-10-12), looked into on the
+1.4.0 release APK. Neither needs a change, and neither blocks a release.
+
+- *"Edge-to-edge may not display for all users"* is the notice every app targeting SDK 35 or later gets. The app
+  already does what it asks: `MainActivity` calls AndroidX `EdgeToEdge.Enable` before `base.OnCreate`, and the page
+  takes its insets from the window ([12](12-platforms.md), Edge to edge, which also records what was checked).
+- *"Your app uses deprecated APIs or parameters for edge-to-edge"* names `Window.setStatusBarColor` and
+  `setNavigationBarColor`, called from `BottomSheetDialog.onCreate` and `EdgeToEdgeUtils.applyEdgeToEdge` in Google's
+  Material library (`Xamarin.Google.Android.Material` 1.12.0.5, which MAUI brings in). `dexdump` over the APK's
+  `classes.dex` shows those two, and AndroidX's own `EdgeToEdgeApi26` and `EdgeToEdgeApi29` (the backward-compatible
+  half of the call Google recommends), as the only callers; nothing of this app's or of MAUI's calls either API. In
+  the APK nothing constructs a `BottomSheetDialog`, and `applyEdgeToEdge` is reached only from `MaterialDatePicker`:
+  the app shows neither, its screens being one WebView, so the code never runs. It is in the package because the
+  Material binding's classes are kept whole (`TrimMode=partial`; `proguard_project_references.cfg`). A newer Material
+  would not clear it: its 1.13 branch and `main` still make the same calls. Taking the classes out would mean
+  trimming the bindings in full, which risks the release build for a warning about code that is never reached, so it
+  is left until MAUI or Material moves.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
