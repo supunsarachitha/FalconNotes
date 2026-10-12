@@ -47,17 +47,20 @@ public class LockedNotesTests : BunitContext
         where T : Microsoft.AspNetCore.Components.IComponent =>
         cut.FindAll("button").First(b => b.TextContent.Trim() == text);
 
+    /// <summary>Opens a card's menu and waits for its items: a click made while a list is still rendering what it
+    /// loaded waits its turn, so the menu is not open yet when <c>Click</c> returns (1 run in 6 on CI).</summary>
     private static List<string> MenuItems<T>(IRenderedComponent<T> cut, string menu)
         where T : Microsoft.AspNetCore.Components.IComponent
     {
         cut.Find($"button[aria-label='{menu}']").Click();
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("button[role=menuitem]")), Slow);
         return cut.FindAll("button[role=menuitem]").Select(b => b.TextContent.Trim()).ToList();
     }
 
     private static void Choose<T>(IRenderedComponent<T> cut, string menu, string item)
         where T : Microsoft.AspNetCore.Components.IComponent
     {
-        cut.Find($"button[aria-label='{menu}']").Click();
+        Assert.Contains(item, MenuItems(cut, menu));
         cut.FindAll("button[role=menuitem]").First(b => b.TextContent.Trim() == item).Click();
     }
 

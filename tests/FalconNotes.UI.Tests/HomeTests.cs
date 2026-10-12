@@ -138,14 +138,18 @@ public class HomeTests : BunitContext
 
         var cut = Render<Home>();
 
-        Assert.Equal("work", cut.Find("h1").TextContent);
+        // Every look at the page's elements is made inside WaitForAssertion, which takes its turn behind the renderer.
+        // A Find from the test's own thread while the list is still loading can leave bUnit holding the elements of an
+        // earlier render, and with no render after it nothing looks again: on CI the page had rendered all ten times,
+        // the notes with it, and the wait still found no list (macOS, 2026-10-12).
         // TextContent, not raw Markup: the tag itself renders as a link, splitting "about #work" across tags.
         cut.WaitForAssertion(() =>
         {
+            Assert.Equal("work", cut.Find("h1").TextContent);
             Assert.Contains("about", cut.Find("section").TextContent, StringComparison.Ordinal);
             Assert.DoesNotContain("home", cut.Find("section").TextContent, StringComparison.Ordinal);
+            Assert.Empty(cut.FindAll("#composer"));
         }, TimeSpan.FromSeconds(5));
-        Assert.Empty(cut.FindAll("#composer"));
     }
 
     [Fact]

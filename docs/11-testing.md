@@ -19,6 +19,13 @@ for the whole process, and `SqliteConnection.ClearAllPools()`, which the test su
 and upgrade steps call to let go of the database files, can close a connection that another test is opening. Run in
 parallel, about one run in ten failed at random with `ObjectDisposedException: SQLitePCL.sqlite3`.
 
+In a component test, look at a page that is still loading only from inside `WaitForAssertion`, or through
+`cut.Markup`. `cut.Find` and `FindAll` keep the parsed elements until the next render; called from the test's own
+thread while renders are still arriving, they can keep the elements of an earlier render, and when no render follows,
+every later look sees the old page. A click made while a list is rendering what it loaded also waits its turn, so
+wait for what it opens before reaching for it. Both cost a CI run on 2026-10-12 (`HomeTests`, `LockedNotesTests`),
+and neither showed on a fast machine, even under load.
+
 A fixed clock gives rows made one after another the same time, and their order then falls back to their IDs. Version 7
 IDs made within one millisecond are in random order, so a test that checks the order of a note's files must give them
 distinct times: `TestApp.AddFileAsync` moves the clock on one tick, and a restore test sets `Clock.Step`. A machine
