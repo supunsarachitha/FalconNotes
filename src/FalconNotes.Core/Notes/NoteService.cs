@@ -59,9 +59,11 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
             }
 
             var names = NoteRepository.AttachmentNames(connection);
+            // A locked note is never a match: finding it would tell what is in it.
             var (matches, ended) = NoteRepository.Scan(connection, query, cursor, pageSize, hideLabelled, (row, content) =>
-                content.Contains(search, StringComparison.OrdinalIgnoreCase)
-                || names.GetValueOrDefault(row.Id, []).Any(name => name.Contains(search, StringComparison.OrdinalIgnoreCase)),
+                !row.IsLocked
+                && (content.Contains(search, StringComparison.OrdinalIgnoreCase)
+                    || names.GetValueOrDefault(row.Id, []).Any(name => name.Contains(search, StringComparison.OrdinalIgnoreCase))),
                 cancellationToken);
             var notes = NoteRepository.Load(connection, matches.Select(m => m.Row).ToList(), matches.ToDictionary(m => m.Row.Id, m => m.Content));
             return new NotePage(notes, ended ? null : CursorAfter(matches[^1].Row, query.State));
@@ -84,6 +86,13 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
     /// <returns>The habits.</returns>
     public Task<IReadOnlyList<Note>> ListHabitsAsync() =>
         Db.ReadAsync<IReadOnlyList<Note>>(connection => NoteRepository.Load(connection, NoteRepository.HabitRows(connection)));
+
+    /// <summary>
+    /// Whether any note is locked, the trash included. While one is, the PIN is in use, and an export, which would hold
+    /// its text, asks for it first (docs/04, Locked notes).
+    /// </summary>
+    /// <returns>Whether a locked note exists.</returns>
+    public Task<bool> AnyLockedAsync() => Db.ReadAsync(NoteRepository.AnyLocked);
 
     /// <summary>Creates a note and attaches the files added while it was written.</summary>
     /// <param name="content">The Markdown text.</param>
@@ -198,13 +207,14 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
     }
 
     /// <summary>
-    /// Pins, archives, trashes, moves or labels a note (each change only when given). <c>UpdatedAt</c> stays.
+    /// Pins, archives, trashes, moves, labels, locks or unlocks a note (each change only when given).
+    /// <c>UpdatedAt</c> stays. Unlocking is not checked here: the caller has already asked for the PIN.
     /// </summary>
     /// <param name="id">The note.</param>
     /// <param name="change">The changes.</param>
     /// <returns>The note, or null when there is none.</returns>
-    /// <exception cref="UserFacingException">A move to or from habits, too many labels, or a label that does not
-    /// exist.</exception>
+    /// <exception cref="UserFacingException">A move to or from habits, a lock on a habit, too many labels, or a label
+    /// that does not exist.</exception>
     public async Task<Note?> PatchAsync(Guid id, NotePatch change)
     {
         var now = Now;
@@ -222,6 +232,13 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
             }
 
             var kind = change.Kind ?? note.Kind;
+
+            // The Habits page shows every habit's name and days, and has nowhere to hide one.
+            if (change.IsLocked == true && kind == NoteKind.Habit)
+            {
+                throw new UserFacingException("Habits cannot be locked.", "isLocked");
+            }
+
             var archivedAt = change.IsArchived is { } archived ? (archived ? note.ArchivedAtUtc ?? now : null) : note.ArchivedAtUtc;
             var trashedAt = change.IsTrashed is { } trashed ? (trashed ? note.TrashedAtUtc ?? now : null) : note.TrashedAtUtc;
 
@@ -230,14 +247,14 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
 
             using (var update = Sql.Command(connection, """
                 UPDATE Notes SET Kind = $kind, IsPinned = $pinned, ArchivedAt = $archived, TrashedAt = $trashed,
-                                 DailyDate = $daily, Revision = Revision + 1
+                                 DailyDate = $daily, IsLocked = $locked, Revision = Revision + 1
                 WHERE Id = $id
                 """, transaction))
             {
                 update.With("$id", Sql.Id(id)).With("$kind", (int)kind).With("$pinned", (change.IsPinned ?? note.IsPinned) ? 1 : 0)
                     .With("$archived", archivedAt is { } a ? Sql.Time(a) : null)
                     .With("$trashed", trashedAt is { } t ? Sql.Time(t) : null)
-                    .With("$daily", Sql.Date(dailyDate)).ExecuteNonQuery();
+                    .With("$daily", Sql.Date(dailyDate)).With("$locked", (change.IsLocked ?? note.IsLocked) ? 1 : 0).ExecuteNonQuery();
             }
 
             if (change.LabelIds is { } labelIds)
@@ -311,7 +328,7 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
 
     /// <summary>
     /// The tags of active notes of these kinds, with how many notes use each, sorted by name. Tags with no such note
-    /// are left out.
+    /// are left out, and locked notes are not counted: a tag is part of the text.
     /// </summary>
     /// <param name="kinds">The enabled kinds.</param>
     /// <returns>The tags.</returns>
@@ -323,7 +340,7 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
                 SELECT t.Name, COUNT(*) FROM NoteTags nt
                 JOIN Tags t ON t.Id = nt.TagId
                 JOIN Notes n ON n.Id = nt.NoteId
-                WHERE n.ArchivedAt IS NULL AND n.TrashedAt IS NULL AND n.Kind IN ({command.InList("$kind", kinds.Select(k => (object)(int)k))})
+                WHERE n.ArchivedAt IS NULL AND n.TrashedAt IS NULL AND n.IsLocked = 0 AND n.Kind IN ({command.InList("$kind", kinds.Select(k => (object)(int)k))})
                 GROUP BY nt.TagId
                 """;
             var tags = new List<TagCount>();
@@ -468,8 +485,10 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
 /// <param name="IsTrashed">Move to or restore from the trash.</param>
 /// <param name="Kind">Move to another kind (never to or from habits).</param>
 /// <param name="LabelIds">The labels it should have.</param>
+/// <param name="IsLocked">Lock or unlock (never a habit).</param>
 public sealed record NotePatch(
-    bool? IsPinned = null, bool? IsArchived = null, bool? IsTrashed = null, NoteKind? Kind = null, IReadOnlyList<Guid>? LabelIds = null);
+    bool? IsPinned = null, bool? IsArchived = null, bool? IsTrashed = null, NoteKind? Kind = null, IReadOnlyList<Guid>? LabelIds = null,
+    bool? IsLocked = null);
 
 /// <summary>How much the notes and files take (Settings → Profile → Storage).</summary>
 /// <param name="NotesBytes">The text of every note, in UTF-8 bytes.</param>

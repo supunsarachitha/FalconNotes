@@ -1,12 +1,15 @@
 @* Port of ExportSection.tsx + RestorePanel.tsx, adapted (docs/05, Writing the file; docs/07, Settings → Backup &
    data): wording changed ("Download ZIP" → "Export ZIP…"), a save dialog instead of a browser download, and the
-   restore flow shared with Welcome and Key lost (RestoreFlow.razor). *@
+   restore flow shared with Welcome and Key lost (RestoreFlow.razor). While a note is locked, exporting asks for the
+   PIN first, because the archive holds that note too (docs/05, What goes in). *@
 @using FalconNotes.Core.Backup.Export
 @using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
 @using FalconNotes.Core.Text
 @using FalconNotes.UI.State
 @implements IDisposable
 @inject ExportService Export
+@inject NoteService Notes
 @inject AutoExportService AutoExport
 @inject Toasts Toasts
 @inject TimeProvider Time
@@ -80,7 +83,7 @@
         }
 
         <div class="flex flex-wrap items-center gap-3">
-            <Button Busy="_progress is not null" OnClick="ExportAsync">
+            <Button Busy="_progress is not null" OnClick="StartExportAsync">
                 @if (_progress is null)
                 {
                     <Icon Name="IconName.Download" Class="size-4" />
@@ -104,6 +107,9 @@
         <RestoreFlow />
     </section>
 </Section>
+
+<VerifyPinDialog Open="_verifying" OpenChanged="open => _verifying = open" OnVerified="OnVerifiedAsync" Title="Export your notes"
+                 Description="The export holds your locked notes too, and it is not encrypted. Enter your PIN to continue." />
 
 @code {
     private static readonly (ExportFormat Value, string Label, string Hint)[] Formats =
@@ -134,6 +140,7 @@
     private string? _error;
     private string? _progress;
     private DateTime? _lastExport;
+    private bool _verifying;
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
@@ -151,6 +158,24 @@
 
     /// <inheritdoc />
     public void Dispose() => AutoExport.Changed -= OnAutoExportChanged;
+
+    private async Task StartExportAsync()
+    {
+        if (await Notes.AnyLockedAsync())
+        {
+            _verifying = true;
+        }
+        else
+        {
+            await ExportAsync();
+        }
+    }
+
+    private async Task OnVerifiedAsync()
+    {
+        _verifying = false;
+        await ExportAsync();
+    }
 
     private async Task ExportAsync()
     {

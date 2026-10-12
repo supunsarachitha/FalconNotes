@@ -9,6 +9,7 @@
 | Database copies before migrations | `{AppDataDirectory}/backups/falcon-{yyyyMMdd-HHmmss}-v{n}.db`, newest 3 kept | Yes (copies of the encrypted file) |
 | Device key | OS secure storage (`ISecretStore`) | By the OS (Keystore, DPAPI, Keychain) |
 | App lock settings and PIN hash | `Settings['appLock']` in the database | Yes (inside the database) |
+| Whether a note is locked | `Notes.IsLocked` in the database | Yes (inside the database) |
 | Decrypted copies for **Open** | `{FileSystem.CacheDirectory}/open/{random}/{file name}` | **No**: deleted at the next start, and at most 24 h old |
 | Export being written, restore archive being read | `{CacheDirectory}/export/`, `{CacheDirectory}/restore/` | **No** (exports are plain by design); deleted when done and at start |
 | Automatic backups, when the user turns them on | A folder **outside the app** that the user chose, as `falcon-notes-auto-{yyyy-MM-dd_HHmm}.zip`, the newest 3, 5 or 10 kept ([05](05-backup-compatibility.md#automatic-backups)) | **No**: they are exports. Off by default, and Settings says so before the folder is chosen. |
@@ -75,7 +76,9 @@ gets the encrypted files without the Keystore key: notes that can never be opene
 
 ## Schema
 
-Migration 1, and migration 2, which added `Labels.HideNotes` with Maple Notes 1.16.0. Times are UTC `DateTime.Ticks` (INTEGER), IDs are lower-case canonical UUID text (`Guid.ToString("D")`),
+Migration 1; migration 2, which added `Labels.HideNotes` with Maple Notes 1.16.0; and migration 3, which added
+`Notes.IsLocked` and its index with Falcon Notes 1.4.0. A migration only ever adds: an update must leave every note,
+label and file as it found them, and a test proves it for each one ([11](11-testing.md#updates-keep-every-note)). Times are UTC `DateTime.Ticks` (INTEGER), IDs are lower-case canonical UUID text (`Guid.ToString("D")`),
 and kinds are integers (0 Note, 1 Todo, 2 Quick, 3 Habit). Note text lives in `NoteBodies`, so lists and counts never
 decrypt pages of text ([13](13-storage-benchmark.md#reading-the-results)).
 
@@ -95,7 +98,8 @@ CREATE TABLE Notes (
   CreatedAt     INTEGER NOT NULL,
   UpdatedAt     INTEGER NOT NULL,
   Revision      INTEGER NOT NULL DEFAULT 0,     -- +1 on every change; the media URL's ?v= and stale-save checks
-  ContentBytes  INTEGER NOT NULL                -- UTF-8 length of the text, for storage use
+  ContentBytes  INTEGER NOT NULL,               -- UTF-8 length of the text, for storage use
+  IsLocked      INTEGER NOT NULL DEFAULT 0      -- 1: hidden until the PIN takes the lock off (migration 3)
 );
 CREATE TABLE NoteBodies (
   NoteId  TEXT NOT NULL PRIMARY KEY REFERENCES Notes(Id) ON DELETE CASCADE,
@@ -106,6 +110,8 @@ CREATE INDEX IX_Notes_List     ON Notes (Kind, IsPinned, ArchivedAt, TrashedAt, 
 CREATE INDEX IX_Notes_Created  ON Notes (CreatedAt, Id);
 CREATE INDEX IX_Notes_Trash    ON Notes (TrashedAt, Id) WHERE TrashedAt IS NOT NULL;
 CREATE UNIQUE INDEX IX_Notes_Daily ON Notes (DailyDate) WHERE DailyDate IS NOT NULL;
+-- Only the locked notes: "is any note locked?" is asked before every export, and must not read the table.
+CREATE INDEX IX_Notes_Locked   ON Notes (Id) WHERE IsLocked = 1;
 
 CREATE TABLE Tags (
   Id   INTEGER PRIMARY KEY,
@@ -158,7 +164,8 @@ Rules the schema relies on:
   (`Settings['preferences']`): the web app's `Preferences` object as camelCase JSON, minus `linkPreviews`, with
   unknown keys ignored and missing keys taking their defaults ([04](04-domain-rules.md#preferences)). **App lock**
   (`Settings['appLock']`): `{"enabled", "biometrics", "lockAfterSeconds", "pinHash", "pinSalt", "pinIterations",
-  "failedAttempts", "lockedUntilUtc"}`.
+  "failedAttempts", "lockedUntilUtc"}`. A PIN can be there with `enabled` false: locked notes use it
+  ([Locked notes](#locked-notes)).
 
 ## Attachment store
 
@@ -191,6 +198,37 @@ anything: the device key does not depend on the PIN, so a forgotten PIN can neve
 - **Forgot your PIN?** The lock cannot be bypassed, since that would defeat it. The way out is to erase the app's data
   and restore from a backup. The Lock screen explains this and offers **Erase and start over…**, after typing `ERASE`.
 
+### Locked notes
+
+New in 1.4.0 (2026-10-12, at the owner's request). A single note can be locked: the app then shows that it is there
+and nothing of what is in it, until the PIN takes the lock off. What a locked note is left out of is in
+[04](04-domain-rules.md#locked-notes), and the screens are in [07](07-screens.md#locked-notes). Like the app lock, it
+is a privacy screen and **not** a key: the note is encrypted exactly as every other note is, with the device key, and
+a forgotten PIN cannot make it unreadable to the app, only to the person.
+
+- **One PIN.** Locked notes use the app lock's PIN, hash and tries counter; there is no second PIN to remember. The
+  PIN is **in use** while the app lock is on or any note is locked, the trash included
+  (`AppLockService.PinInUseAsync`).
+- **The first lock** on a device with no PIN in use asks for one (Set a PIN) and saves it with the app lock left off.
+  With a PIN in use, locking asks for nothing. Nor does it when the PIN there is was typed or chosen since the app
+  started (`AppLockState.PinReadyAsync`): a note unlocked to be read is locked again with one tap, although for that
+  moment no note was locked. A stored PIN that nobody has typed in this run of the app is not trusted that far: it
+  may be one left by an app lock turned off long ago and forgotten, and a note locked with it could not be opened
+  again. That one is chosen anew.
+- **A PIN in use is never chosen again**: whoever could choose it could open the locked notes. Turning the app lock on
+  while a note is locked asks for the PIN there is and keeps it; **Change PIN…** is offered while the PIN is in use,
+  with the app lock on or off, and asks for the current one first. The service refuses a new PIN otherwise
+  (`SetPinAsync`, `EnableAsync`). A PIN left behind by an app lock since turned off, with no note locked, protects
+  nothing and is replaced by the next one chosen, as before.
+- **Unlocking** asks for the PIN, or the fingerprint or face where the app lock allows it, through the same check as
+  Settings uses. Wrong PINs count towards the same five tries and the same waits, and the dialog says "Too many
+  tries. Try again in {n} seconds." while one runs.
+- **Forgot your PIN?** A locked note can still be deleted. An export made before, or an automatic backup, holds it
+  unlocked. There is no other way in.
+- **What it does not do.** Exports and automatic backups hold locked notes as plain text, like every note; that is why
+  the PIN is asked for before an export and before the automatic backups' folder is chosen, while a note is locked.
+  The lock is not in a backup, so a restored note is not locked.
+
 ## Threat model
 
 | Threat | Protected? | How |
@@ -198,6 +236,8 @@ anything: the device key does not depend on the PIN, so a forgotten PIN can neve
 | Someone copies the app's data files (another user account on the PC, a lost laptop without disk encryption, an extracted phone image) | **Yes** | The database and files are encrypted with a key kept in the OS secure store, not with the files |
 | A cloud or device-transfer backup of the app folder | **Yes** | Auto Backup off on Android. Elsewhere, files copied without the key are unreadable. |
 | Someone with the unlocked device opens the app | **Yes, with the app lock on**; otherwise no | PIN or biometrics, the background cover, `FLAG_SECURE` |
+| Someone using the open app, or looking at its screen, reads a note that was locked | **Yes, inside the app** | The card shows no text, file or label; the note is in no search result, tag list or tag count; its files are not opened; an export asks for the PIN first. A screenshot shows only the locked card. |
+| The same person deletes a locked note, or finds it in an export or automatic backup made earlier | **No** | Deleting needs no PIN, so that a forgotten PIN can be cleared away; backups are plain by design |
 | Malware running as the same OS user, or root/admin access while the user is logged in | **No** | It can ask the OS secure store for the key, as the app does. That is the limit of any app without a password-derived key. |
 | Exported ZIP files, by hand or automatic | **No** | Exports are plain Markdown/text/JSON by design (compatibility); the app says so when exporting and where automatic backups are turned on. Whoever can open the chosen folder can read the automatic ones. |
 | Decrypted temporary copies made by **Open** | Partly | Kept in the app's private cache, deleted at the next start and after 24 h |

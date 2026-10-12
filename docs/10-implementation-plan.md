@@ -489,6 +489,72 @@ as 1.2.0; `apksigner verify --print-certs`, `jarsigner -verify`), `minSdkVersion
 arm64-v8a and x86_64, not debuggable, and the permissions are `USE_BIOMETRIC` and `USE_FINGERPRINT` with no
 `INTERNET`. Not checked: the release build was not installed or run on an emulator or a phone.
 
+Version 1.4.0 (versionCode 7), 2026-10-12, on the `release-1.4.0` branch: **locked notes**, at the owner's request
+([04](04-domain-rules.md#locked-notes), [07](07-screens.md#locked-notes),
+[03](03-data-storage-and-security.md#locked-notes)). It is this app's own; Maple Notes has no such thing, at 1.16.1
+either, so there was nothing to port. The owner chose, when asked: the lock hides the note until the app lock's PIN
+takes it off (over a read-only lock, and over a lock with a temporary "Show"); the first lock asks for a PIN and
+leaves the app lock off; and, on seeing the plan, a lock mark like the pin mark in the card's top right corner.
+Decided while building, and written into the documents: tags are part of the text, so a locked note is left out of
+search, tag lists and counts, while it stays on its label's page (for a label that hides its notes there is no other
+way back to it); its files are not served; it cannot be the daily-note template; pinning, archiving and deleting
+need no PIN, which is also the way out of a forgotten one; exports and automatic backups hold locked notes, because
+a backup that leaves notes out is worse than a lock that can be walked round with the PIN, so the screens ask for
+the PIN before an export and before the automatic backups' folder is chosen; the backup format is untouched; a PIN
+in use is never chosen again; and a note unlocked to be read locks again without a question, while a stored PIN
+nobody has typed since the app started is chosen anew. Schema migration 3 adds `Notes.IsLocked` and a partial index.
+
+**The update rule** came with it, from the owner the same day: an update must never cost a note
+([11](11-testing.md#updates-keep-every-note), CLAUDE.md ground rule 12). `UpgradeKeepsNotesTests` and
+`SchemaHistory` are new. On the API 36 emulator (`MAUI_Emulator_API_36`, started `-read-only`, so nothing of this
+stays on it), which held a Debug install of **1.2.0** with 35 notes and 8 files from the demo backup (schema
+version 1): a Debug build of `main` (**1.3.0**, versionCode 6) was installed over it with `adb install -r`, then a
+note was written in it and another written and moved to the trash, and the build of this branch (**1.4.0**,
+versionCode 7) was installed over that. Before and after each install a script (now `scripts/update-check/`) read every card on Home, Todo, Quick
+notes, Archive and Trash through the WebView's DevTools socket (the cards' `textContent`, since `content-visibility`
+empties `innerText` off screen), the Tags page, the storage line and the saved appearance. 1.2.0 → 1.3.0: all 31
+cards, the tags and "Notes 8.1 KB (35) · Files 740 KB (8)" identical. 1.3.0 → 1.4.0: all 33 cards identical but for
+"1 minute ago" having become "3 minutes ago" on the two new ones, the tags and "Notes 8.2 KB (37) · Files 740 KB
+(8)" identical, the accent as chosen, and `files/backups/` holding the copies kept before each migration
+(`…-v1.db`, `…-v2.db`).
+
+Then, in 1.4.0 on that data: **Lock** on the note written in 1.3.0 opened Set a PIN with its own text, and the card
+showed the lock mark beside the ⋯ button, the time and the one line, with none of the note's text in the page; a
+search for its words found nothing, its tag's page was empty and the tag was gone from the Tags page; its menu was
+Pin to top, Unlock…, Archive, Move to trash; a wrong PIN said "That PIN is not right." and left it locked; the right
+one brought the note, its tag and "Unlocked." back. A note with three pictures: its media address answered 200
+before the lock and 404 after, and the locked card held no image. The lock was still on after the app was stopped
+and started, and after another install over it. A todo list locked from its menu showed as the locked card in the
+Todo tab, still under Pinned. **Export ZIP…** opened "Export your notes" with the PIN field; Privacy & security
+showed "Your locked notes use a PIN." with **Change PIN…**, and its switch opened "Turn the app lock on" asking for
+that PIN, not for a new one. The list, unlocked and locked again, locked at once with no dialog. With everything
+unlocked again, the walk over every page matched the one made in 1.3.0 once more.
+
+The Core tests (426, one skipped: the budgets) and the component tests (219) pass, and so do the performance budgets
+on 50,000 notes with the new column (`FALCON_PERF=1`, Release).
+
+The Debug builds above were made in copies outside the repository with `global.json` set back to 10.0.300: the
+Dependabot update of 2026-10-11 raised it to SDK 10.0.401, and this Mac had the MAUI workload for the 10.0.300 band
+only (`NETSDK1147`, "workloads must be installed"; a workload is installed per SDK band). The owner installed it for
+the new band the same day (`sudo dotnet workload install maui`, giving `maui` 10.0.110 under SDK 10.0.400), and the
+repository builds here again. CI was never affected: its Android job installs the workload itself.
+
+**The release build**, the same day: `dotnet publish`, from clean, made the signed AAB and APK; the 1.3.0 output was
+moved to `src/FalconNotes.App/bin/Release-1.3.0/` (git-ignored) first. Checked: the owner's upload key (the same
+certificate as 1.3.0, `apksigner verify --print-certs`), versionCode 7, arm64-v8a and x86_64, not debuggable, and the
+permissions are `USE_BIOMETRIC` and `USE_FINGERPRINT` with no `INTERNET`. Then the update, with the builds people
+get: on the emulator, started `-read-only` again and the Debug app removed for the session, the **release-signed
+1.3.0** was installed fresh, and in it three notes were written (one with a tag, one moved to the trash), a todo list
+with an item made, and the theme set to Dark. The **release-signed 1.4.0** was installed over it with
+`adb install -r`. A release build opens no DevTools socket, so the pages were read through `uiautomator dump`
+(Home, Todo, Settings → Profile, the trash): every label was the same before and after, 98 lines, the storage line
+included, and the theme was still dark. In that build, with R8 and trimming over the new code: **Lock** opened Set a
+PIN, the card showed the lock mark (read out as "Locked") and the one line, the lock held through a restart, a wrong
+PIN said "That PIN is not right.", and the right one brought the note back.
+
+Not checked, still open: a real phone; a fingerprint standing in for the PIN on a locked note (the dialog is the one
+Settings uses, covered by `BiometricUnlockTests`); TalkBack reading the whole card; the tablet layout.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._

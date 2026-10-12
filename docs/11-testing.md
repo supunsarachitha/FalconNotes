@@ -24,6 +24,40 @@ IDs made within one millisecond are in random order, so a test that checks the o
 distinct times: `TestApp.AddFileAsync` moves the clock on one tick, and a restore test sets `Clock.Step`. A machine
 fast enough to make two IDs in a millisecond (the Linux and Windows CI machines) otherwise fails now and then.
 
+## Updates keep every note
+
+**A new version must never cost anyone a note.** The app is offline: the copy on the device is the only one, and an
+update is installed over it by the store without asking. So every release, and every feature that touches the
+database, the attachment files, the keys or start-up, is tested as an update before it ships, not only as a fresh
+install (the owner's rule, 2026-10-12).
+
+1. **Migrations only add.** A migration adds a table, a column with a default, or an index. It does not drop, rename
+   or rewrite what holds notes, and a released migration is never changed
+   ([03](03-data-storage-and-security.md#schema)). Start-up already keeps a copy of the database before it runs one
+   ([02](02-architecture.md#start-up-sequence)); that copy is the last resort, not the plan.
+2. **The automated proof** is `UpgradeKeepsNotesTests`: a database holding one of everything (a pinned and labelled
+   note with a file and a nested tag, a todo list, a quick note, a habit, a daily note, an archived note and one in
+   the trash) is taken back to the schema of **each** earlier version, started by the current code as an update
+   would start it, and compared **row by row** in every table, and file by file, with what was there before; then
+   read back through the services. `SchemaHistory.Undo` holds what takes each migration back. A migration added
+   without its undo fails `Every_migration_has_its_undo_so_every_update_is_tested`, so a new one cannot ship
+   untested. A change that needs data moved, not just added, also gets a test of its own with rows as the old
+   version wrote them (`DatabaseStartupTests` has one per migration).
+3. **The check on a device**, before each release ([Manual QA](#manual-qa)): install the **released** version, make
+   notes of every kind in it, with a file, a label, a pin, an archived note and one in the trash; if the release
+   touches them, turn on the app lock and automatic backups too. Install the new version **over it**
+   (`adb install -r`, never an uninstall, and never `pm clear`). Every note, file and label must be there, in the
+   same lists, and the settings as they were. Debug builds of both versions update each other; a release-signed
+   build only updates a release-signed one ([CLAUDE.md](../CLAUDE.md)). With Debug builds,
+   `scripts/update-check/inventory.mjs` writes down every card on every page, the storage counts, the tags and the
+   appearance, and `compare.mjs` compares the walk before with the walk after, so nothing rests on a glance. An
+   emulator started with `-read-only` forgets the whole test when it closes.
+4. **Write down what was done** under the release in [10](10-implementation-plan.md): which version was updated from,
+   on what, and what was looked at. "Not checked" is written down too.
+
+Anything that could delete, move or rewrite notes by design (a clean-up, a new purge, a change to the trash) needs
+the owner's word first ([CLAUDE.md](../CLAUDE.md), ground rules).
+
 ## Porting the reference tests
 
 | Reference tests | Port to | What they protect |
@@ -82,6 +116,20 @@ New tests the reference does not have:
   ([10](10-implementation-plan.md), Phase 3, has what was looked at and the scrolling measurements).
 - The drawer and the sidebar keep clear of the status and navigation bars (`AppShellTests`): by their classes, since
   bUnit has no screen; the real check is the manual one below, with three-button navigation.
+- Locked notes (1.4.0; this app's own, so every test is new). Core, `LockedNotesTests`: locking and unlocking
+  leave `UpdatedAt` and the text; other changes leave the lock; a habit cannot be locked; a locked note stays in its
+  lists and on its label's page, and is in no search result (text or file name), tag list or tag count; its files
+  are not opened; a locked template starts no daily note; a first PIN leaves the app lock off; when the PIN is in
+  use, and that it cannot be chosen again without the current one. A version 2 database upgrades with nothing
+  locked (`DatabaseStartupTests`), and every earlier version updates with every row kept
+  ([Updates keep every note](#updates-keep-every-note)). The screens, bUnit, `LockedNotesTests`: the first lock asks
+  for a PIN and leaves the app lock off; with a PIN in use Lock locks at once, and so does a note just unlocked,
+  while a stored PIN nobody has typed since the app started is chosen anew; the locked card shows the lock mark
+  and none of the title, text, tag, file name or label, and its menu is Pin, Unlock…, Archive and Move to trash; a
+  wrong PIN leaves it locked, the right one unlocks, and after five the dialog says to wait; a habit is offered no
+  lock; a todo list locks from its menu and shows locked in its tab; the trash hides it; an export and the
+  automatic backups' folder ask for the PIN while a note is locked, and not otherwise; turning the app lock on asks
+  for the PIN in use instead of a new one.
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 
@@ -153,6 +201,9 @@ phone supported, against 4× these budgets:
 Run before each release on **Android phone**, **Android tablet (landscape, ≥ 1,024 dp)**, **Windows** and **macOS**,
 in light and dark mode:
 
+- [ ] **Update over the released version** ([Updates keep every note](#updates-keep-every-note)): notes of every
+      kind made in the released version, with a file, a label, a pin, an archived note and one in the trash, are all
+      there after the new version is installed over it, and the settings are as they were.
 - [ ] First run: Welcome, name, Start writing; Welcome → Restore a demo backup.
 - [ ] Notes: post with a title and date, Markdown, tags, a checklist ticked in place, a picture (picker; paste and drop on
       desktop), a video that seeks, audio, a PDF that opens, Save a copy. With **Shrink photos before adding** on: a
@@ -179,6 +230,12 @@ in light and dark mode:
 - [ ] Android, with **three-button navigation** and again with gesture navigation: the drawer's last row (the name, and
       **Lock now** with the app lock on) is above the navigation bar and can be tapped; the same for the sidebar on a
       tablet; toasts and the picture viewer's buttons are clear of the bars; a phone in landscape.
+- [ ] Locked notes: Lock on a note with a picture, a tag and a label asks for a PIN the first time and not the second;
+      the card shows the lock in its corner and nothing else; it is not found by search, its tag or the Tags page,
+      and is on its label's page; Unlock… with a wrong PIN, then the right one, then a fingerprint with the app lock
+      on; a todo list in its tab and a quick note; pin, archive and trash it while locked, and restore it; Export
+      ZIP… and turning automatic backups on ask for the PIN, and the ZIP holds the note; restored on another
+      install, it is not locked; turning the app lock on asks for the same PIN; Change PIN… with the app lock off.
 - [ ] App lock: set, lock after delay, biometrics, wrong PIN ×5, Lock now, background cover, screenshots blocked
       (Android), Forgot PIN → erase.
 - [ ] Erase all data → Welcome. Removing the device key with the Debug-only developer action leads to Key lost, where

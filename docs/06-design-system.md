@@ -189,7 +189,8 @@ CircleHelp CircleUserRound Code Copy DatabaseBackup Download Eye EyeOff FileText
 ListChecks ListTodo Lock LogOut Menu Monitor Moon MoreHorizontal Palette PanelLeft Paperclip Pencil PenLine Pin PinOff
 Play Plus Quote RotateCcw Search Settings ShieldCheck Sun Tag ToggleRight Trash2 TriangleAlert Upload X Zap`
 
-New screens may also use `Fingerprint`, `KeyRound` and `Share`. Add any other icon to this list first.
+New screens may also use `Fingerprint`, `KeyRound`, `Share` and, for locked notes, `LockOpen`. Add any other icon to
+this list first.
 
 ## App icon and splash
 

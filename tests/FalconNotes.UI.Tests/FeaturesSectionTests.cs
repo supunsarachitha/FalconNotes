@@ -78,7 +78,7 @@ public class FeaturesSectionTests : BunitContext
         var cut = Render<FeaturesSection>();
 
         cut.WaitForAssertion(() => Assert.Contains(
-            "The template note was deleted or is in the trash, so new daily notes start empty.", cut.Markup, StringComparison.Ordinal));
+            "The template note was deleted, is locked or is in the trash, so new daily notes start empty.", cut.Markup, StringComparison.Ordinal));
     }
 
     [Fact]

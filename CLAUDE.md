@@ -49,6 +49,15 @@ and read it there. `reference/maple-notes-1.8.0/` keeps only that release's docu
     feature that is not in the docs, or dropping one that is. Record every agreed change in the relevant doc in the
     same commit.
 
+12. **An update never loses notes.** The copy on the device is the only one. Every release, and every feature that
+    touches the database, the attachment files, the keys or start-up, is tested as an **update over the released
+    version** before it ships, not only as a fresh install: the notes, files, labels and settings made by the
+    earlier version must all be there afterwards ([11 → Updates keep every note](docs/11-testing.md#updates-keep-every-note)).
+    Migrations only add; each one gets its undo in `SchemaHistory` so `UpgradeKeepsNotesTests` covers it, and the
+    update is checked on an emulator or phone (`adb install -r` over the old version, never `pm clear`) and written
+    down in [10](docs/10-implementation-plan.md). Ask me before any change that deletes, moves or rewrites notes by
+    design.
+
 ## Working style
 
 - Work phase by phase as in [10-implementation-plan.md](docs/10-implementation-plan.md). Tick its checklists as items are
@@ -64,6 +73,12 @@ and read it there. `reference/maple-notes-1.8.0/` keeps only that release's docu
 ```sh
 dotnet test tests/FalconNotes.Core.Tests                                       # rules, storage, crypto, backups
 dotnet test tests/FalconNotes.UI.Tests                                         # components (bUnit)
+dotnet test tests/FalconNotes.Core.Tests -- --filter-class "*UpgradeKeepsNotesTests"
+                                                                              # an update keeps every note (ground rule 12)
+node scripts/update-check/inventory.mjs before.json                            # the same on a device, Debug builds: walk the old
+adb install -r <new>-Signed.apk                                                # version's pages, install the new one over it,
+node scripts/update-check/inventory.mjs after.json                             # walk again and compare (docs/11); the files hold
+node scripts/update-check/compare.mjs before.json after.json                   # note text, so keep them outside the repository
 FALCON_PERF=1 dotnet test tests/FalconNotes.Core.Tests -c Release -- --filter-trait "Category=Performance"
                                                                               # the docs/11 budgets on 50,000 notes
 dotnet build src/FalconNotes.App -t:Run -f net10.0-android                     # run on the running emulator/device

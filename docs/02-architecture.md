@@ -79,7 +79,7 @@ src/
   FalconNotes.UI/
     Layout/          AppShell, Sidebar, Drawer, MainLayout
     Pages/           Home, Archive, Todo, Quick, Habits, Tags, Trash, Settings/*, Help, Welcome, Lock, KeyLost
-    Components/      NoteCard, NoteList, Composer, FormatToolbar, TagSuggestions, Markdown, AttachmentGallery,
+    Components/      NoteCard, NoteLock, NoteList, Composer, FormatToolbar, TagSuggestions, Markdown, AttachmentGallery,
                      ImageViewer, TodoCard, HabitRow, HabitChart, HabitCalendar, Calendar, Labels, LabelPicker,
                      LabelSettings, MenuOrderEditor, PreferenceSections, ExportSection, RestorePanel, ui/* primitives
     State/           AppState (profile, preferences, lock state), Toasts, Dialogs

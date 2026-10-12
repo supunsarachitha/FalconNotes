@@ -108,6 +108,9 @@ public enum IconName
     /// <summary>Lucide <c>lock</c>.</summary>
     Lock,
 
+    /// <summary>Lucide <c>lock-open</c>.</summary>
+    LockOpen,
+
     /// <summary>Lucide <c>log-out</c>.</summary>
     LogOut,
 

@@ -82,6 +82,13 @@ public static class Migrations
         """
         ALTER TABLE Labels ADD COLUMN HideNotes INTEGER NOT NULL DEFAULT 0;
         """,
+
+        // 3: a note can be locked, which hides it until the PIN is given (docs/04, Locked notes). Off for every note there is.
+        // The index holds only locked notes, so "is any note locked?" never reads the table.
+        """
+        ALTER TABLE Notes ADD COLUMN IsLocked INTEGER NOT NULL DEFAULT 0;
+        CREATE INDEX IX_Notes_Locked ON Notes (Id) WHERE IsLocked = 1;
+        """,
     ];
 
     /// <summary>Reads the schema version of an open database (0 for a new one).</summary>

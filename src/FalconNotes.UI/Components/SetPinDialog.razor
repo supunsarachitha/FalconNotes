@@ -1,10 +1,11 @@
-@* New (docs/07, Settings → Privacy & security → Set a PIN): used both to turn the app lock on and to change the PIN. *@
+@* New (docs/07, Settings → Privacy & security → Set a PIN): used to turn the app lock on, to change the PIN, and to
+   choose one for the first locked note (docs/07, Locked notes). *@
 @using FalconNotes.Core.Settings
 
 <ConfirmDialog Open="Open" OpenChanged="OnDialogOpenChanged" Title="Set a PIN" ConfirmLabel="Set PIN" ConfirmEnabled="@(_pin.Length > 0 && _repeat.Length > 0)"
                Busy="Busy" OnConfirm="SubmitAsync">
     <Description>
-        <p>Choose a PIN of 4 to 8 digits. If you forget it, the only way back in is to erase the app's data and restore a backup.</p>
+        <p>@Description</p>
     </Description>
     <ChildContent>
         <div class="mt-4 flex flex-col gap-3">
@@ -24,6 +25,10 @@
 
     /// <summary>Called when the dialog closes, cancelled or not.</summary>
     [Parameter] public EventCallback<bool> OpenChanged { get; set; }
+
+    /// <summary>What the PIN is for and what forgetting it costs; the app lock's wording when left alone.</summary>
+    [Parameter] public string Description { get; set; } =
+        "Choose a PIN of 4 to 8 digits. If you forget it, the only way back in is to erase the app's data and restore a backup.";
 
     /// <summary>Shows a spinner while the PIN is being saved.</summary>
     [Parameter] public bool Busy { get; set; }

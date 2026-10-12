@@ -14,6 +14,10 @@ namespace FalconNotes.Core.Domain;
 /// <param name="Tags">Its tags, sorted ordinally.</param>
 /// <param name="Attachments">Its files, oldest first.</param>
 /// <param name="LabelIds">Its labels' IDs, sorted.</param>
+/// <param name="IsLocked">
+/// Locked: the screens show that it is there and when it was written, and nothing of what is in it, until the PIN
+/// takes the lock off (docs/04, Locked notes). The text is here all the same, for exports and for the unlocked note.
+/// </param>
 public sealed record Note(
     Guid Id,
     NoteKind Kind,
@@ -27,7 +31,8 @@ public sealed record Note(
     long Revision,
     IReadOnlyList<string> Tags,
     IReadOnlyList<Attachment> Attachments,
-    IReadOnlyList<Guid> LabelIds)
+    IReadOnlyList<Guid> LabelIds,
+    bool IsLocked = false)
 {
     /// <summary>Whether the note is in the archive.</summary>
     public bool IsArchived => ArchivedAtUtc is not null;

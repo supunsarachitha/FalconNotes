@@ -61,7 +61,7 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 ## Features
 
 - **Timeline.** Newest notes first, a quick-post box at the top, and pinned notes above the feed.
-- **Full note lifecycle.** Create, edit in place (optionally with a double-tap), pin, label, copy, archive and
+- **Full note lifecycle.** Create, edit in place (optionally with a double-tap), pin, label, copy, lock, archive and
   restore, and delete into a trash that keeps notes for 30 days, with Undo.
 - **Markdown and tags.** GitHub-flavoured Markdown with task lists you tick in place, tables and code, a formatting
   toolbar, and `#tags`, including nested ones such as `#work/meetings`. A Tags page lists them all with counts.
@@ -103,6 +103,9 @@ full [privacy policy](https://supunsarachitha.github.io/FalconNotes/privacy.html
 - **App lock.** An optional PIN, asked for when the app opens and after it has been in the background, with
   fingerprint or face unlock where the device has it. It is a privacy screen, not a second key, and a forgotten PIN
   cannot be reset.
+- **Locked notes.** Lock a single note, quick note or todo list from its menu: it then shows a lock and nothing of
+  what is in it, and stays out of searches and tags, until the same PIN unlocks it. Like the app lock it hides and
+  does not encrypt again: exports hold locked notes too, so exporting asks for the PIN.
 - **Android's automatic backup is off** for the app: the encrypted files would be useless without the key.
 - **Exports are not encrypted.** A backup ZIP can be read by anyone who gets it. That goes for automatic backups
   too, which are off unless you turn them on.
@@ -170,7 +173,7 @@ The specification the app is built from is in `docs/`, numbered in reading order
 |---|---|
 | [01 Scope and decisions](docs/01-scope-and-decisions.md) | What the app is, the decisions taken, and the features kept, dropped and changed |
 | [02 Architecture](docs/02-architecture.md) | Projects, runtime model, routes, data access, media, WebView hardening, JS interop, platform services, dependencies |
-| [03 Data, storage and security](docs/03-data-storage-and-security.md) | Files, keys, schema, attachment store, app lock, threat model |
+| [03 Data, storage and security](docs/03-data-storage-and-security.md) | Files, keys, schema, attachment store, app lock, locked notes, threat model |
 | [04 Domain rules](docs/04-domain-rules.md) | Every behaviour rule, with the reference file that defines it |
 | [05 Backup compatibility](docs/05-backup-compatibility.md) | The export and restore contract with the web app |
 | [06 Design system](docs/06-design-system.md) | Tokens, colours, layout, components, icons, theming |
@@ -178,7 +181,7 @@ The specification the app is built from is in `docs/`, numbered in reading order
 | [08 Help guide](docs/08-help-guide.md) | The in-app user guide, adapted |
 | [09 Port map](docs/09-port-map.md) | Every reference file and where it goes |
 | [10 Implementation plan](docs/10-implementation-plan.md) | Phases, spikes, checklists and acceptance criteria, with what was found on the way |
-| [11 Testing](docs/11-testing.md) | Test projects, tests to port, backup conformance, performance budgets, manual QA |
+| [11 Testing](docs/11-testing.md) | Test projects, the rule that an update keeps every note, tests to port, backup conformance, performance budgets, manual QA |
 | [12 Platforms](docs/12-platforms.md) | Android, Windows and macOS specifics |
 | [13 Storage benchmark](docs/13-storage-benchmark.md) | Why SQLite with AEGIS encryption, measured on Android |
 | [Licensing policy](docs/licensing.md) | Which third-party licences are allowed, copied from the web app |

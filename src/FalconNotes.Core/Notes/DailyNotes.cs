@@ -17,7 +17,7 @@ public sealed class DailyNotes(NoteService notes)
 
     /// <summary>
     /// The daily-note template, when one is chosen: an ordinary note, whose text starts each new daily note. A template
-    /// that was deleted, or is in the trash, counts as none.
+    /// that was deleted, is in the trash or is locked counts as none: a locked note's text must not start another note.
     /// </summary>
     /// <param name="preferences">The preferences, which hold the template's ID.</param>
     /// <returns>The template note, or null.</returns>
@@ -28,7 +28,7 @@ public sealed class DailyNotes(NoteService notes)
             return null;
         }
 
-        return await notes.GetAsync(id) is { TrashedAtUtc: null } note ? note : null;
+        return await notes.GetAsync(id) is { TrashedAtUtc: null, IsLocked: false } note ? note : null;
     }
 
     /// <summary>

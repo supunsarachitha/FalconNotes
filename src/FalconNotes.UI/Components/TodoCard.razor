@@ -1,6 +1,7 @@
 @* Port of components/TodoCard.tsx: a todo list in the Todo tab: tick, add, edit and remove items, or edit them all
    at once as Markdown; rename, label, pin, archive or delete the list. Every change shows at once and is saved in
-   the background, one save after another, as the list's Markdown (Core/Text/Todo.cs, NoteEditor). *@
+   the background, one save after another, as the list's Markdown (Core/Text/Todo.cs, NoteEditor). New here: Lock
+   in the menu; a locked list is shown by NoteCard, which hides it (docs/07, Locked notes). *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
 @using FalconNotes.Core.Text
@@ -56,6 +57,7 @@
                             <MenuItem IconName="IconName.ListChecks" OnSelect="ClearCompleted">Clear completed</MenuItem>
                         }
                     }
+                    <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockAsync()">Lock</MenuItem>
                     @if (State.Preferences.Archive || Note.IsArchived)
                     {
                         <MenuItem IconName="@(Note.IsArchived ? IconName.ArchiveRestore : IconName.Archive)"
@@ -129,12 +131,14 @@
     {
         <LabelPicker Note="Note" Open="_choosingLabels" OpenChanged="open => _choosingLabels = open" />
     }
+    <NoteLock @ref="_lock" Note="Note" />
 </article>
 
 @code {
     private IJSObjectReference? _module;
     private NoteEditor<TodoList> _editor = null!;
     private NoteRemoval _removal = null!;
+    private NoteLock _lock = null!;
     private int? _editing;
     private bool _renaming;
     private string _draft = "";

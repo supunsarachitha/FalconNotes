@@ -127,6 +127,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   database gains a column for it (schema version 2), and a copy is kept before the upgrade. Backups do not carry the
   setting, so a restored label does not hide its notes.
 
+- Locked notes (docs/04, docs/07; this app's own, the web app has none). **Lock** in the ⋯ menu of a note, quick note
+  or todo list hides it: the card shows a lock in its top right corner, when it was written, and none of its title,
+  text, files or labels. A locked note stays in its lists and on its label's page, and is left out of searches, its
+  tags' lists, tag counts and suggestions; its files are not opened; it cannot be the daily-note template. **Unlock…**
+  asks for the PIN, or a fingerprint or face where the app lock allows it, and takes the lock off. The PIN is the app
+  lock's: the first lock asks for one and leaves the app lock off, and while a note is locked the PIN is asked for,
+  not chosen again, when the app lock is turned on, and can be changed with the lock off. Pinning, archiving and
+  deleting a locked note need no PIN. Exports and automatic backups hold locked notes as plain text, so **Export
+  ZIP…** and choosing the automatic backups' folder ask for the PIN while a note is locked; the backup format is
+  unchanged, and a restored note is not locked. Schema migration 3 adds `Notes.IsLocked`. Help has a new section,
+  **Locked notes**.
+- A rule and its test, at the owner's request: an update never loses notes (CLAUDE.md, docs/11). `UpgradeKeepsNotesTests`
+  takes a database with one of everything back to the schema of each earlier version, starts it as an update does,
+  and compares every row and file with what was there; a migration added without its undo fails a test.
+
 ### Changed
 
 - The falcon mark (`fixtures/falcon-mark.png`, docs/06) replaced with a new feather design, as a transparent PNG
@@ -161,6 +176,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   backgrounds.
 - The README is reorganised: a contents list, a section on how Falcon Notes relates to Maple Notes, and the limits
   as a list. It no longer describes how the repository was set up or points to the prompts used to build it.
+
+- Where Settings asks for the PIN (turning the app lock off, changing the PIN, erasing), the dialog now says "Too many
+  tries. Try again in {n} seconds." while the wait after five wrong PINs runs; it used to say "That PIN is not
+  right." even for the right one. The line for a daily-note template that cannot be used names a locked note too.
+- Android builds of an update are checked on the emulator with `scripts/update-check/`, which compares what every
+  page shows before and after the new version is installed over the old one.
 
 ### Removed
 

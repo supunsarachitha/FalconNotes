@@ -8,7 +8,7 @@ namespace FalconNotes.Core.Notes;
 /// <summary>A note's row without its text, tags, files or labels.</summary>
 internal sealed record NoteRow(
     Guid Id, NoteKind Kind, DateOnly? DailyDate, bool IsPinned, DateTime? ArchivedAtUtc, DateTime? TrashedAtUtc,
-    DateTime CreatedAtUtc, DateTime UpdatedAtUtc, long Revision);
+    DateTime CreatedAtUtc, DateTime UpdatedAtUtc, long Revision, bool IsLocked);
 
 /// <summary>An attachment's row, with where its file is.</summary>
 internal sealed record AttachmentRow(Attachment Attachment, string StorageKey);
@@ -21,7 +21,7 @@ internal sealed record AttachmentRow(Attachment Attachment, string StorageKey);
 internal static class NoteRepository
 {
     private const string Columns =
-        "n.Id, n.Kind, n.DailyDate, n.IsPinned, n.ArchivedAt, n.TrashedAt, n.CreatedAt, n.UpdatedAt, n.Revision";
+        "n.Id, n.Kind, n.DailyDate, n.IsPinned, n.ArchivedAt, n.TrashedAt, n.CreatedAt, n.UpdatedAt, n.Revision, n.IsLocked";
 
     /// <summary>Reads a page of rows of a list, newest first (the trash: most recently deleted first).</summary>
     public static List<NoteRow> ListRows(SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count, bool hideLabelled)
@@ -68,7 +68,7 @@ internal static class NoteRepository
             }
 
             var row = ReadRow(reader);
-            var content = reader.GetString(9);
+            var content = reader.GetString(10);
             if (accept(row, content))
             {
                 accepted.Add((row, content));
@@ -109,6 +109,13 @@ internal static class NoteRepository
     public static bool AnyLabelHidesNotes(SqliteConnection connection)
     {
         using var command = Sql.Command(connection, "SELECT EXISTS (SELECT 1 FROM Labels WHERE HideNotes = 1)");
+        return Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0;
+    }
+
+    /// <summary>Whether any note is locked, the trash included: while one is, the PIN is in use (docs/04, Locked notes).</summary>
+    public static bool AnyLocked(SqliteConnection connection)
+    {
+        using var command = Sql.Command(connection, "SELECT EXISTS (SELECT 1 FROM Notes WHERE IsLocked = 1)");
         return Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0;
     }
 
@@ -153,7 +160,9 @@ internal static class NoteRepository
 
         if (query.Tag is { } tag)
         {
+            // A tag is part of the text, so a locked note is not listed under its tags.
             where.Add("""
+                n.IsLocked = 0 AND
                 n.Id IN (SELECT nt.NoteId FROM NoteTags nt
                          WHERE nt.TagId IN (SELECT Id FROM Tags WHERE Name = $tag OR substr(Name, 1, $prefixLength) = $prefix))
                 """);
@@ -348,7 +357,8 @@ internal static class NoteRepository
             row.Revision,
             tags.GetValueOrDefault(row.Id, []).Order(StringComparer.Ordinal).ToList(),
             files.GetValueOrDefault(row.Id, []).Select(f => f.Attachment).ToList(),
-            labels.GetValueOrDefault(row.Id, []).Order(StringComparer.Ordinal).Select(id => Guid.ParseExact(id, "D")).ToList()))
+            labels.GetValueOrDefault(row.Id, []).Order(StringComparer.Ordinal).Select(id => Guid.ParseExact(id, "D")).ToList(),
+            row.IsLocked))
             .ToList();
     }
 
@@ -478,7 +488,8 @@ internal static class NoteRepository
             reader.GetTimeOrNull(5),
             reader.GetTime(6),
             reader.GetTime(7),
-            reader.GetInt64(8));
+            reader.GetInt64(8),
+            reader.GetInt64(9) != 0);
 
     /// <summary>The UTF-8 length of a note's text, for storage use.</summary>
     public static long ContentBytes(string content) => Encoding.UTF8.GetByteCount(content);

@@ -1,4 +1,6 @@
-@* New (docs/07, Settings → Privacy & security → App lock; docs/03, App lock). *@
+@* New (docs/07, Settings → Privacy & security → App lock; docs/03, App lock). Locked notes use the same PIN, so while
+   one is locked the PIN is there with the lock off: it is asked for, not chosen, when the lock is turned on, and it
+   can be changed here (docs/07, Locked notes). *@
 @using FalconNotes.Core.Platform
 @using FalconNotes.Core.Settings
 @using FalconNotes.UI.State
@@ -24,6 +26,13 @@
                                Checked="AppLock.Settings.Biometrics" CheckedChanged="OnBiometricsChanged" />
         }
 
+        @if (!AppLock.Settings.Enabled && _pinInUse)
+        {
+            <p class="py-3 text-sm text-stone-600 dark:text-stone-300">
+                Your locked notes use a PIN. The app lock, when you turn it on, uses the same one.
+            </p>
+        }
+
         @if (AppLock.Settings.Enabled)
         {
             <div class="flex flex-col gap-1.5 py-3">
@@ -37,7 +46,10 @@
                 </select>
                 <p class="text-sm text-stone-600 dark:text-stone-300">How long Falcon Notes may stay in the background before it locks.</p>
             </div>
+        }
 
+        @if (AppLock.Settings.Enabled || _pinInUse)
+        {
             <div class="pt-3">
                 <Button Variant="ButtonVariant.Secondary" OnClick="@(() => _verifyingChange = true)">Change PIN…</Button>
             </div>
@@ -46,6 +58,8 @@
 </Section>
 
 <SetPinDialog Open="_settingNewLock" OpenChanged="v => _settingNewLock = v" OnSet="OnNewLockSetAsync" Busy="_busy" />
+<VerifyPinDialog Open="_verifyingEnable" OpenChanged="v => _verifyingEnable = v" OnVerified="OnEnableVerifiedAsync" Title="Turn the app lock on"
+                 Description="Your locked notes already use a PIN, and the app lock uses the same one. Enter it to continue." />
 <VerifyPinDialog Open="_verifyingDisable" OpenChanged="v => _verifyingDisable = v" OnVerified="OnDisableVerifiedAsync" Title="Turn the app lock off" />
 <VerifyPinDialog Open="_verifyingChange" OpenChanged="v => _verifyingChange = v" OnVerified="OnChangeVerifiedAsync" Title="Change your PIN" />
 <SetPinDialog Open="_changingExisting" OpenChanged="v => _changingExisting = v" OnSet="OnPinChangedAsync" Busy="_busy" />
@@ -53,13 +67,19 @@
 @code {
     private readonly string _lockAfterId = $"lock-after-{Guid.NewGuid():N}";
     private bool _settingNewLock;
+    private bool _verifyingEnable;
+    private bool _pinInUse;
     private bool _verifyingDisable;
     private bool _verifyingChange;
     private bool _changingExisting;
     private bool _busy;
 
     /// <inheritdoc />
-    protected override void OnInitialized() => AppLock.Changed += OnAppLockChanged;
+    protected override async Task OnInitializedAsync()
+    {
+        AppLock.Changed += OnAppLockChanged;
+        _pinInUse = await AppLock.PinInUseAsync();
+    }
 
     // Coming back from the device's settings with a fingerprint just added (or removed) shows or hides the switch.
     private void OnAppLockChanged() => _ = InvokeAsync(StateHasChanged);
@@ -77,16 +97,30 @@
         _ => $"After {seconds}s",
     };
 
-    private void OnEnabledChanged(bool on)
+    private async Task OnEnabledChanged(bool on)
     {
-        if (on)
+        if (!on)
         {
-            _settingNewLock = true;
+            _verifyingDisable = true;
+            return;
+        }
+
+        // A PIN that locked notes use is not chosen again: whoever could choose it could open them.
+        _pinInUse = await AppLock.PinInUseAsync();
+        if (_pinInUse)
+        {
+            _verifyingEnable = true;
         }
         else
         {
-            _verifyingDisable = true;
+            _settingNewLock = true;
         }
+    }
+
+    private async Task OnEnableVerifiedAsync()
+    {
+        _verifyingEnable = false;
+        await AppLock.TurnOnAsync();
     }
 
     private async Task OnNewLockSetAsync(string pin)
@@ -107,6 +141,7 @@
     {
         _verifyingDisable = false;
         await AppLock.DisableAsync();
+        _pinInUse = await AppLock.PinInUseAsync();
     }
 
     private void OnChangeVerifiedAsync()

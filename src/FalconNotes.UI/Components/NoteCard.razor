@@ -2,7 +2,9 @@
    menu (pin, edit, labels, move between Home and quick notes, archive, delete). Lists that mix kinds label todo
    lists and quick notes. Ticking a checkbox shows at once and saves in the background (NoteEditor); with
    Double-tap to edit on, double-tapping or double-clicking opens it for editing. Deleting moves it to the trash,
-   unless the trash is off (NoteRemoval). Link previews are gone (docs/07). *@
+   unless the trash is off (NoteRemoval). Link previews are gone (docs/07). New here: a note can be locked, and then
+   shows a lock in its corner and none of what is in it, with a menu that cannot show it either (docs/07, Locked
+   notes). *@
 @using System.Globalization
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
@@ -45,7 +47,13 @@ else
                     <Icon Name="IconName.Pin" Class="size-3.5" /> Pinned
                 </span>
             }
-            <div class="-mr-2 ml-auto">
+            @if (Note.IsLocked)
+            {
+                <span role="img" aria-label="Locked" title="Locked" class="ml-auto shrink-0 text-maple-600 dark:text-maple-400">
+                    <Icon Name="IconName.Lock" Class="size-4" />
+                </span>
+            }
+            <div class="@(Note.IsLocked ? "-mr-2" : "-mr-2 ml-auto")">
                 <DropdownMenu Label="Note actions">
                     <Trigger><Icon Name="IconName.MoreHorizontal" Class="size-5" /></Trigger>
                     <ChildContent>
@@ -55,27 +63,41 @@ else
                                       OnSelect="@(() => ChangeAsync(new NotePatch(IsPinned: !Note.IsPinned), Note.IsPinned ? "Unpinned." : "Pinned to the top."))">
                                 @(Note.IsPinned ? "Unpin" : "Pin to top")
                             </MenuItem>
-                            <MenuItem IconName="IconName.Pencil" OnSelect="() => SetEditing(true)">Edit</MenuItem>
-                            @if (State.Preferences.Labels)
-                            {
-                                <MenuItem IconName="IconName.Tag" OnSelect="() => _choosingLabels = true">Labels…</MenuItem>
-                            }
-                            @if (Note.Kind == NoteKind.Quick)
-                            {
-                                <MenuItem IconName="IconName.Home" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Note), "Moved to Home."))">Move to Home</MenuItem>
-                            }
-                            @if (Note.Kind == NoteKind.Note && State.Preferences.QuickNotes)
-                            {
-                                <MenuItem IconName="IconName.Zap" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Quick), "Moved to quick notes."))">Move to quick notes</MenuItem>
-                            }
                         }
-                        @if (CanBeTemplate || IsTemplate)
+                        @if (Note.IsLocked)
                         {
-                            <MenuItem IconName="@(IsTemplate ? IconName.CalendarX : IconName.CalendarCheck)" OnSelect="ToggleTemplateAsync">
-                                @(IsTemplate ? "Stop using as daily template" : "Use as daily-note template")
-                            </MenuItem>
+                            <MenuItem IconName="IconName.LockOpen" OnSelect="() => _lock.Unlock()">Unlock…</MenuItem>
                         }
-                        <MenuItem IconName="IconName.Copy" OnSelect="CopyTextAsync">Copy text</MenuItem>
+                        else
+                        {
+                            @if (!Note.IsArchived)
+                            {
+                                <MenuItem IconName="IconName.Pencil" OnSelect="() => SetEditing(true)">Edit</MenuItem>
+                                @if (State.Preferences.Labels)
+                                {
+                                    <MenuItem IconName="IconName.Tag" OnSelect="() => _choosingLabels = true">Labels…</MenuItem>
+                                }
+                                @if (Note.Kind == NoteKind.Quick)
+                                {
+                                    <MenuItem IconName="IconName.Home" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Note), "Moved to Home."))">Move to Home</MenuItem>
+                                }
+                                @if (Note.Kind == NoteKind.Note && State.Preferences.QuickNotes)
+                                {
+                                    <MenuItem IconName="IconName.Zap" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Quick), "Moved to quick notes."))">Move to quick notes</MenuItem>
+                                }
+                            }
+                            @if (CanBeTemplate || IsTemplate)
+                            {
+                                <MenuItem IconName="@(IsTemplate ? IconName.CalendarX : IconName.CalendarCheck)" OnSelect="ToggleTemplateAsync">
+                                    @(IsTemplate ? "Stop using as daily template" : "Use as daily-note template")
+                                </MenuItem>
+                            }
+                            <MenuItem IconName="IconName.Copy" OnSelect="CopyTextAsync">Copy text</MenuItem>
+                            @if (Note.Kind != NoteKind.Habit)
+                            {
+                                <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockAsync()">Lock</MenuItem>
+                            }
+                        }
                         @if (State.Preferences.Archive || Note.IsArchived)
                         {
                             <MenuItem IconName="@(Note.IsArchived ? IconName.ArchiveRestore : IconName.Archive)"
@@ -90,16 +112,25 @@ else
             </div>
         </header>
 
-        @if (Title.Length > 0)
+        @if (Note.IsLocked)
         {
-            <h3 class="mb-1 break-words text-lg font-semibold leading-snug">@Title</h3>
+            <p class="text-[15px] text-stone-500 dark:text-stone-400">
+                This @(Note.Kind == NoteKind.Todo ? "list" : "note") is locked. Choose Unlock in its ⋯ menu to open it.
+            </p>
         }
-        @if (Body.Trim().Length > 0)
+        else
         {
-            <Markdown Note="Note" Content="@Body" OnToggleTask="@(Note.IsArchived ? default : EventCallback.Factory.Create<int>(this, ToggleItem))" />
+            @if (Title.Length > 0)
+            {
+                <h3 class="mb-1 break-words text-lg font-semibold leading-snug">@Title</h3>
+            }
+            @if (Body.Trim().Length > 0)
+            {
+                <Markdown Note="Note" Content="@Body" OnToggleTask="@(Note.IsArchived ? default : EventCallback.Factory.Create<int>(this, ToggleItem))" />
+            }
+            <AttachmentGallery Attachments="Note.Attachments" />
+            <LabelChips Ids="Note.LabelIds" />
         }
-        <AttachmentGallery Attachments="Note.Attachments" />
-        <LabelChips Ids="Note.LabelIds" />
 
         <ConfirmDialog Open="_removal.Confirming" OpenChanged="@(open => { if (!open) { _removal.CancelConfirm(); } })"
                         Title="@_removal.ConfirmTitle" ConfirmLabel="Delete" Busy="_removal.Removing" OnConfirm="_removal.ConfirmAsync">
@@ -109,6 +140,7 @@ else
         {
             <LabelPicker Note="Note" Open="_choosingLabels" OpenChanged="open => _choosingLabels = open" />
         }
+        <NoteLock @ref="_lock" Note="Note" />
     </article>
 }
 
@@ -121,6 +153,7 @@ else
     private bool _choosingLabels;
     private NoteEditor<string> _editor = null!;
     private NoteRemoval _removal = null!;
+    private NoteLock _lock = null!;
 
     /// <summary>The note.</summary>
     [Parameter, EditorRequired] public Note Note { get; set; } = null!;
@@ -128,7 +161,7 @@ else
     /// <summary>Whether a mixed list should label todo lists and quick notes.</summary>
     [Parameter] public bool ShowKind { get; set; } = true;
 
-    private bool TapToEdit => State.Preferences.DoubleTapToEdit && !Note.IsArchived;
+    private bool TapToEdit => State.Preferences.DoubleTapToEdit && !Note.IsArchived && !Note.IsLocked;
 
     private bool IsTemplate => Note.Id.ToString("D") == State.Preferences.DailyNoteTemplate;
 
@@ -154,7 +187,7 @@ else
             _ => Toasts.Error("A change to this note could not be saved. Please try again."));
         _removal = new NoteRemoval(
             Note, "note", "Delete this note?",
-            Note.Attachments.Count > 0
+            Note.Attachments.Count > 0 && !Note.IsLocked
                 ? $"The note and its {Note.Attachments.Count} attached file(s) will be deleted permanently. To keep it out of sight instead, archive it."
                 : "The note will be deleted permanently. To keep it out of sight instead, archive it.",
             Notes, State, Toasts, StateHasChanged);

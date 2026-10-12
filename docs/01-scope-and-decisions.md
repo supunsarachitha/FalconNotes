@@ -87,9 +87,10 @@ screens in [07-screens.md](07-screens.md).
 | Export | Browser download | A save dialog (Android: the system's "save to" picker), with progress |
 | Appearance | Theme and accent colour | The same, plus a **Background**: None, or one of nine festival patterns drawn for this app, off by default (2026-10-08, at the owner's request; [06](06-design-system.md#backgrounds)) |
 | Automatic backups | None: the server keeps the notes, and its administrator backs it up | **Automatic backups** to a folder the user chooses, off by default ([05](05-backup-compatibility.md#automatic-backups)) |
+| Locked notes | None: a note is as private as the account | **Lock** in a note's ⋯ menu hides that note until the app lock's PIN takes the lock off (2026-10-12, at the owner's request; [04](04-domain-rules.md#locked-notes)) |
 | Restore | Browser file input | The system file picker, several files at once |
 | Attachments: download | Browser download | **Save a copy…** (save dialog) and **Open** (the system's default app, from a decrypted temporary copy deleted on next start) |
-| Help | 22 sections | Adapted: server sections removed, App lock, Backups and Moving between devices added ([08](08-help-guide.md)) |
+| Help | 22 sections | Adapted: server sections removed, App lock, Locked notes, Backups and Moving between devices added ([08](08-help-guide.md)) |
 
 ## Not in scope for 1.0 (proposals, need a decision)
 
@@ -99,6 +100,7 @@ screens in [07-screens.md](07-screens.md).
 | Settings in backups | Still open. The web app's format has no place for them, so this needs a new manifest version there first ([05](05-backup-compatibility.md#settings-in-backups)). |
 | Automatic backups to a chosen folder | **Done** (2026-10-08, at the owner's request): Settings → Backup & data → Automatic backups, off by default because the backups are not encrypted. The archive is the ordinary export, so the format is untouched. See [05](05-backup-compatibility.md#automatic-backups). |
 | Festival backgrounds | **Done** (2026-10-08, at the owner's request, after trying a Halloween sample on the emulator): Settings → Appearance → Background. This app's own; Maple Notes has none. See [06](06-design-system.md#backgrounds). Themes that also change the colours and icons, and themes from a file, were discussed and not built. |
+| Locked notes | **Done in 1.4.0** (2026-10-12, at the owner's request): **Lock** and **Unlock…** in the ⋯ menu of a note, quick note or todo list. This app's own; Maple Notes has none. The owner chose a lock that hides the note behind the app lock's PIN, over a read-only lock and over one with a temporary "Show"; and that the first lock asks for a PIN, without turning the app lock on. Like the app lock it is a privacy screen and not a key (D5), and it is not in backups, whose format has no place for it (D6). See [04](04-domain-rules.md#locked-notes) and [07](07-screens.md#locked-notes). |
 | Backup reminder | A local app has no other copy of the notes. Proposal: Settings → Backup & data shows "Last export: …", and Home shows a dismissible reminder after 30 days without one. Off by default. |
 | Share into Falcon Notes (Android share sheet, macOS Share menu) | Turns shared text, links and images into a new note. |
 | iOS | D1 keeps it possible. |

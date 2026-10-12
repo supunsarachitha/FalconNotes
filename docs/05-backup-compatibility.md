@@ -63,7 +63,8 @@ The start date must not be after the end date: "The start date must not be after
 
 ### What goes in
 
-- Notes **not in the trash**; archived notes only when asked. All four kinds.
+- Notes **not in the trash**; archived notes only when asked. All four kinds. Locked notes too
+  ([Locked notes in backups](#locked-notes-in-backups)).
 - Created within `[From 00:00, To+1 00:00)` in the time zone. When midnight does not exist on a day (a
   daylight-saving gap), the day starts at the first valid half hour (`NoteExporter.StartOfDayUtc`).
 - In `(CreatedAt, Id)` ascending order. `Id` is compared as its canonical lower-case text, which is the same order as
@@ -183,6 +184,9 @@ is the ordinary export, written by the same `NoteExporter`, and restores whereve
   again: "Falcon Notes can no longer reach the folder. Choose it again." (deleted, moved, its card or drive not
   there, or the access taken back), "There was not enough space.", or "The backup could not be saved." The backup
   stays due, so each hourly pass and each start tries again. Logs get the kind of error and counts, never a name.
+- **Locked notes** are in every automatic backup. While a note is locked, turning automatic backups on and
+  **Change…** ask for the PIN before the folder is chosen; a backup to a folder already chosen asks for nothing, or
+  it could not be automatic.
 - **Turning it off, or choosing another folder**, gives up the access to the folder. The backups in it stay: they are
   the user's. Erase all data does the same, and deletes none of them.
 
@@ -261,7 +265,7 @@ As `importer.ts` and the server's `NoteService.ImportAsync`, in transactions of 
 ## Moving between devices
 
 Exporting on one device and restoring on another is the only way to move notes. Labels travel with the notes that
-carry them. Labels on no note, preferences, the profile and the app lock stay behind. Help says so
+carry them. Labels on no note, preferences, the profile, the app lock and the locks on single notes stay behind. Help says so
 ([08](08-help-guide.md)).
 
 ## Labels in backups
@@ -286,6 +290,19 @@ format.
 Whether a label hides its notes (Maple Notes 1.16.0) is not in a backup, in either app: the manifest gives a label's
 name and colour only. A restored label does not hide its notes until its eye is turned on again in Settings → Labels.
 Carrying it needs a new manifest version in the web app first.
+
+## Locked notes in backups
+
+Locked notes (Falcon Notes 1.4.0, this app's own) do not change the format. A locked note is exported like any other
+note, with its text and files, because a backup that leaves notes out is one to be sorry about later, and because the
+lock is a privacy screen inside the app and not encryption ([03](03-data-storage-and-security.md#locked-notes)). The
+archive says nothing of the lock: Maple Notes' format has no place for it, its restore would ignore one, and adding
+it here would change the format in one project only. So a restored note is not locked, in either app, and is locked
+again by hand.
+
+Since an export holds a locked note's text, the screen asks for the PIN, or the fingerprint or face where the app
+lock allows it, before it writes one, while any note is locked ([07](07-screens.md#settings--backup--data)).
+`ExportService` and `NoteExporter` are unchanged, and the conformance vectors with them.
 
 ## Settings in backups
 
