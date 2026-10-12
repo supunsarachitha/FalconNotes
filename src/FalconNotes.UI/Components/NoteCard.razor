@@ -3,8 +3,8 @@
    lists and quick notes. Ticking a checkbox shows at once and saves in the background (NoteEditor); with
    Double-tap to edit on, double-tapping or double-clicking opens it for editing. Deleting moves it to the trash,
    unless the trash is off (NoteRemoval). Link previews are gone (docs/07). New here: a note can be locked, and then
-   shows a lock in its corner and none of what is in it, with a menu that cannot show it either (docs/07, Locked
-   notes). *@
+   shows a lock in its corner and none of what is in it, with a menu that cannot show it either, until it is
+   unlocked to be read; it locks again by itself (docs/07, Locked notes). *@
 @using System.Globalization
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
@@ -14,6 +14,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject NoteService Notes
+@inject NoteLocks Locks
 @inject AppState State
 @inject Toasts Toasts
 @inject TimeProvider Time
@@ -49,8 +50,9 @@ else
             }
             @if (Note.IsLocked)
             {
-                <span role="img" aria-label="Locked" title="Locked" class="ml-auto shrink-0 text-maple-600 dark:text-maple-400">
-                    <Icon Name="IconName.Lock" Class="size-4" />
+                <span role="img" aria-label="@(Hidden ? "Locked" : "Unlocked for now")" title="@(Hidden ? "Locked" : "Unlocked for now")"
+                      class="ml-auto shrink-0 text-maple-600 dark:text-maple-400">
+                    <Icon Name="@(Hidden ? IconName.Lock : IconName.LockOpen)" Class="size-4" />
                 </span>
             }
             <div class="@(Note.IsLocked ? "-mr-2" : "-mr-2 ml-auto")">
@@ -64,7 +66,7 @@ else
                                 @(Note.IsPinned ? "Unpin" : "Pin to top")
                             </MenuItem>
                         }
-                        @if (Note.IsLocked)
+                        @if (Hidden)
                         {
                             <MenuItem IconName="IconName.LockOpen" OnSelect="() => _lock.Unlock()">Unlock…</MenuItem>
                         }
@@ -86,14 +88,19 @@ else
                                     <MenuItem IconName="IconName.Zap" OnSelect="@(() => ChangeAsync(new NotePatch(Kind: NoteKind.Quick), "Moved to quick notes."))">Move to quick notes</MenuItem>
                                 }
                             }
-                            @if (CanBeTemplate || IsTemplate)
+                            @if ((CanBeTemplate || IsTemplate) && !Note.IsLocked)
                             {
                                 <MenuItem IconName="@(IsTemplate ? IconName.CalendarX : IconName.CalendarCheck)" OnSelect="ToggleTemplateAsync">
                                     @(IsTemplate ? "Stop using as daily template" : "Use as daily-note template")
                                 </MenuItem>
                             }
                             <MenuItem IconName="IconName.Copy" OnSelect="CopyTextAsync">Copy text</MenuItem>
-                            @if (Note.Kind != NoteKind.Habit)
+                            @if (Note.IsLocked)
+                            {
+                                <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockNow()">Lock now</MenuItem>
+                                <MenuItem IconName="IconName.LockOpen" OnSelect="() => _lock.RemoveLockAsync()">Remove lock</MenuItem>
+                            }
+                            else if (State.Preferences.NoteLock && Note.Kind != NoteKind.Habit)
                             {
                                 <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockAsync()">Lock</MenuItem>
                             }
@@ -112,7 +119,7 @@ else
             </div>
         </header>
 
-        @if (Note.IsLocked)
+        @if (Hidden)
         {
             <p class="text-[15px] text-stone-500 dark:text-stone-400">
                 This @(Note.Kind == NoteKind.Todo ? "list" : "note") is locked. Choose Unlock in its ⋯ menu to open it.
@@ -161,7 +168,10 @@ else
     /// <summary>Whether a mixed list should label todo lists and quick notes.</summary>
     [Parameter] public bool ShowKind { get; set; } = true;
 
-    private bool TapToEdit => State.Preferences.DoubleTapToEdit && !Note.IsArchived && !Note.IsLocked;
+    // Locked, and not opened to be read: nothing of the note may be shown.
+    private bool Hidden => Note.IsLocked && !Locks.IsOpen(Note.Id);
+
+    private bool TapToEdit => State.Preferences.DoubleTapToEdit && !Note.IsArchived && !Hidden;
 
     private bool IsTemplate => Note.Id.ToString("D") == State.Preferences.DailyNoteTemplate;
 
@@ -191,7 +201,11 @@ else
                 ? $"The note and its {Note.Attachments.Count} attached file(s) will be deleted permanently. To keep it out of sight instead, archive it."
                 : "The note will be deleted permanently. To keep it out of sight instead, archive it.",
             Notes, State, Toasts, StateHasChanged);
+        Locks.Changed += OnLocksChanged;
     }
+
+    // The note was opened to be read, or locked again by itself (the page or the app was left).
+    private void OnLocksChanged() => _ = InvokeAsync(StateHasChanged);
 
     /// <inheritdoc />
     protected override void OnParametersSet() => _editor.Reload(Note);
@@ -218,6 +232,20 @@ else
     {
         _editing = value;
         _bound = false; // the article is gone while editing; re-bind if it comes back
+
+        // An open locked note stays open while it is edited: picking a file for it leaves the app for a moment.
+        if (Note.IsLocked)
+        {
+            if (value)
+            {
+                Locks.Hold(Note.Id);
+            }
+            else
+            {
+                Locks.Release(Note.Id);
+            }
+        }
+
         StateHasChanged();
     }
 
@@ -271,6 +299,12 @@ else
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        Locks.Changed -= OnLocksChanged;
+        if (_editing)
+        {
+            Locks.Release(Note.Id);
+        }
+
         _self?.Dispose();
         if (_module is not null)
         {

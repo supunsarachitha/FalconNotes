@@ -102,7 +102,7 @@ public class LockedNotesTests
     }
 
     [Fact]
-    public async Task A_locked_note_s_files_are_not_opened()
+    public async Task A_locked_note_s_files_are_opened_only_while_the_note_is_open_to_be_read()
     {
         using var app = await TestApp.StartAsync();
         var file = await app.AddFileAsync("statement.pdf");
@@ -113,10 +113,94 @@ public class LockedNotesTests
         Assert.Null(await app.Attachments.OpenAsync(file.Id));
         Assert.Null(await app.Attachments.CopyDecryptedAsync(file.Id, folder));
 
-        await app.Notes.PatchAsync(note.Id, new NotePatch(IsLocked: false));
+        app.Locks.Open(note.Id); // unlocked with the PIN, to be read
+        await using (var opened = (await app.Attachments.OpenAsync(file.Id))!.Content)
+        {
+            Assert.Equal(100, opened.Length);
+        }
 
-        await using var opened = (await app.Attachments.OpenAsync(file.Id))!.Content;
-        Assert.Equal(100, opened.Length);
+        Assert.NotNull(await app.Attachments.CopyDecryptedAsync(file.Id, folder));
+
+        app.Locks.CloseAll(); // the page or the app was left
+        Assert.Null(await app.Attachments.OpenAsync(file.Id));
+
+        await app.Notes.PatchAsync(note.Id, new NotePatch(IsLocked: false)); // the lock taken off for good
+        await using var unlocked = (await app.Attachments.OpenAsync(file.Id))!.Content;
+        Assert.Equal(100, unlocked.Length);
+    }
+
+    [Fact]
+    public async Task An_open_note_is_still_locked_for_search_and_tags()
+    {
+        using var app = await TestApp.StartAsync();
+        var note = await app.Notes.CreateAsync("bank details #money");
+        await app.Notes.PatchAsync(note.Id, new NotePatch(IsLocked: true));
+
+        app.Locks.Open(note.Id);
+
+        Assert.True((await app.Notes.GetAsync(note.Id))!.IsLocked); // opening never touches the stored lock
+        Assert.Empty((await app.Notes.ListAsync(Active(search: "bank"))).Items);
+        Assert.Empty((await app.Notes.ListAsync(Active(tag: "money"))).Items);
+        Assert.True(await app.Notes.AnyLockedAsync());
+    }
+
+    [Fact]
+    public void Open_notes_lock_again_together_and_only_in_memory()
+    {
+        var locks = new NoteLocks();
+        var (first, second) = (Guid.CreateVersion7(), Guid.CreateVersion7());
+        var changes = 0;
+        locks.Changed += () => changes++;
+
+        locks.Open(first);
+        locks.Open(second);
+        Assert.True(locks.IsOpen(first));
+        Assert.Equal(2, changes);
+
+        locks.Close(first); // Lock now
+        Assert.False(locks.IsOpen(first));
+        Assert.True(locks.IsOpen(second));
+
+        locks.CloseAll(); // the page or the app was left
+        Assert.False(locks.IsOpen(second));
+        Assert.Equal(4, changes);
+
+        locks.CloseAll(); // nothing open: nobody is told
+        Assert.Equal(4, changes);
+        Assert.False(new NoteLocks().IsOpen(second)); // a new run of the app starts with every note locked
+    }
+
+    [Fact]
+    public void A_note_being_edited_stays_open_until_the_edit_ends()
+    {
+        var locks = new NoteLocks();
+        var (edited, read) = (Guid.CreateVersion7(), Guid.CreateVersion7());
+        locks.Open(edited);
+        locks.Open(read);
+        locks.Hold(edited);
+
+        locks.CloseAll(); // off to the file picker
+        Assert.True(locks.IsOpen(edited));
+        Assert.False(locks.IsOpen(read));
+
+        locks.Release(edited); // saved or cancelled: it locks now, because the app was left meanwhile
+        Assert.False(locks.IsOpen(edited));
+    }
+
+    [Fact]
+    public void An_edit_that_ends_without_the_app_being_left_leaves_the_note_open()
+    {
+        var locks = new NoteLocks();
+        var note = Guid.CreateVersion7();
+        locks.Open(note);
+        locks.Hold(note);
+
+        locks.Release(note);
+
+        Assert.True(locks.IsOpen(note));
+        locks.Hold(Guid.CreateVersion7()); // holding a note that is not open opens nothing
+        locks.CloseAll();
+        Assert.False(locks.IsOpen(note));
     }
 
     [Fact]

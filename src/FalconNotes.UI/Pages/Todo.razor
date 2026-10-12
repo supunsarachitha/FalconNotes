@@ -5,7 +5,9 @@
 @using FalconNotes.Core.Text
 @using FalconNotes.UI.State
 @using TodoText = FalconNotes.Core.Text.Todo
+@implements IDisposable
 @inject NoteService Notes
+@inject NoteLocks Locks
 @inject Toasts Toasts
 @inject AppState State
 
@@ -41,8 +43,9 @@ else
 
     private RenderFragment<Note> Card => note => builder =>
     {
-        // A locked list shows as the locked card every other page shows, with Unlock in its menu (docs/07, Locked notes).
-        if (note.IsLocked)
+        // A locked list shows as the locked card every other page shows, with Unlock in its menu, until it is unlocked
+        // to be read (docs/07, Locked notes).
+        if (note.IsLocked && !Locks.IsOpen(note.Id))
         {
             builder.OpenComponent<NoteCard>(3);
             builder.AddComponentParameter(4, nameof(NoteCard.Note), note);
@@ -56,6 +59,15 @@ else
         builder.AddComponentParameter(2, nameof(TodoCard.AutoFocus), note.Id == _created);
         builder.CloseComponent();
     };
+
+    /// <inheritdoc />
+    protected override void OnInitialized() => Locks.Changed += OnLocksChanged;
+
+    // A list was opened to be read, or locked again by itself: its card changes kind.
+    private void OnLocksChanged() => _ = InvokeAsync(StateHasChanged);
+
+    /// <inheritdoc />
+    public void Dispose() => Locks.Changed -= OnLocksChanged;
 
     private async Task CreateAsync()
     {

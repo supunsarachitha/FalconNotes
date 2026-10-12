@@ -127,17 +127,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   database gains a column for it (schema version 2), and a copy is kept before the upgrade. Backups do not carry the
   setting, so a restored label does not hide its notes.
 
-- Locked notes (docs/04, docs/07; this app's own, the web app has none). **Lock** in the ⋯ menu of a note, quick note
-  or todo list hides it: the card shows a lock in its top right corner, when it was written, and none of its title,
-  text, files or labels. A locked note stays in its lists and on its label's page, and is left out of searches, its
-  tags' lists, tag counts and suggestions; its files are not opened; it cannot be the daily-note template. **Unlock…**
-  asks for the PIN, or a fingerprint or face where the app lock allows it, and takes the lock off. The PIN is the app
-  lock's: the first lock asks for one and leaves the app lock off, and while a note is locked the PIN is asked for,
-  not chosen again, when the app lock is turned on, and can be changed with the lock off. Pinning, archiving and
-  deleting a locked note need no PIN. Exports and automatic backups hold locked notes as plain text, so **Export
-  ZIP…** and choosing the automatic backups' folder ask for the PIN while a note is locked; the backup format is
-  unchanged, and a restored note is not locked. Schema migration 3 adds `Notes.IsLocked`. Help has a new section,
-  **Locked notes**.
+- Locked notes (docs/04, docs/07; this app's own, the web app has none), **off by default**: turn on **Note lock**
+  in Settings → Privacy & security. Then **Lock** in the ⋯ menu of a note, quick note or todo list hides it: the card
+  shows a lock in its top right corner, when it was written, and none of its title, text, files or labels. A locked
+  note stays in its lists and on its label's page, and is left out of searches, its tags' lists, tag counts and
+  suggestions; its files are not opened; it cannot be the daily-note template. **Unlock…** asks for the PIN, or a
+  fingerprint or face where the app lock allows it, and opens the note to be read and changed; **it locks again by
+  itself** when you go to another page, leave the app or close it, and **Lock now** does so at once. A note being
+  edited stays open until the edit is saved or cancelled. **Remove lock**, on an open note, takes the lock off for
+  good. The PIN is the app lock's: the first lock asks for one and leaves the app lock off, and while a note is
+  locked the PIN is asked for, not chosen again, when the app lock is turned on, and can be changed with the lock
+  off. Pinning, archiving and deleting a locked note need no PIN. Exports and automatic backups hold locked notes as
+  plain text, so **Export ZIP…** and choosing the automatic backups' folder ask for the PIN while a note is locked;
+  the backup format is unchanged, and a restored note is not locked. Turning Note lock off only takes **Lock** out
+  of the menus: notes already locked stay locked and can still be unlocked. Schema migration 3 adds
+  `Notes.IsLocked`. Help has a new section, **Locked notes**.
 - A rule and its test, at the owner's request: an update never loses notes (CLAUDE.md, docs/11). `UpgradeKeepsNotesTests`
   takes a database with one of everything back to the schema of each earlier version, starts it as an update does,
   and compares every row and file with what was there; a migration added without its undo fails a test.
@@ -225,8 +229,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Core and UI tests no longer fail at random, which had failed CI on Linux and Windows. Tests running side by
   side emptied each other's database connection pools; they now run one at a time (docs/11). And four tests listed a
   note's files in the order of IDs made within one millisecond, which is random; the files now get distinct times.
-- Two component tests no longer fail at random on CI: the tag filter's test on Home looked at the page from the
-  test's thread while its list was loading, and a locked-notes test reached for a menu before it had opened.
+- Three component tests no longer fail at random: the tag filter's test on Home and the calendar's count test looked
+  at the page from the test's thread while it was loading, which can leave bUnit with the elements of an earlier
+  render, and a locked-notes test reached for a menu before it had opened.
 - Three UI tests no longer fail at random on a busy machine: the new biometric unlock tests, the Tags page's sort
   test and the todo card's menu test checked the page before a click had been handled. They now wait for it. (CI
   failed once in the UI tests on the Mac; with the processors busy these failed locally in about 1 run in 10.)

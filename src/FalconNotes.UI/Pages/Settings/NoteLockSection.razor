@@ -1,0 +1,25 @@
+@* New (docs/07, Settings → Privacy & security → Locked notes; docs/04, Locked notes): whether Lock is offered in the
+   menu of notes, quick notes and todo lists. Off by default. Turning it off reveals nothing, so it asks for no PIN:
+   notes already locked stay locked, and keep Unlock in their menu. *@
+@using FalconNotes.UI.State
+@implements IDisposable
+@inject AppState State
+
+<Section Title="Locked notes">
+    <Description>Hide single notes behind your PIN. A locked note shows a lock and nothing of what is in it. Unlock it to read it, and it locks again by itself when you leave the page or the app.</Description>
+    <ChildContent>
+        <PreferenceSwitch Label="Note lock"
+                           Description="Adds Lock to the ⋯ menu of notes, quick notes and todo lists. The first lock asks you to choose a PIN, the same one the app lock uses. Turning this off takes Lock away again; notes already locked stay locked and can still be unlocked."
+                           Checked="State.Preferences.NoteLock" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { NoteLock = on }))" />
+    </ChildContent>
+</Section>
+
+@code {
+    /// <inheritdoc />
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    /// <inheritdoc />
+    public void Dispose() => State.Changed -= OnStateChanged;
+}

@@ -10,6 +10,7 @@
 | Device key | OS secure storage (`ISecretStore`) | By the OS (Keystore, DPAPI, Keychain) |
 | App lock settings and PIN hash | `Settings['appLock']` in the database | Yes (inside the database) |
 | Whether a note is locked | `Notes.IsLocked` in the database | Yes (inside the database) |
+| Which locked notes are open to be read just now | Memory only (`NoteLocks`) | Not stored: closing the app locks them all |
 | Decrypted copies for **Open** | `{FileSystem.CacheDirectory}/open/{random}/{file name}` | **No**: deleted at the next start, and at most 24 h old |
 | Export being written, restore archive being read | `{CacheDirectory}/export/`, `{CacheDirectory}/restore/` | **No** (exports are plain by design); deleted when done and at start |
 | Automatic backups, when the user turns them on | A folder **outside the app** that the user chose, as `falcon-notes-auto-{yyyy-MM-dd_HHmm}.zip`, the newest 3, 5 or 10 kept ([05](05-backup-compatibility.md#automatic-backups)) | **No**: they are exports. Off by default, and Settings says so before the folder is chosen. |
@@ -201,7 +202,8 @@ anything: the device key does not depend on the PIN, so a forgotten PIN can neve
 ### Locked notes
 
 New in 1.4.0 (2026-10-12, at the owner's request). A single note can be locked: the app then shows that it is there
-and nothing of what is in it, until the PIN takes the lock off. What a locked note is left out of is in
+and nothing of what is in it, until the PIN opens it to be read; then it locks again by itself. **Lock** is offered
+only while **Note lock** is turned on in Settings → Privacy & security, which it is not by default. What a locked note is left out of is in
 [04](04-domain-rules.md#locked-notes), and the screens are in [07](07-screens.md#locked-notes). Like the app lock, it
 is a privacy screen and **not** a key: the note is encrypted exactly as every other note is, with the device key, and
 a forgotten PIN cannot make it unreadable to the app, only to the person.
@@ -223,6 +225,15 @@ a forgotten PIN cannot make it unreadable to the app, only to the person.
 - **Unlocking** asks for the PIN, or the fingerprint or face where the app lock allows it, through the same check as
   Settings uses. Wrong PINs count towards the same five tries and the same waits, and the dialog says "Too many
   tries. Try again in {n} seconds." while one runs.
+- **Unlocking does not take the lock off.** It opens the note to be read and changed, and the fact is kept in memory
+  only (`NoteLocks`), never in the database. The note **locks again by itself** when another page is opened, when the
+  app goes to the background (at once, whatever the app lock's "Lock after" says, and with the app lock off too),
+  when the app lock locks, and when the app is closed. There is no timer: on a phone the screen turning off sends
+  the app to the background, which locks it. Taking the lock off for good is a separate, deliberate choice (**Remove
+  lock**), offered only on a note that is open, so it never needs the PIN a second time.
+- **The switch** (**Note lock**, the preference `noteLock`, off by default) decides only whether **Lock** is in the
+  menus. Turning it off reveals nothing and so asks for no PIN: notes already locked stay locked and keep **Unlock…**,
+  or a switch could strand them.
 - **Forgot your PIN?** A locked note can still be deleted. An export made before, or an automatic backup, holds it
   unlocked. There is no other way in.
 - **What it does not do.** Exports and automatic backups hold locked notes as plain text, like every note; that is why
@@ -237,6 +248,7 @@ a forgotten PIN cannot make it unreadable to the app, only to the person.
 | A cloud or device-transfer backup of the app folder | **Yes** | Auto Backup off on Android. Elsewhere, files copied without the key are unreadable. |
 | Someone with the unlocked device opens the app | **Yes, with the app lock on**; otherwise no | PIN or biometrics, the background cover, `FLAG_SECURE` |
 | Someone using the open app, or looking at its screen, reads a note that was locked | **Yes, inside the app** | The card shows no text, file or label; the note is in no search result, tag list or tag count; its files are not opened; an export asks for the PIN first. A screenshot shows only the locked card. |
+| Someone picks up the device after its owner unlocked a note to read it | **Yes, once the page or the app was left** | The note locks again by itself when another page is opened and when the app goes to the background, which a screen turning off does. Not before: a note left open on the screen can be read. |
 | The same person deletes a locked note, or finds it in an export or automatic backup made earlier | **No** | Deleting needs no PIN, so that a forgotten PIN can be cleared away; backups are plain by design |
 | Malware running as the same OS user, or root/admin access while the user is logged in | **No** | It can ask the OS secure store for the key, as the app does. That is the limit of any app without a password-derived key. |
 | Exported ZIP files, by hand or automatic | **No** | Exports are plain Markdown/text/JSON by design (compatibility); the app says so when exporting and where automatic backups are turned on. Whoever can open the chosen folder can read the automatic ones. |

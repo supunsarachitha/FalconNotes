@@ -64,8 +64,9 @@ own.
 Added with automatic backups (2026-10-08): the second paragraph of `backup`. It is this app's own; the web app has no
 such feature.
 
-Added with locked notes (1.4.0, 2026-10-12): the `locked` section, "lock it" in the last point of `writing`, and the
-last sentence of `privacy`. They are this app's own; the web app has no such feature.
+Added with locked notes (1.4.0, 2026-10-12): the `locked` section and the last sentence of `privacy`. They are this
+app's own; the web app has no such feature. `writing` does not name the lock among a note's menu actions, because
+**Note lock** is off until it is turned on, and that section stays as it was.
 
 Brought up to Maple Notes 1.15.0 (1.2.0, 2026-10-08): `daily` gains the paragraph on the template, word for word;
 `pictures` describes the three photo sizes; `features` lists "Help in the side menu" and says where the guide is
@@ -83,8 +84,8 @@ are at the top.
   and links.
 - **Pictures and files.** Choose the paperclip and pick them. They are added while you write.
 - **Checklists.** Tick a checklist's boxes right in the note; the change is saved straight away.
-- **Changing a note.** Open a note's **⋯** menu to edit it, pin it to the top, label it, copy its text, lock it,
-  archive it or delete it. Editing starts with the cursor at the end of the note, ready to carry on. Archived notes wait in the
+- **Changing a note.** Open a note's **⋯** menu to edit it, pin it to the top, label it, copy its text, archive it or
+  delete it. Editing starts with the cursor at the end of the note, ready to carry on. Archived notes wait in the
   **Archive**, where you can restore them, and deleted ones in the [trash](/trash). To edit a note faster, turn on
   **Double-tap to edit** in [Settings → Writing](/settings/writing), then double-tap the note (or double-click it).
 ````
@@ -180,7 +181,7 @@ Two things are up to you:
 - **Uninstalling Falcon Notes deletes your notes** from this device, together with their key. Export them first.
 
 To keep people who pick up your device out of the app, turn on the [app lock](/settings/security). To hide
-single notes instead, lock them from their **⋯** menu.
+single notes instead, turn on **Note lock** in the same place and lock them from their **⋯** menu.
 ````
 
 ## 16. The app lock (`lock`)
@@ -200,13 +201,16 @@ data on this device and restore your notes from a backup.
 ## 17. Locked notes (`locked`)
 
 ````markdown
-To keep a note from anyone who looks at your screen or borrows your device, choose **Lock** in its **⋯** menu. The
-first time, you choose a PIN. A locked note shows a lock in its corner and when it was written, and nothing of what
-is in it: its text, files and labels are hidden, and it is left out of searches and tags. Todo lists and quick notes
-lock the same way; habits cannot be locked.
+Turn on **Note lock** in [Settings → Privacy & security](/settings/security) to keep single notes from anyone who
+looks at your screen or borrows your device. Then choose **Lock** in a note's **⋯** menu. The first time, you choose a
+PIN. A locked note shows a lock in its corner and when it was written, and nothing of what is in it: its text, files
+and labels are hidden, and it is left out of searches and tags. Todo lists and quick notes lock the same way; habits
+cannot be locked.
 
-To open a note again, choose **Unlock…** in its menu and enter the PIN. It then stays open until you lock it again.
-A locked note can still be pinned, archived and deleted without the PIN.
+To read a locked note, choose **Unlock…** in its menu and enter the PIN. The note opens, and you can read and change
+it as usual. It locks again by itself when you go to another page, leave Falcon Notes or close it; **Lock now** in
+its menu does so sooner. To take the lock off for good, unlock the note and choose **Remove lock**. A locked note can
+still be pinned, archived and deleted without the PIN.
 
 The PIN is the one the [app lock](/settings/security) uses, so there is only one to remember, and you change it
 there. Where the app lock lets you unlock with your fingerprint or face, that opens locked notes too. Write the PIN
@@ -216,6 +220,9 @@ backup that holds it.
 Locking hides a note inside Falcon Notes, and nowhere else. Exports and automatic backups hold locked notes like
 any others, and they are not encrypted; that is why exporting asks for your PIN while a note is locked. A restored
 note comes back unlocked.
+
+Turning **Note lock** off again only takes **Lock** out of the menus. Notes you have locked stay locked, and you can
+still unlock them.
 ````
 
 ## 18. Your name (`account`)

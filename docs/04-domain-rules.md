@@ -257,30 +257,45 @@ are in [03](03-data-storage-and-security.md#locked-notes); the screens are in [0
 
 - **What can be locked**: a timeline note (a daily note too), a quick note and a todo list, in any state. **Not a
   habit**: the Habits page shows every habit's name and days and has nowhere to hide one. "Habits cannot be locked."
+- **The switch**: **Lock** is offered only while the preference `noteLock` (**Note lock** in Settings → Privacy &
+  security) is on. It is off by default. Off, nothing else changes: locked notes stay locked, are still left out of
+  what they are left out of, and can still be unlocked, locked again and have their lock removed.
 - **Lock**: `IsLocked` = 1. `UpdatedAt` stays; `Revision` goes up. With no PIN in use, and none typed or chosen
   since the app started, one is chosen first ([03](03-data-storage-and-security.md#locked-notes)). Toast: "Locked.
   Unlocking it takes your PIN."
-- **Unlock**: after the PIN or a biometric check, `IsLocked` = 0, for good: the note is an ordinary note again until
-  it is locked again. There is no temporary look at a locked note. Toast: "Unlocked." The service does not check the
-  PIN itself; like turning the app lock off, the screen has done so.
+- **Unlock** (the owner's change of 2026-10-12: at first it took the lock off): after the PIN or a biometric check,
+  the note is **open to be read**. `IsLocked` stays 1 and nothing is written; `NoteLocks` remembers it in memory.
+  While it is open the note shows and works as any note does (edit, labels, moves, Copy text, its files), with an
+  open lock where the lock mark was. It is still locked for everything below: search, tags, the template, exports.
+  Toast: "Unlocked. It locks again when you leave this page or the app."
+- **It locks again by itself** (`NoteLocks.CloseAll`): when another page is opened (any change of address, a filter
+  too), when the app goes to the background, when the app lock locks, and when the app is closed, since nothing was
+  stored. **Lock now** in its menu does it at once ("Locked."). There is no timer.
+- **A note being edited is held open** until the edit ends (`NoteLocks.Hold`, `Release`): attaching a file opens the
+  system's picker, which sends the app to the background, and the editor must keep its text and its files. If the
+  page or the app was left meanwhile, the note locks the moment the edit is saved or cancelled. The same holds for a
+  todo list while its items are edited as Markdown.
+- **Remove lock**: `IsLocked` = 0, for good. Offered only on a note that is open, so the PIN has been given. Toast:
+  "Lock removed." The service does not check the PIN itself; like turning the app lock off, the screen has done so.
 - **A locked note keeps its place**: it stays in the feed, the pinned list, the archive, the trash, a day's list and
   a label's list, as a card that shows only that it is there ([07](07-screens.md#locked-notes)). It must stay on a
   label's page: for a label that hides its notes, that page is the only way back to it. The calendar still counts it.
 - **A locked note is left out of everything that would tell what is in it**: search (its text and its files' names),
   the list of a tag, tag counts, the Tags page and tag suggestions. A tag is part of the text; a label is not.
-- **Its files are not opened**: the media handler answers as for a file that does not exist, and Open, Save a copy
-  and Share make no copy (`AttachmentService.OpenAsync`, `CopyDecryptedAsync`).
+- **Its files are not opened** unless it is open to be read: the media handler answers as for a file that does not
+  exist, and Open, Save a copy and Share make no copy (`AttachmentService.OpenAsync`, `CopyDecryptedAsync`).
 - **It cannot be the daily-note template**: its text would start every new daily note. A template that gets locked
   counts as none until it is unlocked ([Daily notes](#daily-notes)).
 - **Pin, archive, restore, move to the trash, restore from the trash and delete for good need no PIN.** None of them
   shows the note, and deleting is the way out of a forgotten PIN. The lock stays through all of them. Edit, Labels…,
-  moving between Home and quick notes, the template and Copy text are not offered while it is locked.
+  moving between Home and quick notes and Copy text are not offered until it is open; the template is not offered
+  while it has a lock at all.
 - **Storage use** counts it. **Delete all notes and files** and **Erase all data** delete it like any note.
 - **Exports and automatic backups hold it**, as plain text, and say nothing of the lock; a restored note is not
   locked ([05](05-backup-compatibility.md#locked-notes-in-backups)). While any note is locked, the trash included,
   an export asks for the PIN first (`NoteService.AnyLockedAsync`).
-- The rules are decided in `NoteService` and `AttachmentService`, not by the screens, so that no list or handler can
-  forget one. Lists read `IsLocked` with the row; there is no extra query.
+- The rules are decided in `NoteService`, `AttachmentService` and `NoteLocks`, not by the screens, so that no list or
+  handler can forget one. Lists read `IsLocked` with the row; there is no extra query.
 
 ## Labels
 
@@ -323,7 +338,7 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `dateInTitles` | false | `tags` | true |
 | `quickNoteTitles` | false | `shrinkPhotos` | false |
 | `dailyNoteTemplate` | `""` (a note's ID, or none) | `photoSize` | `Large` (Large, Medium, Small) |
-| `helpMenu` | true | | |
+| `helpMenu` | true | `noteLock` | false |
 | `dateFormat` | `yyyy-MM-dd` | `doubleTapToEdit` | false |
 | `todoLists` | true | `tagSuggestions` | false |
 | `quickNotes` | true | `labels` | false |
@@ -337,6 +352,8 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
   part of backups, so nothing needs mapping.
 - `background` is this app's own ([06](06-design-system.md#backgrounds)): the web app's `Preferences` has no such
   key, and a value this app does not offer reads as `None`, like every other preference.
+- `noteLock` is this app's own too ([Locked notes](#locked-notes)): whether **Lock** is in the menus. Preferences
+  saved before 1.4.0 have no such key and read as off.
 - A change shows at once and is saved in the background. If saving fails, it is rolled back with "Your setting could
   not be saved. Please try again."
 - Turning a feature off hides its page or tool and deletes nothing. A page whose feature is off shows "{Feature} is

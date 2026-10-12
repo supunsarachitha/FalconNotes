@@ -5,9 +5,11 @@
    three-button navigation. *@
 @inherits LayoutComponentBase
 @implements IAsyncDisposable
+@using FalconNotes.Core.Notes
 @using FalconNotes.UI.State
 @inject NavigationManager Navigation
 @inject AppLockState AppLock
+@inject NoteLocks NoteLocks
 @inject IJSRuntime JS
 
 <div class="min-h-dvh bg-stone-100 text-stone-900 dark:bg-stone-950 dark:text-stone-100">
@@ -60,8 +62,12 @@
         AppLock.Changed += OnAppLockChanged;
     }
 
-    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) =>
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Leaving a page locks the notes that were unlocked to be read on it (docs/04, Locked notes).
+        NoteLocks.CloseAll();
         _ = InvokeAsync(StateHasChanged);
+    }
 
     private void OnAppLockChanged() => _ = InvokeAsync(StateHasChanged);
 

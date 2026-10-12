@@ -1,3 +1,4 @@
+using FalconNotes.Core.Notes;
 using FalconNotes.Core.Platform;
 using FalconNotes.Core.Settings;
 
@@ -12,7 +13,8 @@ namespace FalconNotes.UI.State;
 /// <param name="service">Reads, checks and changes the PIN and its settings.</param>
 /// <param name="biometrics">The platform's biometric prompt.</param>
 /// <param name="time">The clock, for the background timer.</param>
-public sealed class AppLockState(AppLockService service, IAppLock biometrics, TimeProvider time)
+/// <param name="noteLocks">The locked notes open to be read, which lock again when the app is left or locks.</param>
+public sealed class AppLockState(AppLockService service, IAppLock biometrics, TimeProvider time, NoteLocks noteLocks)
 {
     private DateTimeOffset? _backgroundedAt;
 
@@ -147,6 +149,7 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
         }
 
         IsLocked = true;
+        noteLocks.CloseAll();
         Changed?.Invoke();
     }
 
@@ -186,8 +189,15 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
     /// <returns>The remaining time, or null when it is not locked out.</returns>
     public Task<TimeSpan?> LockoutRemainingAsync() => service.LockoutRemainingAsync();
 
-    /// <summary>Called when the app goes to the background.</summary>
-    public void OnBackgrounded() => _backgroundedAt = time.GetUtcNow();
+    /// <summary>
+    /// Called when the app goes to the background. Locked notes that were opened to be read lock again at once,
+    /// whatever "Lock after" says: that delay is the app lock's, and a note may be locked with the app lock off.
+    /// </summary>
+    public void OnBackgrounded()
+    {
+        _backgroundedAt = time.GetUtcNow();
+        noteLocks.CloseAll();
+    }
 
     /// <summary>
     /// Called when the app returns to the foreground: locks again if the lock is on and the app stayed away at least

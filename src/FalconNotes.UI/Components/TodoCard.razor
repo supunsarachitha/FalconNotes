@@ -1,7 +1,8 @@
 @* Port of components/TodoCard.tsx: a todo list in the Todo tab: tick, add, edit and remove items, or edit them all
    at once as Markdown; rename, label, pin, archive or delete the list. Every change shows at once and is saved in
    the background, one save after another, as the list's Markdown (Core/Text/Todo.cs, NoteEditor). New here: Lock
-   in the menu; a locked list is shown by NoteCard, which hides it (docs/07, Locked notes). *@
+   in the menu; a locked list is shown by NoteCard, which hides it, and by this card only while it is unlocked to be
+   read, with Lock now and Remove lock in its menu (docs/07, Locked notes). *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
 @using FalconNotes.Core.Text
@@ -10,6 +11,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject NoteService Notes
+@inject NoteLocks Locks
 @inject AppState State
 @inject Toasts Toasts
 
@@ -29,6 +31,10 @@
         @if (Note.IsPinned && !Note.IsArchived)
         {
             <span aria-label="Pinned" class="shrink-0 text-maple-600 dark:text-maple-400"><Icon Name="IconName.Pin" Class="size-4" /></span>
+        }
+        @if (Note.IsLocked)
+        {
+            <span role="img" aria-label="Unlocked for now" title="Unlocked for now" class="shrink-0 text-maple-600 dark:text-maple-400"><Icon Name="IconName.LockOpen" Class="size-4" /></span>
         }
         <span class="shrink-0 text-sm tabular-nums text-stone-500 dark:text-stone-400" aria-label="@($"{Done} of {List.Items.Count} done")">
             @($"{Done}/{List.Items.Count}")
@@ -57,7 +63,15 @@
                             <MenuItem IconName="IconName.ListChecks" OnSelect="ClearCompleted">Clear completed</MenuItem>
                         }
                     }
-                    <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockAsync()">Lock</MenuItem>
+                    @if (Note.IsLocked)
+                    {
+                        <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockNow()">Lock now</MenuItem>
+                        <MenuItem IconName="IconName.LockOpen" OnSelect="() => _lock.RemoveLockAsync()">Remove lock</MenuItem>
+                    }
+                    else if (State.Preferences.NoteLock)
+                    {
+                        <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockAsync()">Lock</MenuItem>
+                    }
                     @if (State.Preferences.Archive || Note.IsArchived)
                     {
                         <MenuItem IconName="@(Note.IsArchived ? IconName.ArchiveRestore : IconName.Archive)"
@@ -74,7 +88,7 @@
 
     @if (_markdown is not null && !Note.IsArchived)
     {
-        <ItemsEditor Title="@List.Title" Initial="@_markdown" OnSave="SaveMarkdown" OnCancel="@(() => _markdown = null)" />
+        <ItemsEditor Title="@List.Title" Initial="@_markdown" OnSave="SaveMarkdown" OnCancel="CancelMarkdown" />
     }
     else
     {
@@ -265,11 +279,19 @@
     {
         _editing = null;
         _markdown = TodoText.SerializeItems(List.Items);
+        Locks.Hold(Note.Id); // an open locked list stays open until its items are saved or the edit is cancelled
+    }
+
+    private void CancelMarkdown()
+    {
+        _markdown = null;
+        Locks.Release(Note.Id);
     }
 
     private void SaveMarkdown(string text)
     {
         _markdown = null;
+        Locks.Release(Note.Id);
         var items = TodoText.ParseItems(text);
         if (TodoText.SerializeItems(items) != TodoText.SerializeItems(List.Items))
         {
@@ -311,6 +333,11 @@
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        if (_markdown is not null)
+        {
+            Locks.Release(Note.Id);
+        }
+
         if (_module is not null)
         {
             try

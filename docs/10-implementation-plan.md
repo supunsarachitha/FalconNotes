@@ -552,8 +552,52 @@ included, and the theme was still dark. In that build, with R8 and trimming over
 PIN, the card showed the lock mark (read out as "Locked") and the one line, the lock held through a restart, a wrong
 PIN said "That PIN is not right.", and the right one brought the note back.
 
+**Two changes later the same day**, at the owner's request, before anything was released: a switch for the
+feature, **off by default**, and a note unlocked to be read **locking again by itself**. The owner left the rest to
+be decided ("take appropriate decision for this scope"), and these are the decisions, written into
+[03](03-data-storage-and-security.md#locked-notes), [04](04-domain-rules.md#locked-notes) and
+[07](07-screens.md#locked-notes):
+
+- The switch is **Note lock** in a new **Locked notes** section of Settings → Privacy & security, kept with the
+  other preferences (`noteLock`). It decides only whether **Lock** is in the menus, and asks for no PIN: turning it
+  on locks nothing and turning it off shows nothing. Notes already locked stay locked and keep **Unlock…**, so a
+  switch can never strand one.
+- **Unlock…** no longer takes the lock off. It opens the note to be read and changed, in memory only (`NoteLocks`),
+  and the note locks again when another page is opened, when the app goes to the background (at once, with the app
+  lock on or off), when the app lock locks, and when the app is closed. No timer: a screen that turns off sends the
+  app to the background. **Lock now** does it by hand, and **Remove lock**, on an open note, is the one way to take
+  a lock off for good.
+- A note being edited is held open until the edit ends, because attaching a file opens the system's picker and that
+  sends the app to the background: the editor keeps its text and files, and the note locks when it is saved or
+  cancelled.
+- An open note is still locked for search, tags, the daily-note template and the PIN before an export.
+
+Checked on the emulator, again `-read-only`, with a Debug build made in the repository (the workload being there
+now), installed straight over the **1.2.0** data (schema version 1 to 3 in one step): `scripts/update-check/`
+found every card, the tags, the storage line and the appearance identical. Then: no menu offered **Lock** as
+installed; the Locked notes section sat between App lock and Data protection with its switch off, and turning it on
+asked for nothing; **Lock** on the note with three pictures asked for a PIN, hid it, and its media address answered
+404; **Unlock…** showed it with an open lock, its pictures (200), and Lock now and Remove lock in its menu; it was
+locked again, and its media 404, after a visit to the Tags page, after the home button, and after the app was
+stopped and started; with its editor open the home button left the editor, its text and its files, and Cancel
+locked the note; a todo list did the same in its tab, and the second lock asked for no PIN; Remove lock gave the
+list back with **Lock** in its menu; with the switch off again the locked note stayed locked with **Unlock…**, and
+other notes had no **Lock**.
+
+The Core tests (431, one skipped) and the component tests (225) pass. Three component tests were found to depend on
+timing, two of them on CI: the cause, and the proof, are in [11](11-testing.md#projects).
+
 Not checked, still open: a real phone; a fingerprint standing in for the PIN on a locked note (the dialog is the one
-Settings uses, covered by `BiometricUnlockTests`); TalkBack reading the whole card; the tablet layout.
+Settings uses, covered by `BiometricUnlockTests`); TalkBack reading the whole card; the tablet layout; the screen
+turning off by itself with a note open.
+
+The signed 1.4.0 was published again from clean with these two changes (2026-10-12; the earlier output was deleted
+first, being the same version without them). Checked on the new APK: the owner's upload key (the same certificate
+as 1.3.0), versionCode 7, `targetSdkVersion` 36, arm64-v8a and x86_64, not debuggable, and the permissions are
+`USE_BIOMETRIC` and `USE_FINGERPRINT` with no `INTERNET`. **Not checked: this release build was not installed or
+run.** The update over the release-signed 1.3.0 was checked with the earlier 1.4.0 build only, and the two changes
+were checked in a Debug build; the 1.3.0 output kept aside in `bin/Release-1.3.0/` was no longer there to repeat it
+with.
 
 ## Spike results
 

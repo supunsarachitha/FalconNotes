@@ -19,7 +19,8 @@ public sealed class NotEnoughSpaceException() : UserFacingException("Not enough 
 /// <param name="storage">The open database and keys.</param>
 /// <param name="store">The files.</param>
 /// <param name="time">The clock.</param>
-public sealed class AttachmentService(StorageContext storage, AttachmentStore store, TimeProvider time) : IMediaSource
+/// <param name="locks">Which locked notes are open to be read: only their files are opened.</param>
+public sealed class AttachmentService(StorageContext storage, AttachmentStore store, TimeProvider time, NoteLocks locks) : IMediaSource
 {
     /// <summary>The largest file: 2 GiB.</summary>
     public const long MaxFileBytes = 2L * 1024 * 1024 * 1024;
@@ -117,10 +118,13 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
     public async Task<Attachment?> GetAsync(Guid id) => (await FindAsync(id))?.Attachment;
 
     /// <inheritdoc />
-    /// <remarks>A locked note's files are not opened (docs/04, Locked notes): the answer is the same as for no file.</remarks>
+    /// <remarks>
+    /// A locked note's files are not opened unless the note is open to be read (docs/04, Locked notes): the answer is
+    /// the same as for no file.
+    /// </remarks>
     public async Task<MediaFile?> OpenAsync(Guid id)
     {
-        if (await FindAsync(id, ofLockedNotes: false) is not { } row)
+        if (await FindReadableAsync(id) is not { } row)
         {
             return null;
         }
@@ -135,10 +139,10 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
     /// <param name="id">The attachment.</param>
     /// <param name="folder">Where to make the copy's folder.</param>
     /// <param name="cancellationToken">Cancels the copy.</param>
-    /// <returns>The copy's path, or null when there is no such attachment, or its note is locked.</returns>
+    /// <returns>The copy's path, or null when there is no such attachment, or its note is locked and not open.</returns>
     public async Task<string?> CopyDecryptedAsync(Guid id, string folder, CancellationToken cancellationToken = default)
     {
-        if (await FindAsync(id, ofLockedNotes: false) is not { } row)
+        if (await FindReadableAsync(id) is not { } row)
         {
             return null;
         }
@@ -166,13 +170,35 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
         return DecryptingAttachmentStream.Open(store.OpenRead(row.StorageKey), key, storage.InstallationId, row.Attachment.Id);
     }
 
-    private Task<AttachmentRow?> FindAsync(Guid id, bool ofLockedNotes = true) =>
+    /// <summary>The file, unless it belongs to a locked note that is not open to be read.</summary>
+    private Task<AttachmentRow?> FindReadableAsync(Guid id) =>
         storage.Database.ReadAsync(connection =>
         {
-            using var command = Sql.Command(connection, $"""
-                SELECT Id, NoteId, FileName, ContentType, SizeBytes, CreatedAt, Revision, StorageKey FROM Attachments
-                WHERE Id = $id{(ofLockedNotes ? "" : " AND NOT EXISTS (SELECT 1 FROM Notes n WHERE n.Id = Attachments.NoteId AND n.IsLocked = 1)")}
+            using var command = Sql.Command(connection, """
+                SELECT a.Id, a.NoteId, a.FileName, a.ContentType, a.SizeBytes, a.CreatedAt, a.Revision, a.StorageKey,
+                       COALESCE((SELECT n.IsLocked FROM Notes n WHERE n.Id = a.NoteId), 0)
+                FROM Attachments a WHERE a.Id = $id
                 """)
+                .With("$id", Sql.Id(id));
+            using var reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            var row = new AttachmentRow(
+                new Attachment(reader.GetId(0), reader.GetIdOrNull(1), reader.GetString(2), reader.GetString(3),
+                    reader.GetInt64(4), reader.GetTime(5), reader.GetInt64(6)),
+                reader.GetString(7));
+            var hidden = reader.GetInt64(8) != 0 && !(row.Attachment.NoteId is { } noteId && locks.IsOpen(noteId));
+            return hidden ? null : row;
+        });
+
+    private Task<AttachmentRow?> FindAsync(Guid id) =>
+        storage.Database.ReadAsync(connection =>
+        {
+            using var command = Sql.Command(connection,
+                "SELECT Id, NoteId, FileName, ContentType, SizeBytes, CreatedAt, Revision, StorageKey FROM Attachments WHERE Id = $id")
                 .With("$id", Sql.Id(id));
             return NoteRepository.ReadAttachments(command).SingleOrDefault();
         });

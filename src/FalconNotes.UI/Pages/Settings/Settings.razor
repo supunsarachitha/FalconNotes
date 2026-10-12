@@ -91,6 +91,7 @@
                     break;
                 case "security":
                     <AppLockSection />
+                    <NoteLockSection />
                     <DataProtectionSection />
                     break;
                 default:
@@ -115,7 +116,7 @@
         new("features", "Features", "The pages and tools you use.", IconName.ToggleRight),
         new("labels", "Labels", "Coloured labels for your notes.", IconName.Tag),
         new("data", "Backup & data", "Export, restore, the trash and starting over.", IconName.DatabaseBackup),
-        new("security", "Privacy & security", "App lock, and how your notes are protected.", IconName.ShieldCheck),
+        new("security", "Privacy & security", "App lock, locked notes, and how your notes are protected.", IconName.ShieldCheck),
     ];
 
     /// <summary>The section named in the address, if any.</summary>

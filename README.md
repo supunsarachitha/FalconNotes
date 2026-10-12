@@ -61,7 +61,7 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 ## Features
 
 - **Timeline.** Newest notes first, a quick-post box at the top, and pinned notes above the feed.
-- **Full note lifecycle.** Create, edit in place (optionally with a double-tap), pin, label, copy, lock, archive and
+- **Full note lifecycle.** Create, edit in place (optionally with a double-tap), pin, label, copy, archive and
   restore, and delete into a trash that keeps notes for 30 days, with Undo.
 - **Markdown and tags.** GitHub-flavoured Markdown with task lists you tick in place, tables and code, a formatting
   toolbar, and `#tags`, including nested ones such as `#work/meetings`. A Tags page lists them all with counts.
@@ -103,9 +103,10 @@ full [privacy policy](https://supunsarachitha.github.io/FalconNotes/privacy.html
 - **App lock.** An optional PIN, asked for when the app opens and after it has been in the background, with
   fingerprint or face unlock where the device has it. It is a privacy screen, not a second key, and a forgotten PIN
   cannot be reset.
-- **Locked notes.** Lock a single note, quick note or todo list from its menu: it then shows a lock and nothing of
-  what is in it, and stays out of searches and tags, until the same PIN unlocks it. Like the app lock it hides and
-  does not encrypt again: exports hold locked notes too, so exporting asks for the PIN.
+- **Locked notes.** Optional, and off until you turn on **Note lock**. Lock a single note, quick note or todo list
+  from its menu: it then shows a lock and nothing of what is in it, and stays out of searches and tags. The same PIN
+  opens it to be read, and it locks again by itself when you leave the page or the app. Like the app lock it hides
+  and does not encrypt again: exports hold locked notes too, so exporting asks for the PIN.
 - **Android's automatic backup is off** for the app: the encrypted files would be useless without the key.
 - **Exports are not encrypted.** A backup ZIP can be read by anyone who gets it. That goes for automatic backups
   too, which are off unless you turn them on.

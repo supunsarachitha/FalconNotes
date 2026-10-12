@@ -183,6 +183,12 @@ public sealed record Preferences
     /// <summary>Deleting moves notes to the trash, where they stay for 30 days.</summary>
     public bool Trash { get; init; } = true;
 
+    /// <summary>
+    /// Offer Lock in the menu of notes, quick notes and todo lists (docs/04, Locked notes). This app's own; off by
+    /// default. Turning it off only takes Lock away: notes already locked stay locked and can still be unlocked.
+    /// </summary>
+    public bool NoteLock { get; init; }
+
     /// <summary>Light or dark.</summary>
     public Theme Theme { get; init; } = Theme.System;
 

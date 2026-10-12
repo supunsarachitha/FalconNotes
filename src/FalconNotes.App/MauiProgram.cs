@@ -62,6 +62,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<DatabaseBackups>();
         builder.Services.AddSingleton<DatabaseStartup>();
         builder.Services.AddSingleton<AttachmentStore>();
+        builder.Services.AddSingleton<NoteLocks>();
         builder.Services.AddSingleton<AttachmentService>();
         builder.Services.AddSingleton<IMediaSource>(sp => sp.GetRequiredService<AttachmentService>());
         builder.Services.AddSingleton<NoteService>();
