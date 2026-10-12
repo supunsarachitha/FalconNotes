@@ -35,8 +35,11 @@ public class CalendarTests : BunitContext
 
         var cut = Render<Calendar>();
 
-        Assert.Equal("September 2026", cut.Find("h2").TextContent);
+        // The wait comes first. A Find made from this thread while the month's counts are still being read can leave
+        // bUnit holding the elements of the first render, and the wait then never sees the counts: measured here on
+        // 2026-10-12, when cut.Markup had "3 notes (today)" and cut.FindAll still returned the day without them.
         var today = cut.WaitForElement("a[aria-label='Tuesday, September 29, 2026, 3 notes (today)']");
+        Assert.Equal("September 2026", cut.Find("h2").TextContent);
         Assert.Equal("/?day=2026-09-29", today.GetAttribute("href"));
         cut.Find("a[aria-label='Thursday, September 3, 2026, 1 note']");
         cut.Find("a[aria-label='Friday, September 4, 2026']");

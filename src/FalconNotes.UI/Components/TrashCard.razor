@@ -1,5 +1,6 @@
 @* Port of TrashCard in pages/TrashPage.tsx: a note in the trash, what it was, when it was deleted, and Restore or
-   Delete forever. Its files are not loaded (docs/07: the intro drops the storage sentence, kept otherwise). *@
+   Delete forever. Its files are not loaded (docs/07: the intro drops the storage sentence, kept otherwise). A locked
+   note stays hidden here too (docs/07, Locked notes). *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
 @using FalconNotes.Core.Text
@@ -18,9 +19,21 @@
             Deleted @RelativeTime.Format(DeletedAtUtc, Time.GetUtcNow(), Time.LocalTimeZone)
         </time>
         <span>· @DaysLeftText</span>
+        @if (Note.IsLocked)
+        {
+            <span role="img" aria-label="Locked" title="Locked" class="ml-auto shrink-0 text-maple-600 dark:text-maple-400">
+                <Icon Name="IconName.Lock" Class="size-4" />
+            </span>
+        }
     </header>
 
-    @if (Habit is { } habit)
+    @if (Note.IsLocked)
+    {
+        <p class="text-[15px] text-stone-500 dark:text-stone-400">
+            This @(Note.Kind == NoteKind.Todo ? "list" : "note") is locked. Restore it, then choose Unlock in its ⋯ menu to open it.
+        </p>
+    }
+    else if (Habit is { } habit)
     {
         <p class="font-medium">
             @(habit.Name.Length > 0 ? habit.Name : "Untitled habit")
@@ -34,7 +47,7 @@
             <div class="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-stone-900"></div>
         </div>
     }
-    @if (Note.Attachments.Count > 0)
+    @if (Note.Attachments.Count > 0 && !Note.IsLocked)
     {
         <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">With @Note.Attachments.Count @(Note.Attachments.Count == 1 ? "file" : "files")</p>
     }
@@ -50,7 +63,7 @@
 
     <ConfirmDialog Open="_confirming" OpenChanged="open => _confirming = open" Title="Delete forever?" ConfirmLabel="Delete forever" Busy="_deleting" OnConfirm="DeleteForeverAsync">
         <Description>
-            @(Note.Attachments.Count > 0
+            @(Note.Attachments.Count > 0 && !Note.IsLocked
                 ? $"It and its {Note.Attachments.Count} {(Note.Attachments.Count == 1 ? "file" : "files")} will be deleted permanently. This cannot be undone."
                 : "It will be deleted permanently. This cannot be undone.")
         </Description>

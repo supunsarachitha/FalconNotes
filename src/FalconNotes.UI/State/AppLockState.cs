@@ -1,3 +1,4 @@
+using FalconNotes.Core.Notes;
 using FalconNotes.Core.Platform;
 using FalconNotes.Core.Settings;
 
@@ -12,9 +13,13 @@ namespace FalconNotes.UI.State;
 /// <param name="service">Reads, checks and changes the PIN and its settings.</param>
 /// <param name="biometrics">The platform's biometric prompt.</param>
 /// <param name="time">The clock, for the background timer.</param>
-public sealed class AppLockState(AppLockService service, IAppLock biometrics, TimeProvider time)
+/// <param name="noteLocks">The locked notes open to be read, which lock again when the app is left or locks.</param>
+public sealed class AppLockState(AppLockService service, IAppLock biometrics, TimeProvider time, NoteLocks noteLocks)
 {
     private DateTimeOffset? _backgroundedAt;
+
+    // Whether the PIN was typed or chosen since the app started: proof that it is still known (see PinReadyAsync).
+    private bool _pinEntered;
 
     /// <summary>Raised when the lock state or its settings change; may run on any thread.</summary>
     public event Action? Changed;
@@ -54,6 +59,39 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
     public async Task EnableAsync(string pin)
     {
         await service.EnableAsync(pin);
+        _pinEntered = true;
+        await RefreshAsync();
+    }
+
+    /// <summary>Whether a PIN is in use: the app lock is on, or a note is locked (docs/04, Locked notes).</summary>
+    /// <returns>Whether a new PIN may only be set after the current one was checked.</returns>
+    public Task<bool> PinInUseAsync() => service.PinInUseAsync();
+
+    /// <summary>
+    /// Whether a note can be locked without asking for anything: a PIN is in use, or the PIN there is was typed or
+    /// chosen since the app started. The second lets a note just unlocked be locked again at once, and is as far as a
+    /// PIN not in use is trusted: one left by an app lock turned off long ago may be forgotten, and a note locked
+    /// with it could not be opened again, so that one is chosen anew.
+    /// </summary>
+    /// <returns>Whether locking needs no PIN chosen first.</returns>
+    public async Task<bool> PinReadyAsync() =>
+        await service.PinInUseAsync() || (_pinEntered && (await service.GetAsync()).PinHash is not null);
+
+    /// <summary>Saves a first PIN for locked notes; the app lock stays as it is.</summary>
+    /// <param name="pin">The PIN.</param>
+    /// <returns>A task that completes when it is saved.</returns>
+    public async Task SetPinAsync(string pin)
+    {
+        await service.SetPinAsync(pin);
+        _pinEntered = true;
+        await RefreshAsync();
+    }
+
+    /// <summary>Turns the lock on with the PIN locked notes already use. The caller has already checked it.</summary>
+    /// <returns>A task that completes when it is saved.</returns>
+    public async Task TurnOnAsync()
+    {
+        await service.TurnOnAsync();
         await RefreshAsync();
     }
 
@@ -71,6 +109,7 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
     public async Task ChangePinAsync(string pin)
     {
         await service.ChangePinAsync(pin);
+        _pinEntered = true;
         await RefreshAsync();
     }
 
@@ -110,6 +149,7 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
         }
 
         IsLocked = true;
+        noteLocks.CloseAll();
         Changed?.Invoke();
     }
 
@@ -123,6 +163,7 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
         if (ok)
         {
             IsLocked = false;
+            _pinEntered = true;
         }
 
         Changed?.Invoke();
@@ -148,8 +189,15 @@ public sealed class AppLockState(AppLockService service, IAppLock biometrics, Ti
     /// <returns>The remaining time, or null when it is not locked out.</returns>
     public Task<TimeSpan?> LockoutRemainingAsync() => service.LockoutRemainingAsync();
 
-    /// <summary>Called when the app goes to the background.</summary>
-    public void OnBackgrounded() => _backgroundedAt = time.GetUtcNow();
+    /// <summary>
+    /// Called when the app goes to the background. Locked notes that were opened to be read lock again at once,
+    /// whatever "Lock after" says: that delay is the app lock's, and a note may be locked with the app lock off.
+    /// </summary>
+    public void OnBackgrounded()
+    {
+        _backgroundedAt = time.GetUtcNow();
+        noteLocks.CloseAll();
+    }
 
     /// <summary>
     /// Called when the app returns to the foreground: locks again if the lock is on and the app stayed away at least

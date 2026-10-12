@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using FalconNotes.Core.Domain;
+using FalconNotes.Core.Notes;
 using FalconNotes.Core.Storage;
 
 namespace FalconNotes.Core.Settings;
@@ -8,6 +9,7 @@ namespace FalconNotes.Core.Settings;
 /// Sets up, checks and changes the app lock's PIN (docs/03, App lock): PBKDF2-HMAC-SHA256 with 210,000 iterations and
 /// a 16-byte random salt, compared in constant time. Five wrong PINs in a row lock the screen for 30 s; each further
 /// five doubles the wait, up to 15 minutes. The counter and the lockout survive a restart, since they are stored.
+/// The same PIN takes the lock off a locked note (docs/04, Locked notes), so it can be in use with the app lock off.
 /// </summary>
 /// <param name="storage">The open database.</param>
 /// <param name="time">The clock, for the lockout.</param>
@@ -29,19 +31,70 @@ public sealed class AppLockService(StorageContext storage, TimeProvider time)
     public Task<AppLockSettings> GetAsync() =>
         storage.Database.ReadAsync(connection => SettingsStore.Get<AppLockSettings>(connection, Key) ?? AppLockSettings.Default);
 
+    /// <summary>
+    /// Whether a PIN is in use: the app lock is on, or a note is locked. While it is, a new PIN may only replace it
+    /// after the current one was checked (<see cref="ChangePinAsync"/>). A PIN left behind by a lock since turned off,
+    /// with no locked note, protects nothing and is not in use.
+    /// </summary>
+    /// <returns>Whether the PIN is in use.</returns>
+    public Task<bool> PinInUseAsync() =>
+        storage.Database.ReadAsync(connection =>
+            SettingsStore.Get<AppLockSettings>(connection, Key) is { PinHash: not null } settings
+            && (settings.Enabled || NoteRepository.AnyLocked(connection)));
+
     /// <summary>Turns the lock on with a new PIN (docs/07, Set a PIN).</summary>
     /// <param name="pin">The PIN, checked for 4–8 digits first.</param>
     /// <returns>A task that completes when it is saved.</returns>
     /// <exception cref="UserFacingException">The PIN is not 4–8 digits.</exception>
+    /// <exception cref="InvalidOperationException">Locked notes use a PIN already: check it and call
+    /// <see cref="TurnOnAsync"/>.</exception>
     public async Task EnableAsync(string pin)
     {
-        ValidatePin(pin);
-        var current = await GetAsync();
-        var (hash, salt) = Hash(pin);
-        await SaveAsync(current with { Enabled = true, PinHash = hash, PinSalt = salt, PinIterations = Iterations, FailedAttempts = 0, LockedUntilUtc = null });
+        await SetPinAsync(pin);
+        await TurnOnAsync();
     }
 
-    /// <summary>Turns the lock off. The caller has already checked the PIN or biometrics.</summary>
+    /// <summary>
+    /// Saves a first PIN and leaves the app lock as it is: locking a note needs a PIN, not the Lock screen (docs/04,
+    /// Locked notes).
+    /// </summary>
+    /// <param name="pin">The PIN, checked for 4–8 digits first.</param>
+    /// <returns>A task that completes when it is saved.</returns>
+    /// <exception cref="UserFacingException">The PIN is not 4–8 digits.</exception>
+    /// <exception cref="InvalidOperationException">A PIN is in use: it is changed, after a check, not set.</exception>
+    public async Task SetPinAsync(string pin)
+    {
+        ValidatePin(pin);
+        if (await PinInUseAsync())
+        {
+            throw new InvalidOperationException("A PIN is in use already. Check it, then change it.");
+        }
+
+        var current = await GetAsync();
+        var (hash, salt) = Hash(pin);
+        await SaveAsync(current with { PinHash = hash, PinSalt = salt, PinIterations = Iterations, FailedAttempts = 0, LockedUntilUtc = null });
+    }
+
+    /// <summary>
+    /// Turns the lock on with the PIN there is: the one locked notes use. The caller has already checked it.
+    /// </summary>
+    /// <returns>A task that completes when it is saved.</returns>
+    /// <exception cref="InvalidOperationException">There is no PIN.</exception>
+    public async Task TurnOnAsync()
+    {
+        var current = await GetAsync();
+        if (current.PinHash is null)
+        {
+            throw new InvalidOperationException("There is no PIN to turn the lock on with.");
+        }
+
+        await SaveAsync(current with { Enabled = true });
+    }
+
+    /// <summary>
+    /// Turns the lock off. The caller has already checked the PIN or biometrics. The PIN stays, and stays in use while
+    /// a note is locked.
+    /// </summary>
     /// <returns>A task that completes when it is saved.</returns>
     public async Task DisableAsync()
     {

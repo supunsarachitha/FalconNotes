@@ -99,7 +99,7 @@ public sealed class UiTestApp : IDisposable
         await state.LoadAsync();
         var appLockService = new AppLockService(core.Storage, core.Clock);
         var fakeAppLock = new FakeAppLock();
-        var appLock = new AppLockState(appLockService, fakeAppLock, core.Clock);
+        var appLock = new AppLockState(appLockService, fakeAppLock, core.Clock, core.Locks);
         await appLock.LoadAsync();
         var picker = new FakeFilePicker();
         var opener = new FakeFileOpener();
@@ -108,6 +108,7 @@ public sealed class UiTestApp : IDisposable
         var share = new FakeShare();
 
         services.AddSingleton(core.Notes);
+        services.AddSingleton(core.Locks);
         services.AddSingleton(new DailyNotes(core.Notes));
         services.AddSingleton(core.Labels);
         services.AddSingleton(core.Attachments);

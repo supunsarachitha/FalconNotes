@@ -27,11 +27,12 @@ Sections marked **as in web** are copied from the reference without change (they
 | 14 | `trash` | The trash | as in web |
 | 15 | `privacy` | Keeping your notes private | new (replaces `encryption`) |
 | 16 | `lock` | The app lock | new |
-| 17 | `account` | Your name | changed |
-| 18 | `backup` | Backing up and restoring | changed |
-| 19 | `devices` | Moving to another device | new |
-| 20 | `storage` | How much you store | changed |
-| 21 | `shortcuts` | Keyboard shortcuts | changed |
+| 17 | `locked` | Locked notes | new |
+| 18 | `account` | Your name | changed |
+| 19 | `backup` | Backing up and restoring | changed |
+| 20 | `devices` | Moving to another device | new |
+| 21 | `storage` | How much you store | changed |
+| 22 | `shortcuts` | Keyboard shortcuts | changed |
 
 Removed: `links` (link previews), `encryption`, `password`, `https`, `admins`.
 
@@ -62,6 +63,10 @@ own.
 
 Added with automatic backups (2026-10-08): the second paragraph of `backup`. It is this app's own; the web app has no
 such feature.
+
+Added with locked notes (1.4.0, 2026-10-12): the `locked` section and the last sentence of `privacy`. They are this
+app's own; the web app has no such feature. `writing` does not name the lock among a note's menu actions, because
+**Note lock** is off until it is turned on, and that section stays as it was.
 
 Brought up to Maple Notes 1.15.0 (1.2.0, 2026-10-08): `daily` gains the paragraph on the template, word for word;
 `pictures` describes the three photo sizes; `features` lists "Help in the side menu" and says where the guide is
@@ -175,7 +180,8 @@ Two things are up to you:
 - **Exports are not encrypted.** A ZIP you export can be opened by anyone who gets it, so keep it somewhere safe.
 - **Uninstalling Falcon Notes deletes your notes** from this device, together with their key. Export them first.
 
-To keep people who pick up your device out of the app, turn on the [app lock](/settings/security).
+To keep people who pick up your device out of the app, turn on the [app lock](/settings/security). To hide
+single notes instead, turn on **Note lock** in the same place and lock them from their **⋯** menu.
 ````
 
 ## 16. The app lock (`lock`)
@@ -192,14 +198,41 @@ Write your PIN down somewhere safe. It cannot be reset: if you forget it, the on
 data on this device and restore your notes from a backup.
 ````
 
-## 17. Your name (`account`)
+## 17. Locked notes (`locked`)
+
+````markdown
+Turn on **Note lock** in [Settings → Privacy & security](/settings/security) to keep single notes from anyone who
+looks at your screen or borrows your device. Then choose **Lock** in a note's **⋯** menu. The first time, you choose a
+PIN. A locked note shows a lock in its corner and when it was written, and nothing of what is in it: its text, files
+and labels are hidden, and it is left out of searches and tags. Todo lists and quick notes lock the same way; habits
+cannot be locked.
+
+To read a locked note, choose **Unlock…** in its menu and enter the PIN. The note opens, and you can read and change
+it as usual. It locks again by itself when you go to another page, leave Falcon Notes or close it; **Lock now** in
+its menu does so sooner. To take the lock off for good, unlock the note and choose **Remove lock**. A locked note can
+still be pinned, archived and deleted without the PIN.
+
+The PIN is the one the [app lock](/settings/security) uses, so there is only one to remember, and you change it
+there. Where the app lock lets you unlock with your fingerprint or face, that opens locked notes too. Write the PIN
+down somewhere safe. It cannot be reset: if you forget it, a locked note can only be deleted, and brought back from a
+backup that holds it.
+
+Locking hides a note inside Falcon Notes, and nowhere else. Exports and automatic backups hold locked notes like
+any others, and they are not encrypted; that is why exporting asks for your PIN while a note is locked. A restored
+note comes back unlocked.
+
+Turning **Note lock** off again only takes **Lock** out of the menus. Notes you have locked stay locked, and you can
+still unlock them.
+````
+
+## 18. Your name (`account`)
 
 ````markdown
 [Settings → Profile](/settings/account) shows the name Falcon Notes uses for you, at the bottom of the menu and in your
 exports. Choose **Change** to pick another.
 ````
 
-## 18. Backing up and restoring (`backup`)
+## 19. Backing up and restoring (`backup`)
 
 ````markdown
 Your notes live only on this device, so make a backup from time to time. Under [Settings → Backup & data](/settings/data),
@@ -222,7 +255,7 @@ labels and the trash included. Your name, settings and app lock stay. This canno
 might want your notes back.
 ````
 
-## 19. Moving to another device (`devices`)
+## 20. Moving to another device (`devices`)
 
 ````markdown
 Falcon Notes does not sync. To move your notes to a new phone or computer, **Export** them on the old one, copy the ZIP
@@ -230,7 +263,7 @@ across, and **Restore** it on the new one, in [Settings → Backup & data](/sett
 that carry them. Your settings do not travel with it, so set them up again on the new device.
 ````
 
-## 20. How much you store (`storage`)
+## 21. How much you store (`storage`)
 
 ````markdown
 [Settings → Profile](/settings/account) shows how much space your notes and files take, with how many of each.
@@ -238,7 +271,7 @@ Archived notes, the trash and files count too; deleting them for good frees the 
 the free space on your device.
 ````
 
-## 21. Keyboard shortcuts (`shortcuts`)
+## 22. Keyboard shortcuts (`shortcuts`)
 
 ````markdown
 On a computer, or a tablet with a keyboard:

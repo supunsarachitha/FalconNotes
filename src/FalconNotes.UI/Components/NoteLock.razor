@@ -1,0 +1,127 @@
+@* New (docs/07, Locked notes; docs/04, Locked notes): locking and unlocking a note from its ⋯ menu. The web app has
+   no such thing. A lock needs a PIN to open it again, so the first one asks for a PIN, and unlocking asks for it.
+   Unlocking opens the note to be read and leaves its lock on: it locks again by itself (NoteLocks). Lock now does
+   that at once, and Remove lock takes the lock off for good.
+   The cards call these from their menu items and render this for the dialogs. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Notes
+@using FalconNotes.UI.State
+@inject NoteService Notes
+@inject NoteLocks Locks
+@inject AppLockState AppLock
+@inject Toasts Toasts
+
+<SetPinDialog Open="_settingPin" OpenChanged="open => _settingPin = open" OnSet="OnPinSetAsync" Busy="_busy"
+              Description="Choose a PIN of 4 to 8 digits for your locked notes. It cannot be reset: if you forget it, a locked note can only be deleted. The app lock, if you turn it on, uses the same PIN." />
+<VerifyPinDialog Open="_unlocking" OpenChanged="open => _unlocking = open" OnVerified="OnVerified" Title="@($"Unlock this {Noun}")" />
+
+@code {
+    private bool _settingPin;
+    private bool _unlocking;
+    private bool _busy;
+
+    /// <summary>The note or list.</summary>
+    [Parameter, EditorRequired] public Note Note { get; set; } = null!;
+
+    private string Noun => Note.Kind == NoteKind.Todo ? "list" : "note";
+
+    /// <summary>Locks the note, after asking for a PIN when none is in use or known to be remembered.</summary>
+    /// <returns>A task that completes when the note is locked or the PIN dialog is open.</returns>
+    public async Task LockAsync()
+    {
+        bool pinReady;
+        try
+        {
+            pinReady = await AppLock.PinReadyAsync();
+        }
+        catch (Exception)
+        {
+            Toasts.Error("That didn't work. Please try again.");
+            return;
+        }
+
+        if (pinReady)
+        {
+            await LockNoteAsync();
+        }
+        else
+        {
+            _settingPin = true;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Asks for the PIN, or a fingerprint or face where the app lock allows it, then opens the note to be read. Its
+    /// lock stays: it locks again when the page or the app is left.
+    /// </summary>
+    public void Unlock()
+    {
+        _unlocking = true;
+        StateHasChanged();
+    }
+
+    /// <summary>Locks an open note again at once.</summary>
+    public void LockNow()
+    {
+        Locks.Close(Note.Id);
+        Toasts.Info("Locked.");
+    }
+
+    /// <summary>Takes the lock off an open note for good. It was opened with the PIN, so none is asked for again.</summary>
+    /// <returns>A task that completes when the lock is off.</returns>
+    public async Task RemoveLockAsync()
+    {
+        try
+        {
+            await Notes.PatchAsync(Note.Id, new NotePatch(IsLocked: false));
+            Locks.Close(Note.Id);
+            Toasts.Info("Lock removed.");
+        }
+        catch (Exception)
+        {
+            Toasts.Error("That didn't work. Please try again.");
+        }
+    }
+
+    private async Task OnPinSetAsync(string pin)
+    {
+        _busy = true;
+        try
+        {
+            await AppLock.SetPinAsync(pin);
+            _settingPin = false;
+        }
+        catch (Exception)
+        {
+            Toasts.Error("That didn't work. Please try again.");
+            return;
+        }
+        finally
+        {
+            _busy = false;
+        }
+
+        await LockNoteAsync();
+    }
+
+    private void OnVerified()
+    {
+        _unlocking = false;
+        Locks.Open(Note.Id);
+        Toasts.Info("Unlocked. It locks again when you leave this page or the app.");
+    }
+
+    private async Task LockNoteAsync()
+    {
+        try
+        {
+            await Notes.PatchAsync(Note.Id, new NotePatch(IsLocked: true));
+            Toasts.Info("Locked. Unlocking it takes your PIN.");
+        }
+        catch (Exception)
+        {
+            Toasts.Error("That didn't work. Please try again.");
+        }
+    }
+}

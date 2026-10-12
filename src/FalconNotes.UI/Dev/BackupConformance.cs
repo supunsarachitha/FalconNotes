@@ -251,7 +251,7 @@ public static partial class BackupConformance
             app.Storage.Open(database, keys, Guid.NewGuid());
             var feed = new ChangeFeed();
             app.Store = new AttachmentStore(app);
-            var attachments = new AttachmentService(app.Storage, app.Store, app.Clock);
+            var attachments = new AttachmentService(app.Storage, app.Store, app.Clock, new NoteLocks());
             app.Profile = new ProfileService(app.Storage, feed, app.Clock);
             app.Exporter = new NoteExporter(app.Storage, attachments, app.Profile, app.Clock, NullLogger<NoteExporter>.Instance);
             app.Reader = new RestoreReader(app, app.Clock);

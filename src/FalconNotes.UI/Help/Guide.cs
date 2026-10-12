@@ -181,7 +181,8 @@ public static class Guide
             - **Exports are not encrypted.** A ZIP you export can be opened by anyone who gets it, so keep it somewhere safe.
             - **Uninstalling Falcon Notes deletes your notes** from this device, together with their key. Export them first.
 
-            To keep people who pick up your device out of the app, turn on the [app lock](/settings/security).
+            To keep people who pick up your device out of the app, turn on the [app lock](/settings/security). To hide
+            single notes instead, turn on **Note lock** in the same place and lock them from their **⋯** menu.
             """),
 
         new("lock", "The app lock", """
@@ -194,6 +195,31 @@ public static class Guide
 
             Write your PIN down somewhere safe. It cannot be reset: if you forget it, the only way back in is to erase the app's
             data on this device and restore your notes from a backup.
+            """),
+
+        new("locked", "Locked notes", """
+            Turn on **Note lock** in [Settings → Privacy & security](/settings/security) to keep single notes from anyone who
+            looks at your screen or borrows your device. Then choose **Lock** in a note's **⋯** menu. The first time, you choose a
+            PIN. A locked note shows a lock in its corner and when it was written, and nothing of what is in it: its text, files
+            and labels are hidden, and it is left out of searches and tags. Todo lists and quick notes lock the same way; habits
+            cannot be locked.
+
+            To read a locked note, choose **Unlock…** in its menu and enter the PIN. The note opens, and you can read and change
+            it as usual. It locks again by itself when you go to another page, leave Falcon Notes or close it; **Lock now** in
+            its menu does so sooner. To take the lock off for good, unlock the note and choose **Remove lock**. A locked note can
+            still be pinned, archived and deleted without the PIN.
+
+            The PIN is the one the [app lock](/settings/security) uses, so there is only one to remember, and you change it
+            there. Where the app lock lets you unlock with your fingerprint or face, that opens locked notes too. Write the PIN
+            down somewhere safe. It cannot be reset: if you forget it, a locked note can only be deleted, and brought back from a
+            backup that holds it.
+
+            Locking hides a note inside Falcon Notes, and nowhere else. Exports and automatic backups hold locked notes like
+            any others, and they are not encrypted; that is why exporting asks for your PIN while a note is locked. A restored
+            note comes back unlocked.
+
+            Turning **Note lock** off again only takes **Lock** out of the menus. Notes you have locked stay locked, and you can
+            still unlock them.
             """),
 
         new("account", "Your name", """

@@ -22,7 +22,7 @@ public sealed class TestApp : IDisposable
         Directories = new FakeDirectories(_directory.Path);
         Store = new AttachmentStore(Directories);
         Notes = new NoteService(Storage, Store, Feed, Clock);
-        Attachments = new AttachmentService(Storage, Store, Clock);
+        Attachments = new AttachmentService(Storage, Store, Clock, Locks);
         Labels = new LabelService(Storage, Feed, Clock);
         Preferences = new PreferencesService(Storage, Feed);
         Profile = new ProfileService(Storage, Feed, Clock);
@@ -40,6 +40,8 @@ public sealed class TestApp : IDisposable
     public ChangeFeed Feed { get; } = new();
 
     public AttachmentStore Store { get; }
+
+    public NoteLocks Locks { get; } = new();
 
     public NoteService Notes { get; }
 

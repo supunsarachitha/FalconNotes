@@ -65,6 +65,19 @@ public class SettingsTests
         Assert.Equal(Background.None, (await app.Preferences.SaveAsync(new Preferences { Background = (Background)99 })).Background);
     }
 
+    // New: the web app has no locked notes (docs/04, Locked notes).
+    [Fact]
+    public async Task Note_lock_is_off_until_it_is_turned_on()
+    {
+        using var app = await TestApp.StartAsync();
+        Assert.False((await app.Preferences.GetAsync()).NoteLock);
+        Assert.False(new Preferences().NoteLock); // and for preferences saved before there was such a switch
+
+        await app.Preferences.SaveAsync(new Preferences { NoteLock = true });
+
+        Assert.True((await app.Preferences.GetAsync()).NoteLock);
+    }
+
     // Ported from the server's PreferencesTests.cs (Maple Notes 1.9.0 to 1.15.0). There a value that is not offered
     // is refused; here it falls back to its default, as every preference does.
     [Fact]
