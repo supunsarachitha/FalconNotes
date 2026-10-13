@@ -22,9 +22,10 @@ public sealed partial class PdfExportService(IPdfWriter writer, IFileSaver saver
     /// <summary>Writes the note's PDF and lets the user save it.</summary>
     /// <param name="note">The note.</param>
     /// <param name="content">Its text as the card shows it now.</param>
+    /// <param name="lineBreaks">Whether a single line break is a new line, as the card shows it with Keep line breaks on.</param>
     /// <param name="cancellationToken">Cancels the export.</param>
     /// <returns>True when the file was saved; false when the user cancelled the save dialog.</returns>
-    public async Task<bool> ExportAsync(Note note, string content, CancellationToken cancellationToken = default)
+    public async Task<bool> ExportAsync(Note note, string content, bool lineBreaks = false, CancellationToken cancellationToken = default)
     {
         var folder = Path.Combine(directories.CacheDirectory, "export");
         Directory.CreateDirectory(folder);
@@ -32,7 +33,7 @@ public sealed partial class PdfExportService(IPdfWriter writer, IFileSaver saver
         try
         {
             var use24Hour = !CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.Contains("tt", StringComparison.Ordinal);
-            var pdf = await Task.Run(() => PdfNoteBuilder.Build(note, content, time.LocalTimeZone, use24Hour), cancellationToken);
+            var pdf = await Task.Run(() => PdfNoteBuilder.Build(note, content, time.LocalTimeZone, use24Hour, lineBreaks), cancellationToken);
             await using (var file = File.Create(path))
             {
                 await writer.WriteAsync(pdf, file, cancellationToken);

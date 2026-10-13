@@ -16,8 +16,22 @@ public sealed class AndroidWindowInsets : Core.Platform.IWindowInsets
     {
         if (Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.Window?.DecorView is { } decorView)
         {
-            ViewCompat.SetOnApplyWindowInsetsListener(decorView, new Listener(this));
+            Attach(decorView);
         }
+    }
+
+    /// <summary>
+    /// Follows a window. <c>MainActivity</c> calls this each time it is created: this service outlives the activity,
+    /// and an activity made again (after Back left the app, or the system reclaimed it) has a new decor view, which
+    /// the listener on the old one hears nothing of.
+    /// </summary>
+    /// <param name="decorView">The activity's decor view.</param>
+    public void Attach(global::Android.Views.View decorView)
+    {
+        ViewCompat.SetOnApplyWindowInsetsListener(decorView, new Listener(this));
+
+        // The window may have handed its insets out before anyone listened.
+        ViewCompat.RequestApplyInsets(decorView);
     }
 
     /// <inheritdoc />

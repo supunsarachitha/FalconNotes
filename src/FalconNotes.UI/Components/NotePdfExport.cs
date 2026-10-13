@@ -11,7 +11,7 @@ namespace FalconNotes.UI.Components;
 /// write a PDF: one that cannot registers no <see cref="PdfExportService"/>.
 /// </summary>
 /// <param name="services">Finds the export, where the platform has one.</param>
-/// <param name="state">Reads the preference.</param>
+/// <param name="state">Reads the preferences: whether the item is offered, and whether line breaks are kept.</param>
 /// <param name="toasts">Shows the outcome.</param>
 public sealed class NotePdfExport(IServiceProvider services, AppState state, Toasts toasts)
 {
@@ -36,7 +36,7 @@ public sealed class NotePdfExport(IServiceProvider services, AppState state, Toa
         _running = true;
         try
         {
-            if (await _pdf.ExportAsync(note, content))
+            if (await _pdf.ExportAsync(note, content, state.Preferences.LineBreaks))
             {
                 toasts.Info("Saved as a PDF.");
             }

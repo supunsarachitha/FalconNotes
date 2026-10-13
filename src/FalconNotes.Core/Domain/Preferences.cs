@@ -177,6 +177,12 @@ public sealed record Preferences
     /// <summary>Suggest existing tags while a <c>#tag</c> is typed.</summary>
     public bool TagSuggestions { get; init; }
 
+    /// <summary>
+    /// Show a single line break in a note as a new line, on the screen and in its PDF (docs/04, Markdown rendering).
+    /// This app's own; off by default, which joins the lines into one paragraph as Markdown and the web app do.
+    /// </summary>
+    public bool LineBreaks { get; init; }
+
     /// <summary>Coloured labels on notes.</summary>
     public bool Labels { get; init; }
 

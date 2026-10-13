@@ -9,7 +9,7 @@ public class PdfNoteBuilderTests
     private static readonly DateTime Written = new(2026, 9, 28, 14, 30, 0, DateTimeKind.Utc);
 
     /// <summary>Each block on a line: quote marks, two spaces per list level, the marker or box, the style, the text.</summary>
-    private static string[] Blocks(string markdown) => PdfNoteBuilder.Body(markdown).Select(Show).ToArray();
+    private static string[] Blocks(string markdown, bool lineBreaks = false) => PdfNoteBuilder.Body(markdown, lineBreaks).Select(Show).ToArray();
 
     private static string Show(PdfBlock block) => block switch
     {
@@ -54,6 +54,25 @@ public class PdfNoteBuilderTests
         Assert.Equal(["Body: one two"], Blocks("one\ntwo"));
         Assert.Equal(["Body: one\ntwo"], Blocks("one  \ntwo"));
         Assert.Equal(["Body: one", "Body: two"], Blocks("one\n\ntwo"));
+    }
+
+    // Keep line breaks (docs/04, Markdown rendering): the PDF breaks where the screen does.
+    [Fact]
+    public void Kept_line_breaks_break_the_line_in_a_paragraph_and_in_a_list_item()
+    {
+        Assert.Equal(["Body: one\ntwo"], Blocks("one\ntwo", lineBreaks: true));
+        Assert.Equal(["Body: one", "Body: two"], Blocks("one\n\ntwo", lineBreaks: true));
+        Assert.Equal(["  [ ] Body: bread\nand <b:butter>", "  • Body: tea"], Blocks("- [ ] bread\n  and **butter**\n- tea", lineBreaks: true));
+        Assert.Equal(["Code: first\nsecond"], Blocks("```\nfirst\nsecond\n```", lineBreaks: true));
+    }
+
+    [Fact]
+    public void A_note_is_laid_out_with_its_line_breaks_kept_when_asked()
+    {
+        var note = MakeNote("one\ntwo");
+
+        Assert.Contains("Body: one two", PdfNoteBuilder.Build(note, note.Content, TimeZoneInfo.Utc, use24Hour: true).Blocks.Select(Show));
+        Assert.Contains("Body: one\ntwo", PdfNoteBuilder.Build(note, note.Content, TimeZoneInfo.Utc, use24Hour: true, lineBreaks: true).Blocks.Select(Show));
     }
 
     [Fact]

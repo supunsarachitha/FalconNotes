@@ -24,6 +24,9 @@ public static class Guide
             - **Formatting.** Use the toolbar under the text box for bold, italic, headings, lists, checklists, quotes, code and
               links, or type [Markdown](https://commonmark.org/help/) yourself. Ctrl/⌘+B, I and K are shortcuts for bold, italic
               and links.
+            - **New lines.** Lines typed one under another are joined into one paragraph, as Markdown does; leave a blank
+              line between them to start a new paragraph. To have every line shown on its own line, as you typed it, turn on
+              **Keep line breaks** in [Settings → Writing](/settings/writing).
             - **Pictures and files.** Choose the paperclip and pick them. They are added while you write.
             - **Checklists.** Tick a checklist's boxes right in the note; the change is saved straight away.
             - **Changing a note.** Open a note's **⋯** menu to edit it, pin it to the top, label it, copy its text, archive it or

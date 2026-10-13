@@ -22,10 +22,11 @@ public static class PdfNoteBuilder
     /// <param name="content">Its text as the card shows it now, which may be a change still being saved.</param>
     /// <param name="zone">The device's time zone, for the dates.</param>
     /// <param name="use24Hour">Whether the device uses a 24-hour clock.</param>
+    /// <param name="lineBreaks">Whether a single line break is a new line, as the screen shows it with Keep line breaks on.</param>
     /// <returns>What to draw.</returns>
-    public static PdfNote Build(Note note, string content, TimeZoneInfo zone, bool use24Hour)
+    public static PdfNote Build(Note note, string content, TimeZoneInfo zone, bool use24Hour, bool lineBreaks = false)
     {
-        var blocks = Body(content);
+        var blocks = Body(content, lineBreaks);
 
         // Under the title when the note starts with one, as a letter is dated; otherwise at the very top.
         var written = RelativeTime.Absolute(note.CreatedAtUtc, zone, use24Hour);
@@ -51,11 +52,12 @@ public static class PdfNoteBuilder
 
     /// <summary>Reads Markdown into blocks, as <see cref="MarkdownRenderer"/> reads it into HTML.</summary>
     /// <param name="content">The Markdown.</param>
+    /// <param name="lineBreaks">Whether a single line break is a new line, as the screen shows it with Keep line breaks on.</param>
     /// <returns>The blocks.</returns>
-    public static List<PdfBlock> Body(string content)
+    public static List<PdfBlock> Body(string content, bool lineBreaks = false)
     {
         var blocks = new List<PdfBlock>();
-        AddBlocks(blocks, Markdig.Markdown.Parse(content, MarkdownRenderer.Pipeline), 0, 0, null);
+        AddBlocks(blocks, MarkdownRenderer.Parse(content, lineBreaks), 0, 0, null);
         return blocks;
     }
 
@@ -148,7 +150,7 @@ public static class PdfNoteBuilder
                     spans.Add(code.Content, style with { Code = true });
                     break;
                 case LineBreakInline lineBreak:
-                    spans.Add(lineBreak.IsHard ? "\n" : " ", style); // a single line break joins the lines, as on the screen
+                    spans.Add(lineBreak.IsHard ? "\n" : " ", style); // a single line break joins the lines unless they are kept, as on the screen
                     break;
                 case AutolinkInline autolink:
                     spans.Add(autolink.Url, style with { Link = true });

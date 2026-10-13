@@ -21,8 +21,7 @@ public sealed partial class MarkdownRenderer
 {
     private const int CacheLimit = 1000;
 
-    /// <summary>How note Markdown is read, here and for a note's PDF (<c>PdfNoteBuilder</c>), so the two agree.</summary>
-    internal static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UsePipeTables()
         .UseTaskLists()
         .UseEmphasisExtras(Markdig.Extensions.EmphasisExtras.EmphasisExtraOptions.Strikethrough)
@@ -32,26 +31,53 @@ public sealed partial class MarkdownRenderer
         .DisableHtml()
         .Build();
 
-    private readonly ConcurrentDictionary<(Guid Id, long Revision, int Length, bool Interactive), string> _cache = new();
+    private readonly ConcurrentDictionary<(Guid Id, long Revision, int Length, bool Interactive, bool LineBreaks), string> _cache = new();
 
     /// <summary>
     /// Renders a note, cached by its ID and revision so long lists do not render the same Markdown again. The text's
     /// length is part of the key because one revision is shown two ways: whole, or without its title line when note
-    /// titles are on, and the setting can change while the note is cached.
+    /// titles are on, and the setting can change while the note is cached. So can Keep line breaks, which is in the
+    /// key for the same reason.
     /// </summary>
     /// <param name="noteId">The note.</param>
     /// <param name="revision">Its revision.</param>
     /// <param name="content">Its text.</param>
     /// <param name="interactive">Whether task checkboxes can be ticked (not in archived notes).</param>
+    /// <param name="lineBreaks">Whether a single line break is shown as a new line (the Keep line breaks preference).</param>
     /// <returns>The HTML.</returns>
-    public string Render(Guid noteId, long revision, string content, bool interactive)
+    public string Render(Guid noteId, long revision, string content, bool interactive, bool lineBreaks = false)
     {
         if (_cache.Count > CacheLimit)
         {
             _cache.Clear();
         }
 
-        return _cache.GetOrAdd((noteId, revision, content.Length, interactive), _ => Render(content, interactive));
+        return _cache.GetOrAdd((noteId, revision, content.Length, interactive, lineBreaks), _ => Render(content, interactive, lineBreaks));
+    }
+
+    /// <summary>
+    /// Reads note Markdown, here and for a note's PDF (<c>PdfNoteBuilder</c>), so the two agree on what is a heading,
+    /// a list or a new line.
+    /// </summary>
+    /// <param name="content">The Markdown.</param>
+    /// <param name="lineBreaks">
+    /// Whether a single line break is a new line. Markdown reads it as a space between two words of one paragraph,
+    /// which is how the web app shows it and the default here; with Keep line breaks on (docs/04, Markdown rendering)
+    /// each becomes the break that two spaces at the end of a line ask for.
+    /// </param>
+    /// <returns>The document.</returns>
+    internal static MarkdownDocument Parse(string content, bool lineBreaks)
+    {
+        var document = Markdig.Markdown.Parse(content, Pipeline);
+        if (lineBreaks)
+        {
+            foreach (var lineBreak in document.Descendants<LineBreakInline>())
+            {
+                lineBreak.IsHard = true;
+            }
+        }
+
+        return document;
     }
 
     /// <summary>Renders Markdown, wrapped in <c>&lt;div class="markdown"&gt;</c>.</summary>
@@ -60,10 +86,14 @@ public sealed partial class MarkdownRenderer
     /// Whether task checkboxes can be ticked. Each has <c>data-task</c>, the offset in <paramref name="content"/> where
     /// its item's list marker starts (see <c>MarkdownEdit.ToggleTask</c>), and is named after its item.
     /// </param>
+    /// <param name="lineBreaks">
+    /// Whether a single line break is shown as a new line. Left off for the Help page, whose paragraphs are wrapped
+    /// in the source.
+    /// </param>
     /// <returns>The HTML.</returns>
-    public static string Render(string content, bool interactive)
+    public static string Render(string content, bool interactive, bool lineBreaks = false)
     {
-        var document = Markdig.Markdown.Parse(content, Pipeline);
+        var document = Parse(content, lineBreaks);
         foreach (var node in document.Descendants().ToList())
         {
             switch (node)

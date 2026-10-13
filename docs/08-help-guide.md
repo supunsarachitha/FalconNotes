@@ -72,6 +72,10 @@ Added with Export to PDF (1.5.0, 2026-10-13): the second paragraph of `features`
 app has no such feature. `writing` does not name it among a note's menu actions, because **Export to PDF** is off
 until it is turned on.
 
+Added with Keep line breaks (1.6.0, 2026-10-13): the **New lines** item of `writing`. It is this app's own: the web
+app's guide does not say that lines typed one under another are joined, and it has no such switch. The guide itself
+is always shown with its lines joined, whatever the switch says.
+
 Brought up to Maple Notes 1.15.0 (1.2.0, 2026-10-08): `daily` gains the paragraph on the template, word for word;
 `pictures` describes the three photo sizes; `features` lists "Help in the side menu" and says where the guide is
 when it is hidden: "opened from the foot of Settings", where the web app gives its address, `/help`, which a phone
@@ -86,6 +90,9 @@ are at the top.
 - **Formatting.** Use the toolbar under the text box for bold, italic, headings, lists, checklists, quotes, code and
   links, or type [Markdown](https://commonmark.org/help/) yourself. Ctrl/⌘+B, I and K are shortcuts for bold, italic
   and links.
+- **New lines.** Lines typed one under another are joined into one paragraph, as Markdown does; leave a blank
+  line between them to start a new paragraph. To have every line shown on its own line, as you typed it, turn on
+  **Keep line breaks** in [Settings → Writing](/settings/writing).
 - **Pictures and files.** Choose the paperclip and pick them. They are added while you write.
 - **Checklists.** Tick a checklist's boxes right in the note; the change is saved straight away.
 - **Changing a note.** Open a note's **⋯** menu to edit it, pin it to the top, label it, copy its text, archive it or

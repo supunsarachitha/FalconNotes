@@ -32,6 +32,12 @@ public class MainActivity : MauiAppCompatActivity
         AndroidX.Activity.EdgeToEdge.Enable(this);
         base.OnCreate(savedInstanceState);
 
+        // The insets service lives as long as the process; this activity's window is new (docs/12, Edge to edge).
+        if (Window?.DecorView is { } decorView)
+        {
+            (IPlatformApplication.Current?.Services.GetService<Core.Platform.IWindowInsets>() as Services.AndroidWindowInsets)?.Attach(decorView);
+        }
+
         // While the app lock is on, hide this window from screenshots and the recent-apps thumbnail (docs/03, App
         // lock; docs/12, Lock privacy). Kept in step with the setting for as long as the activity lives.
         _appLock = IPlatformApplication.Current?.Services.GetService<AppLockState>();

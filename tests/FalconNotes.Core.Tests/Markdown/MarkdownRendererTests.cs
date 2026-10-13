@@ -157,6 +157,45 @@ public partial class MarkdownRendererTests
         Assert.DoesNotContain("Shopping", renderer.Render(id, 1, "milk", true), StringComparison.Ordinal);
     }
 
+    // New: Keep line breaks (docs/04, Markdown rendering); the web app always joins the lines.
+    [Fact]
+    public void A_single_line_break_joins_its_lines_unless_line_breaks_are_kept()
+    {
+        const string content = "milk\neggs\n\n- [ ] bread\n  and butter\n- [x] tea";
+
+        var joined = Render(content);
+        Assert.Contains("<p>milk\neggs</p>", joined, StringComparison.Ordinal);
+        Assert.DoesNotContain("<br", joined, StringComparison.Ordinal);
+
+        var kept = MarkdownRenderer.Render(content, interactive: true, lineBreaks: true);
+        Assert.Contains("<p>milk<br />\neggs</p>", kept, StringComparison.Ordinal);
+        Assert.Contains("bread<br />\nand butter", kept, StringComparison.Ordinal);
+
+        // Only the breaks differ: the same paragraphs and items, each box at the same place in the text and named alike.
+        Assert.Equal(joined, kept.Replace("<br />", "", StringComparison.Ordinal));
+        Assert.Equal(["bread and butter", "tea"], Checkboxes(kept).Select(b => Attribute(b, "aria-label")));
+    }
+
+    [Fact]
+    public void Kept_line_breaks_leave_code_and_asked_for_breaks_as_they_are()
+    {
+        const string content = "one  \ntwo\n\n```\nfirst\nsecond\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |";
+
+        Assert.Equal(Render(content), MarkdownRenderer.Render(content, interactive: true, lineBreaks: true));
+    }
+
+    [Fact]
+    public void A_note_is_cached_apart_with_and_without_kept_line_breaks()
+    {
+        var renderer = new MarkdownRenderer();
+        var id = Guid.NewGuid();
+
+        // The switch can be turned on while the note is cached, at the same revision.
+        Assert.DoesNotContain("<br", renderer.Render(id, 1, "one\ntwo", true), StringComparison.Ordinal);
+        Assert.Contains("<br", renderer.Render(id, 1, "one\ntwo", true, lineBreaks: true), StringComparison.Ordinal);
+        Assert.DoesNotContain("<br", renderer.Render(id, 1, "one\ntwo", true), StringComparison.Ordinal);
+    }
+
     private static List<string> Checkboxes(string html) => CheckboxPattern().Matches(html).Select(m => m.Value).ToList();
 
     private static string Attribute(string element, string name) =>

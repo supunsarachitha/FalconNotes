@@ -28,6 +28,7 @@ public sealed class AppearanceService(IThemeSource theme, AppState state)
         [Accent.Slate] = "#334155",
     };
 
+    private IJSRuntime? _page;
     private IJSObjectReference? _module;
     private (bool Dark, Accent Accent, Background Background)? _applied;
 
@@ -48,6 +49,7 @@ public sealed class AppearanceService(IThemeSource theme, AppState state)
     /// <returns>A task that completes when it is applied.</returns>
     public async Task ApplyAsync(IJSRuntime js)
     {
+        Use(js);
         var wanted = (Dark: IsDark, state.Preferences.Accent, state.Preferences.Background);
         if (_applied == wanted)
         {
@@ -71,6 +73,27 @@ public sealed class AppearanceService(IThemeSource theme, AppState state)
     /// <summary>The module, for the shell's other page-level calls (insets, scrolling).</summary>
     /// <param name="js">The page's JS runtime.</param>
     /// <returns>The module.</returns>
-    public async Task<IJSObjectReference> ModuleAsync(IJSRuntime js) =>
-        _module ??= await js.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/appearance.js");
+    public async Task<IJSObjectReference> ModuleAsync(IJSRuntime js)
+    {
+        Use(js);
+        return _module ??= await js.InvokeAsync<IJSObjectReference>("import", "./_content/FalconNotes.UI/js/appearance.js");
+    }
+
+    /// <summary>
+    /// Starts afresh for a new page. This service lives as long as the process, but the page does not: Android
+    /// destroys the activity when Back leaves the app's first page, or to reclaim it, and the next start is a new
+    /// WebView with its own JS runtime. The module of the page that is gone reaches nothing, and what was applied
+    /// to that page says nothing about this one, whose window has its own status bar too. Kept, they left the new
+    /// page without its safe-area insets, so the drawer lay under the status bar (found by the owner on a Pixel 8
+    /// Pro, 2026-10-13; docs/12, Edge to edge).
+    /// </summary>
+    private void Use(IJSRuntime js)
+    {
+        if (!ReferenceEquals(_page, js))
+        {
+            _page = js;
+            _module = null;
+            _applied = null;
+        }
+    }
 }
