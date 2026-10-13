@@ -1,4 +1,5 @@
-@* Port of EditingSection in components/PreferenceSections.tsx (docs/07, Settings: unchanged). *@
+@* Port of EditingSection in components/PreferenceSections.tsx (docs/07, Settings). New here: Keep line breaks, off by
+   default (docs/04, Markdown rendering). *@
 @using FalconNotes.UI.State
 @inject AppState State
 
@@ -10,5 +11,8 @@
         <PreferenceSwitch Label="Double-tap to edit"
                            Description="Double-tap a note, or double-click it, to start editing it. Its ⋯ menu still has Edit too."
                            Checked="State.Preferences.DoubleTapToEdit" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { DoubleTapToEdit = on }))" />
+        <PreferenceSwitch Label="Keep line breaks"
+                           Description="Show every line of a note on its own line, as you typed it. Off, lines typed one under another are joined into one paragraph, as Markdown does, and a blank line starts a new one."
+                           Checked="State.Preferences.LineBreaks" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { LineBreaks = on }))" />
     </div>
 </Section>

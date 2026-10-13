@@ -79,6 +79,8 @@ tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
   full-screen viewer, where you can save a copy or share one; audio and video play in the note. Optionally, large
   photos are shrunk before they are added, to JPEG in one of three sizes, without their location and camera details.
 - **Search.** Finds text in your notes and the names of attached files.
+- **Keep line breaks.** Optional: lines typed one under another are joined into a paragraph, as Markdown does,
+  until you turn this on in Settings → Writing; then every line is shown as you typed it.
 - **Export to PDF.** Optional, and off until you turn it on in Settings → Features. A note, quick note or todo list
   is then saved from its menu as a PDF on the device, with its pictures: real text, in any script, on A4 pages.
 - **Backups.** Export everything as a ZIP of Markdown, plain text or JSON, with your files and each note's labels,

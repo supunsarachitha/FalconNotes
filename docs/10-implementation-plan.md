@@ -670,12 +670,84 @@ build's).
 
 The Core tests (457, one skipped: the budgets) and the component tests (233) pass; 26 and 8 of them are new.
 
-Not checked, still open: a **Release build** of this version (R8 and trimming over the new code) built, installed
-or run, and so the update between release-signed builds; a real phone, and the PDF opened in a phone's own viewer;
-Android 8.0 and 8.1, where pictures take the older decoder; a photo taken on its side (the decoding is the photo
-shrinker's, which is checked for that); a picture the device cannot decode, and a note with a video, on the device
-(Core tests cover what the PDF says for each); a table wider or a row taller than a page; TalkBack; the tablet
-layout; the dark theme, which the PDF's colours do not depend on.
+**The release build**, the same day, from the commit that holds the feature (`2d52ea8`): `dotnet publish`, from
+clean, made the signed AAB and APK; the 1.4.0 output was moved to `src/FalconNotes.App/bin/Release-1.4.0/`
+(git-ignored) first. Checked: the owner's upload key (the same certificate as 1.4.0, `apksigner verify
+--print-certs`; `jarsigner -verify` on the AAB), versionCode 8, `targetSdkVersion` 36, arm64-v8a and x86_64, not
+debuggable, and the permissions are `USE_BIOMETRIC` and `USE_FINGERPRINT` with no `INTERNET` and no storage
+permission. Then the update, with the builds people get: on the emulator, started `-read-only` again and the Debug
+app removed for the session, the **release-signed 1.4.0** was installed fresh and the demo backup restored in it (35
+notes, 8 files). The **release-signed 1.5.0** was installed over it with `adb install -r`. A release build opens no
+DevTools socket, so the pages were read through `uiautomator dump`: the side menu, the Todo tab and Settings →
+Profile with its storage line were the same before and after, line for line; Home's 333 lines of text were the same
+once blank lines were left out, but for a video's "Unable to play media." read in 1.4.0 just after the restore; and
+the foot of Settings said 1.5.0. In that build, with R8 and trimming over the new code: no menu offered **Export to
+PDF…** as installed; the switch in Settings → Features turned it on; the pinned note saved as "Welcome to the Maple
+Notes demo.pdf" (one page, its text read back out of the file); and the note with three pictures saved with the
+toast "Saved as a PDF." as a file of the same bytes as the Debug build's.
+
+Not checked, still open: a real phone, and the PDF opened in a phone's own viewer; Android 8.0 and 8.1, where
+pictures take the older decoder; a photo taken on its side (the decoding is the photo shrinker's, which is checked
+for that); a picture the device cannot decode, and a note with a video, on the device (Core tests cover what the
+PDF says for each); a table wider or a row taller than a page; a locked note and a todo list in the release build
+(both checked in the Debug build); TalkBack; the tablet layout; the dark theme, which the PDF's colours do not
+depend on.
+
+Version 1.6.0 (versionCode 9), 2026-10-13, on the `release-1.6.0` branch: **Keep line breaks**, at the owner's
+request ([04](04-domain-rules.md#markdown-rendering), [07](07-screens.md#settings)). The owner asked why "when i
+type on the next line, all text come to the single line after saved", and whether it was a technical difficulty or
+a bug. It is neither: a single line break inside a paragraph is a space in Markdown, the web app shows it so
+(react-markdown with `remark-gfm` and no `remark-breaks`, at 1.16.0), and the port matched it; the note's text
+keeps its line breaks all along. Told how Obsidian, Joplin and Bear show such lines, the owner chose a switch over
+changing the rule outright. Decided while building, and written into the documents:
+
+- The switch, **Keep line breaks**, is last under Editing in Settings → Writing, **off by default**, kept with the
+  other preferences (`lineBreaks`). No schema change and no migration: preferences saved by an earlier version have
+  no such key and read as off, so an update shows every note as before.
+- It changes only how a note is shown. `MarkdownRenderer.Parse` reads the note as before and, with the switch on,
+  marks each soft break as a hard one, so the screen and the PDF, which both start from it, break at the same
+  places and nothing else is read differently. No note is rewritten, backups are the same, and switching it off
+  puts every note back. The render cache's key has the switch, because it can change while a note is cached.
+- The Help page is rendered by the same code and its paragraphs are wrapped in the source, so it never keeps line
+  breaks. Help gains the item **New lines** under Writing notes, which says what joins and where the switch is.
+
+Checked: the Core tests (463, one skipped: the budgets) and the component tests (238) pass; 6 and 5 of them are
+new. `UpgradeKeepsNotesTests` is among them and needed nothing new, there being no migration.
+
+**A fault found on the way**, by the owner, who installed that build on a Pixel 8 Pro: the drawer lay under the
+status bar. Nothing in this release touches the layout, and the files concerned are as they were in 1.4.0. A fresh
+install showed the drawer right on both emulators (WebView 133, and WebView 148 with and without a tall cut-out,
+light and dark). It came out by leaving the app with **Back** and opening it again while its process lived:
+Android makes the activity and its WebView anew, and `AppearanceService`, a singleton, still held the JS module of
+the page that was gone, so the new page was never given `--safe-*` ([12](12-platforms.md), Edge to edge). The
+release-signed 1.5.0 does the same. Fixed in `AppearanceService` (afresh for each page's JS runtime) and
+`AndroidWindowInsets` (`MainActivity.OnCreate` attaches it to each new window), with a component test. The build
+was made again, and everything below is of that second build.
+
+**The release build and the update**, the same day, from the working tree before its commit: `dotnet publish`,
+from clean, made the signed AAB and APK with no warnings; the 1.5.0 output was moved to
+`src/FalconNotes.App/bin/Release-1.5.0/` (git-ignored) first. Checked: the same certificate as 1.5.0 (`apksigner
+verify --print-certs`; `jarsigner -verify` on the AAB), versionCode 9, `targetSdkVersion` 36, arm64-v8a and
+x86_64, and the permissions are `USE_BIOMETRIC` and `USE_FINGERPRINT` with no `INTERNET` and no storage
+permission. On the emulator (`MAUI_Emulator_API_36`, started `-read-only`, the Debug app removed for the session),
+the **release-signed 1.5.0** was installed fresh, the Markdown demo backup restored in it (35 notes, 8 files), and
+a note of five lines typed one under another posted, which 1.5.0 showed as one line. The **release-signed 1.6.0**
+was installed over it with `adb install -r`. Read through `uiautomator dump` before and after: Home (687 lines of
+text), the side menu, Todo, Quick notes, Settings and Settings → Profile with its storage line were the same, line
+for line, but for the foot of Settings, which said 1.6.0; the five-line note was still one line, the switch being
+off. Then Settings → Writing showed **Keep line breaks** off; turned on, Home differed from before in that one
+note alone, now five lines one under another (also seen in a screenshot), and Help read as before, its paragraphs
+flowing, with the new item. That walk was of the first build. The second build, with the drawer's fix, was checked
+the same way on `Medium_Phone_API_36.1` (WebView 148), over the release-signed 1.5.0 with the demo backup: the side
+menu, Todo, Quick notes, Settings and Profile the same line for line but for the version, and Home's text, gathered
+while scrolling to its end (221 distinct lines), the same. Then the fault: in 1.5.0, Back out of Home and the app
+opened again put the drawer's name under the clock and its last row under the navigation bar; in 1.6.0 the same
+steps, the process still alive, showed the drawer clear of both.
+
+Not checked, still open: a real phone; a PDF made on the device with the switch on (the Core and component tests
+cover what the PDF is given, and the PDF drawing is unchanged); a checklist item and a quote of several lines on
+the device, and the Archive and the trash; ticking a box in a note with kept line breaks on the device; the switch
+turned off again on the device; TalkBack; the tablet layout.
 
 ## Spike results
 

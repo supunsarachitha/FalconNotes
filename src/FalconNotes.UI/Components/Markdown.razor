@@ -1,12 +1,15 @@
 @* Port of components/Markdown.tsx: renders a note's Markdown as HTML (Core/Markdown/MarkdownRenderer.cs; GitHub
    flavour, raw HTML dropped, #tags linked, safe links). With OnToggleTask set, task-list checkboxes tick in place
    and report which item's list marker changed (its offset in Content, per MarkdownEdit.ToggleTask); without it, every
-   checkbox is disabled (an archived note). *@
+   checkbox is disabled (an archived note). New here: with Keep line breaks on (Settings → Writing), a single line
+   break is shown as a new line (docs/04, Markdown rendering). *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Markdown
+@using FalconNotes.UI.State
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject MarkdownRenderer Renderer
+@inject AppState State
 
 <div @ref="_container">
     @((MarkupString)Html)
@@ -28,7 +31,7 @@
     /// that cannot be changed, which disables every checkbox.</summary>
     [Parameter] public EventCallback<int> OnToggleTask { get; set; }
 
-    private string Html => Renderer.Render(Note.Id, Note.Revision, Content, OnToggleTask.HasDelegate);
+    private string Html => Renderer.Render(Note.Id, Note.Revision, Content, OnToggleTask.HasDelegate, State.Preferences.LineBreaks);
 
     /// <inheritdoc />
     protected override async Task OnAfterRenderAsync(bool firstRender)

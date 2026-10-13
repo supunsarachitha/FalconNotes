@@ -139,6 +139,15 @@ Port `web/components/Markdown.tsx` with **Markdig**:
 - Pipeline: CommonMark + `UsePipeTables` + `UseTaskLists` + `UseEmphasisExtras(Strikethrough)` + `UseAutoLinks` (GFM
   literal autolinks) + `UseFootnotes` + `UsePreciseSourceLocation`, with **`DisableHtml()`**. Raw HTML in a note shows as
   text and never becomes markup.
+- **Line breaks**: a single line break inside a paragraph is a space, as CommonMark has it and the web app shows it
+  (react-markdown without `remark-breaks`); a blank line starts a new paragraph, and two spaces or a `\` at the end
+  of a line ask for a break. That is how the app is installed. **New in this app** (1.6.0, 2026-10-13, at the
+  owner's request; the web app has no such choice): with the preference `lineBreaks` on (**Keep line breaks** in
+  Settings → Writing), every single line break is shown as a new line (`<br />`), in a paragraph, a list item or a
+  quote. `MarkdownRenderer.Parse` reads the note as before and then marks each soft break as a hard one, so nothing
+  else is read differently: the same paragraphs, lists, code blocks and tables, and each task box at the same
+  offset. The note's text is not rewritten, so backups are the same and turning the switch off puts every note back
+  as it was. The Help page is always rendered without it, because its paragraphs are wrapped in the source.
 - **Links**: keep `href` only for `http:`, `https:`, `mailto:`, `xmpp:`, `irc:`, `ircs:` and relative URLs; anything else
   (`javascript:`, `data:`, `file:`, …) becomes an empty `href`. This is react-markdown's default `urlTransform`.
   Relative links starting with `/` navigate inside the app. Others open in the system browser, and so do `//host/…`
@@ -155,7 +164,8 @@ Port `web/components/Markdown.tsx` with **Markdig**:
   card adds the length of the title part before the body to the offset.
 - Wrap the output in `<div class="markdown">`. Cache rendered HTML by `(note id, revision)`, so long lists do not
   re-render Markdown. The key also has the length of the text rendered, because the same revision is shown whole or
-  without its title line, depending on the note titles setting.
+  without its title line, depending on the note titles setting, and whether line breaks are kept, which can change
+  as well while a note is cached.
 
 ## Markdown editing
 
@@ -316,7 +326,8 @@ reference to port. The screens are in [07](07-screens.md#export-to-pdf) and the 
   being saved included, read with the same Markdig pipeline as the screen
   ([Markdown rendering](#markdown-rendering)): headings, bold, italic, strikethrough, inline code and code blocks,
   bullet and numbered lists with their levels, task items as boxes, quotes, rules, tables and footnotes. A single
-  line break joins its lines and raw HTML stays text, as on the screen. With it:
+  line break joins its lines, or breaks them with **Keep line breaks** on, and raw HTML stays text, as on the
+  screen. With it:
   - **When it was written**, in small grey text: "Sep 28, 2026, 14:30", as the card's tooltip writes it, followed
     by " · edited {date}" when the card says "edited". Under the title when the note starts with one (a first-level
     heading), otherwise at the very top.
@@ -400,7 +411,7 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `habitTracker` | false | `accent` | `Falcon` (Falcon, Ocean, Forest, Teal, Plum, Amber, Slate) |
 | `menuTextSize` | `Medium` (Small, Medium, Large) | `weekStart` | `Auto` (Auto, Sunday, Monday, Saturday) |
 | `menuOrder` | `""` | `background` | `None` (None, Halloween, Christmas, NewYear, Valentine, Easter, Diwali, Vesak, Eid, LunarNewYear) |
-| `pdfExport` | false | | |
+| `pdfExport` | false | `lineBreaks` | false |
 
 - `Falcon` is the web app's `Maple` accent under this app's name, with the same colours (D12). Preferences are not
   part of backups, so nothing needs mapping.
@@ -410,6 +421,8 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
   saved before 1.4.0 have no such key and read as off.
 - `pdfExport` is this app's own as well ([Export to PDF](#export-to-pdf)): whether **Export to PDF…** is in the
   menus. Preferences saved before 1.5.0 have no such key and read as off.
+- `lineBreaks` is this app's own too ([Markdown rendering](#markdown-rendering)): whether a single line break in a
+  note is shown as a new line. Preferences saved before 1.6.0 have no such key and read as off.
 - A change shows at once and is saved in the background. If saving fails, it is rolled back with "Your setting could
   not be saved. Please try again."
 - Turning a feature off hides its page or tool and deletes nothing. A page whose feature is off shows "{Feature} is

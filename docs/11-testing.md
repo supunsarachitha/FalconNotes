@@ -264,6 +264,14 @@ in light and dark mode:
       todo list and a quick note; a note with a video names the file at the end; cancelling the save dialog saves
       nothing and says nothing; a locked note offers it only while it is unlocked; nothing is left in
       `cache/export/`; and the app still has no storage permission.
+- [ ] The app made again: leave Home with Back, open the app again from the launcher before Android has ended its
+      process, and open the drawer: its name and mark are under the status bar's clock, not behind it, and its last
+      row is above the navigation bar; the theme, accent and background are as chosen; rotate, and it still fits.
+- [ ] Keep line breaks: as installed, a note of three lines typed one under another shows as one paragraph; with
+      the switch on in Settings → Writing each line is on its own, in a paragraph, a checklist item and a quote, on
+      Home, in the Archive and in the trash; a code block, a table and a blank line between paragraphs look as
+      before; ticking a box still ticks the right one; editing the note shows the text as typed; its PDF breaks
+      where the screen does; Help reads as before; switched off again, every note is as it was.
 - [ ] App lock: set, lock after delay, biometrics, wrong PIN ×5, Lock now, background cover, screenshots blocked
       (Android), Forgot PIN → erase.
 - [ ] Erase all data → Welcome. Removing the device key with the Debug-only developer action leads to Key lost, where

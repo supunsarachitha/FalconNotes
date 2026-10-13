@@ -153,6 +153,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   while it is unlocked to be read. A PDF is not encrypted, and it is not a backup: it cannot be restored. Android
   only for now; it uses Android's own PDF drawing, so the app gains no library and needs no new permission. Help
   describes it.
+- **Keep line breaks** (docs/04, Markdown rendering; this app's own, the web app has none), **off by default**:
+  lines typed one under another in a note are joined into one paragraph, as Markdown does and Maple Notes shows
+  them. Turn on **Keep line breaks** in Settings → Writing to have every line shown on its own line, as you typed
+  it, on the screen and in a note's PDF. Only how notes are shown changes: no note is rewritten, backups are the
+  same, and turning it off puts every note back as it was. Help says so under **New lines**.
 - A rule and its test, at the owner's request: an update never loses notes (CLAUDE.md, docs/11). `UpgradeKeepsNotesTests`
   takes a database with one of everything back to the schema of each earlier version, starts it as an update does,
   and compares every row and file with what was there; a migration added without its undo fails a test.
@@ -211,6 +216,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The side menu no longer slides under the status bar and the navigation bar after the app is left with Back and
+  opened again (found on a Pixel 8 Pro; docs/12, Edge to edge). Android makes the screen anew then, and the new
+  page was never told how much room the system bars take; on an older WebView the top bar went under as well. The
+  same slip could leave the status bar's icons the wrong shade for the theme, and stop Forgot PIN's erase from
+  finishing, after such a restart. Version 1.5.0 has the fault too.
 - Android: the last row of the side menu, with your name and the **Lock now** button, no longer lies under the
   system's navigation bar. With three-button navigation it was hidden and could not be tapped; with gesture
   navigation it was clipped. The sidebar on tablets is fixed the same way.
