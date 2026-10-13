@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://play.google.com/store/apps/details?id=lk.stechbuzz.falconnotes"><img alt="Get it on Google Play" src="https://img.shields.io/badge/Google%20Play-Get%20it-414141?logo=googleplay&logoColor=white"></a>
   <a href="https://github.com/supunsarachitha/FalconNotes/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/supunsarachitha/FalconNotes/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Android 8.0+" src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white">
   <img alt=".NET MAUI 10" src="https://img.shields.io/badge/.NET%20MAUI-10-512BD4?logo=dotnet&logoColor=white">
@@ -17,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://play.google.com/store/apps/details?id=lk.stechbuzz.falconnotes"><b>Get it on Google Play</b></a> ·
   <a href="https://supunsarachitha.github.io/FalconNotes/"><b>Website</b></a> ·
   <a href="https://supunsarachitha.github.io/FalconNotes/privacy.html"><b>Privacy policy</b></a> ·
   <a href="CHANGELOG.md"><b>Changelog</b></a> ·
@@ -36,7 +38,8 @@ features and look under its own name and mark. Backups use the web app's export 
 Falcon Notes, other devices and any Maple Notes server.
 
 Falcon Notes is built with .NET 10 MAUI Blazor Hybrid. It currently runs on **Android 8.0 and later**, on phones and
-tablets. Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
+tablets: install it from [Google Play](https://play.google.com/store/apps/details?id=lk.stechbuzz.falconnotes), or
+[build it from source](#building-from-source). Windows and macOS are planned ([12 Platforms](docs/12-platforms.md)).
 
 ## Contents
 
