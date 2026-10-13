@@ -46,7 +46,7 @@ public sealed class AndroidImageCodec : IImageCodec
         source.ReadExactly(file);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var bitmap = OperatingSystem.IsAndroidVersionAtLeast(28) ? Decode(file, fit) : DecodeLegacy(file, fit);
+        var bitmap = DecodeUpright(file, fit, firstFrameOfAnimations: false);
         if (bitmap is null)
         {
             return null;
@@ -66,12 +66,27 @@ public sealed class AndroidImageCodec : IImageCodec
         }
     }
 
+    /// <summary>
+    /// Decodes an image upright, at the size <paramref name="fit"/> gives for its upright width and height, into a
+    /// bitmap whose pixels are in memory. Also what a note's PDF draws its pictures from (<c>AndroidPdfWriter</c>).
+    /// </summary>
+    /// <param name="file">The whole image file.</param>
+    /// <param name="fit">The size to decode at, given the upright size.</param>
+    /// <param name="firstFrameOfAnimations">
+    /// What an animation becomes: its first frame (a page cannot move), or nothing (shrinking would lose the animation).
+    /// </param>
+    /// <returns>The bitmap, which the caller recycles, or null when the device cannot decode the file.</returns>
+    internal static Bitmap? DecodeUpright(byte[] file, Func<int, int, (int Width, int Height)> fit, bool firstFrameOfAnimations) =>
+        OperatingSystem.IsAndroidVersionAtLeast(28)
+            ? Decode(file, fit, firstFrameOfAnimations)
+            : DecodeLegacy(file, fit, firstFrameOfAnimations);
+
     [SupportedOSPlatform("android28.0")]
-    private static Bitmap? Decode(byte[] file, Func<int, int, (int Width, int Height)> fit)
+    private static Bitmap? Decode(byte[] file, Func<int, int, (int Width, int Height)> fit, bool firstFrameOfAnimations)
     {
         using var buffer = ByteBuffer.Wrap(file);
         using var source = ImageDecoder.CreateSource(buffer);
-        using var listener = new HeaderListener(fit);
+        using var listener = new HeaderListener(fit, firstFrameOfAnimations);
         try
         {
             return ImageDecoder.DecodeBitmap(source, listener);
@@ -82,9 +97,9 @@ public sealed class AndroidImageCodec : IImageCodec
         }
     }
 
-    private static Bitmap? DecodeLegacy(byte[] file, Func<int, int, (int Width, int Height)> fit)
+    private static Bitmap? DecodeLegacy(byte[] file, Func<int, int, (int Width, int Height)> fit, bool firstFrameOfAnimations)
     {
-        if (IsAnimatedWebP(file))
+        if (!firstFrameOfAnimations && IsAnimatedWebP(file))
         {
             return null; // left as it is, as HeaderListener does on later versions
         }
@@ -208,14 +223,15 @@ public sealed class AndroidImageCodec : IImageCodec
         return false;
     }
 
-    /// <summary>Sets the size to decode at once the image's own size is known, and refuses animations.</summary>
+    /// <summary>Sets the size to decode at once the image's own size is known, and refuses animations unless their first frame is wanted.</summary>
     [SupportedOSPlatform("android28.0")]
-    private sealed class HeaderListener(Func<int, int, (int Width, int Height)> fit) : Java.Lang.Object, ImageDecoder.IOnHeaderDecodedListener
+    private sealed class HeaderListener(Func<int, int, (int Width, int Height)> fit, bool firstFrameOfAnimations)
+        : Java.Lang.Object, ImageDecoder.IOnHeaderDecodedListener
     {
         public void OnHeaderDecoded(ImageDecoder decoder, ImageDecoder.ImageInfo info, ImageDecoder.Source source)
         {
             // An animated WebP or AVIF would become a JPEG of its first frame; it is left as it is, like a GIF.
-            if (info.IsAnimated)
+            if (info.IsAnimated && !firstFrameOfAnimations)
             {
                 throw new Java.IO.IOException("animated");
             }

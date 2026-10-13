@@ -13,13 +13,16 @@
 | Which locked notes are open to be read just now | Memory only (`NoteLocks`) | Not stored: closing the app locks them all |
 | Decrypted copies for **Open** | `{FileSystem.CacheDirectory}/open/{random}/{file name}` | **No**: deleted at the next start, and at most 24 h old |
 | Export being written, restore archive being read | `{CacheDirectory}/export/`, `{CacheDirectory}/restore/` | **No** (exports are plain by design); deleted when done and at start |
+| A note's PDF being written ([04](04-domain-rules.md#export-to-pdf)) | `{CacheDirectory}/export/{random}.pdf` | **No** (a PDF is a plain copy by design); deleted when it is saved or the dialog is cancelled, and at start |
 | Automatic backups, when the user turns them on | A folder **outside the app** that the user chose, as `falcon-notes-auto-{yyyy-MM-dd_HHmm}.zip`, the newest 3, 5 or 10 kept ([05](05-backup-compatibility.md#automatic-backups)) | **No**: they are exports. Off by default, and Settings says so before the folder is chosen. |
 | Automatic backups' settings and the folder's reference | `Settings['autoExport']` in the database | Yes (inside the database) |
 | Appearance for the first paint | WebView `localStorage` key `falcon-notes:appearance` (`{theme, accent}`) | No (not sensitive) |
 
 Exports are not encrypted, exactly as in the web app; the Help and Backup screens say so. Automatic backups are
 exports written without asking each time, so they are the one place where plain copies of the notes are made without
-a tap: only after the user has turned them on and chosen the folder, and only into that folder.
+a tap: only after the user has turned them on and chosen the folder, and only into that folder. A note's PDF is a
+plain copy too, of one note, made only when **Export to PDF…** is chosen in that note's menu and saved only where
+the save dialog is told to; the switch that offers it is off by default and says the PDF is not encrypted.
 
 ## Keys
 

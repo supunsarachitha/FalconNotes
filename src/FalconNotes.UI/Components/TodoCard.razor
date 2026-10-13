@@ -2,7 +2,8 @@
    at once as Markdown; rename, label, pin, archive or delete the list. Every change shows at once and is saved in
    the background, one save after another, as the list's Markdown (Core/Text/Todo.cs, NoteEditor). New here: Lock
    in the menu; a locked list is shown by NoteCard, which hides it, and by this card only while it is unlocked to be
-   read, with Lock now and Remove lock in its menu (docs/07, Locked notes). *@
+   read, with Lock now and Remove lock in its menu (docs/07, Locked notes). With Export to PDF turned on, the menu
+   saves the list as a PDF (docs/07, Export to PDF). *@
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
 @using FalconNotes.Core.Text
@@ -14,6 +15,7 @@
 @inject NoteLocks Locks
 @inject AppState State
 @inject Toasts Toasts
+@inject IServiceProvider Services
 
 <article aria-label="@List.Title"
          class="note-card rounded-2xl border border-stone-200 bg-white p-4 shadow-sm dark:border-stone-800 dark:bg-stone-900">
@@ -62,6 +64,10 @@
                         {
                             <MenuItem IconName="IconName.ListChecks" OnSelect="ClearCompleted">Clear completed</MenuItem>
                         }
+                    }
+                    @if (_pdf.Offered)
+                    {
+                        <MenuItem IconName="IconName.Download" OnSelect="@(() => _pdf.RunAsync(Note, TodoText.Serialize(List)))">Export to PDF…</MenuItem>
                     }
                     @if (Note.IsLocked)
                     {
@@ -153,6 +159,7 @@
     private NoteEditor<TodoList> _editor = null!;
     private NoteRemoval _removal = null!;
     private NoteLock _lock = null!;
+    private NotePdfExport _pdf = null!;
     private int? _editing;
     private bool _renaming;
     private string _draft = "";
@@ -184,6 +191,7 @@
             Note, "list", "Delete this list?",
             $"\"{List.Title}\" and its {List.Items.Count} item(s) will be deleted permanently. To keep it out of sight instead, archive it.",
             Notes, State, Toasts, StateHasChanged);
+        _pdf = new NotePdfExport(Services, State, Toasts);
     }
 
     /// <inheritdoc />

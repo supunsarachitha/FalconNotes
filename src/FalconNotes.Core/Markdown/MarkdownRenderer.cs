@@ -21,7 +21,8 @@ public sealed partial class MarkdownRenderer
 {
     private const int CacheLimit = 1000;
 
-    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+    /// <summary>How note Markdown is read, here and for a note's PDF (<c>PdfNoteBuilder</c>), so the two agree.</summary>
+    internal static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
         .UsePipeTables()
         .UseTaskLists()
         .UseEmphasisExtras(Markdig.Extensions.EmphasisExtras.EmphasisExtraOptions.Strikethrough)

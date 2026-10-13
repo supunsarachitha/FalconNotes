@@ -189,6 +189,12 @@ public sealed record Preferences
     /// </summary>
     public bool NoteLock { get; init; }
 
+    /// <summary>
+    /// Offer Export to PDF… in the menu of notes, quick notes and todo lists (docs/04, Export to PDF). This app's own;
+    /// off by default, because a PDF is a plain copy of a note outside the app.
+    /// </summary>
+    public bool PdfExport { get; init; }
+
     /// <summary>Light or dark.</summary>
     public Theme Theme { get; init; } = Theme.System;
 

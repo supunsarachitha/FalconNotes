@@ -68,6 +68,10 @@ Added with locked notes (1.4.0, 2026-10-12): the `locked` section and the last s
 app's own; the web app has no such feature. `writing` does not name the lock among a note's menu actions, because
 **Note lock** is off until it is turned on, and that section stays as it was.
 
+Added with Export to PDF (1.5.0, 2026-10-13): the second paragraph of `features`. It is this app's own; the web
+app has no such feature. `writing` does not name it among a note's menu actions, because **Export to PDF** is off
+until it is turned on.
+
 Brought up to Maple Notes 1.15.0 (1.2.0, 2026-10-08): `daily` gains the paragraph on the template, word for word;
 `pictures` describes the three photo sizes; `features` lists "Help in the side menu" and says where the guide is
 when it is hidden: "opened from the foot of Settings", where the web app gives its address, `/help`, which a phone
@@ -166,6 +170,10 @@ Everything beyond plain notes can be switched on or off in [Settings → Feature
 lists, quick notes, the habit tracker, the Tags page, the archive, Help in the side menu, daily notes, the calendar,
 labels and the trash. Turning something off only hides it; nothing is deleted, and it all comes back when you turn it
 on again. With Help hidden from the menu, this guide is opened from the foot of [Settings](/settings).
+
+To keep or send a single note as a document, turn on **Export to PDF** in the same place. **Export to PDF…** in the
+⋯ menu of a note, quick note or todo list then saves it as a PDF file, with its pictures, where you choose on this
+device. A PDF is not encrypted, so keep it somewhere safe. It is not a backup either: it cannot be restored.
 ````
 
 ## 15. Keeping your notes private (`privacy`)
