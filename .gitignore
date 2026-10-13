@@ -38,3 +38,6 @@ secrets/
 Thumbs.db
 .idea/
 *.swp
+
+# Instructions for AI agents: kept on the development machine, not on GitHub
+CLAUDE.md
