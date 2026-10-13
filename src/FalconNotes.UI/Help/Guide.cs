@@ -157,6 +157,10 @@ public static class Guide
             lists, quick notes, the habit tracker, the Tags page, the archive, Help in the side menu, daily notes, the calendar,
             labels and the trash. Turning something off only hides it; nothing is deleted, and it all comes back when you turn it
             on again. With Help hidden from the menu, this guide is opened from the foot of [Settings](/settings).
+
+            To keep or send a single note as a document, turn on **Export to PDF** in the same place. **Export to PDF…** in the
+            ⋯ menu of a note, quick note or todo list then saves it as a PDF file, with its pictures, where you choose on this
+            device. A PDF is not encrypted, so keep it somewhere safe. It is not a backup either: it cannot be restored.
             """),
 
         new("trash", "The trash", """

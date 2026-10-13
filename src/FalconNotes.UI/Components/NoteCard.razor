@@ -4,7 +4,8 @@
    Double-tap to edit on, double-tapping or double-clicking opens it for editing. Deleting moves it to the trash,
    unless the trash is off (NoteRemoval). Link previews are gone (docs/07). New here: a note can be locked, and then
    shows a lock in its corner and none of what is in it, with a menu that cannot show it either, until it is
-   unlocked to be read; it locks again by itself (docs/07, Locked notes). *@
+   unlocked to be read; it locks again by itself (docs/07, Locked notes). With Export to PDF turned on, the menu
+   saves the note as a PDF (docs/07, Export to PDF). *@
 @using System.Globalization
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
@@ -19,6 +20,7 @@
 @inject Toasts Toasts
 @inject TimeProvider Time
 @inject IClipboard Clipboard
+@inject IServiceProvider Services
 
 @if (_editing)
 {
@@ -95,6 +97,10 @@ else
                                 </MenuItem>
                             }
                             <MenuItem IconName="IconName.Copy" OnSelect="CopyTextAsync">Copy text</MenuItem>
+                            @if (_pdf.Offered)
+                            {
+                                <MenuItem IconName="IconName.Download" OnSelect="@(() => _pdf.RunAsync(Note, _editor.Value))">Export to PDF…</MenuItem>
+                            }
                             @if (Note.IsLocked)
                             {
                                 <MenuItem IconName="IconName.Lock" OnSelect="() => _lock.LockNow()">Lock now</MenuItem>
@@ -161,6 +167,7 @@ else
     private NoteEditor<string> _editor = null!;
     private NoteRemoval _removal = null!;
     private NoteLock _lock = null!;
+    private NotePdfExport _pdf = null!;
 
     /// <summary>The note.</summary>
     [Parameter, EditorRequired] public Note Note { get; set; } = null!;
@@ -201,6 +208,7 @@ else
                 ? $"The note and its {Note.Attachments.Count} attached file(s) will be deleted permanently. To keep it out of sight instead, archive it."
                 : "The note will be deleted permanently. To keep it out of sight instead, archive it.",
             Notes, State, Toasts, StateHasChanged);
+        _pdf = new NotePdfExport(Services, State, Toasts);
         Locks.Changed += OnLocksChanged;
     }
 

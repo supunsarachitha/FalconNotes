@@ -78,6 +78,21 @@ public class SettingsTests
         Assert.True((await app.Preferences.GetAsync()).NoteLock);
     }
 
+    // New: the web app has no Export to PDF (docs/04, Export to PDF).
+    [Fact]
+    public async Task Export_to_pdf_is_off_until_it_is_turned_on()
+    {
+        using var app = await TestApp.StartAsync();
+        Assert.False((await app.Preferences.GetAsync()).PdfExport);
+        Assert.False(new Preferences().PdfExport); // and for preferences saved before there was such a switch
+
+        await app.Preferences.SaveAsync(new Preferences { PdfExport = true });
+
+        Assert.True((await app.Preferences.GetAsync()).PdfExport);
+        var stored = await app.Storage.Database.ReadAsync(connection => SettingsStore.GetRaw(connection, "preferences"));
+        Assert.Contains("\"pdfExport\":true", stored, StringComparison.Ordinal);
+    }
+
     // Ported from the server's PreferencesTests.cs (Maple Notes 1.9.0 to 1.15.0). There a value that is not offered
     // is refused; here it falls back to its default, as every preference does.
     [Fact]

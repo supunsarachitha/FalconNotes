@@ -60,7 +60,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `components/BrandMark.tsx`, `Logo.tsx` | `UI/Components/Logo.razor` (Adapt: the falcon mark, no custom icon) |
 | `components/Toaster.tsx` | `UI/State/Toasts.cs` + `UI/Components/Toaster.razor` |
 | `components/ConfirmDialog.tsx` | `UI/Components/ConfirmDialog.razor` (`<dialog>`) |
-| `components/NoteCard.tsx` | `UI/Components/NoteCard.razor` + `MenuItem.razor`, `DropdownMenu.razor`; new `NoteLock.razor`, for the locked notes the web app does not have ([07](07-screens.md#locked-notes)) |
+| `components/NoteCard.tsx` | `UI/Components/NoteCard.razor` + `MenuItem.razor`, `DropdownMenu.razor`; new `NoteLock.razor`, for the locked notes the web app does not have ([07](07-screens.md#locked-notes)), and `NotePdfExport.cs`, for Export to PDF ([07](07-screens.md#export-to-pdf)) |
 | `components/NoteList.tsx` | `UI/Components/NoteList.razor` |
 | `components/NoteRemoval.tsx` | `UI/Components/NoteRemoval.cs` (helper) |
 | `components/Composer.tsx` | `UI/Components/Composer.razor` (Adapt: native picker) |
@@ -71,7 +71,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `components/ImageViewer.tsx` | `UI/Components/ImageViewer.razor` (Adapt: Save a copy, Share) |
 | `components/Labels.tsx` | `UI/Components/LabelDot.razor`, `LabelChips.razor`, `LabelPicker.razor` |
 | `components/LabelSettings.tsx` | `UI/Pages/Settings/LabelSettings.razor`, `LabelRow.razor`, `LabelColorPicker.razor` (with the eye that hides a label's notes, web 1.16.0) |
-| `components/TodoCard.tsx` | `UI/Components/TodoCard.razor`, `ItemsEditor.razor` (plus **Lock** in the menu, with `NoteLock.razor`) |
+| `components/TodoCard.tsx` | `UI/Components/TodoCard.razor`, `ItemsEditor.razor` (plus **Lock** in the menu, with `NoteLock.razor`, and **Export to PDF…**, with `NotePdfExport.cs`) |
 | `components/HabitRow.tsx`, `HabitChart.tsx`, `HabitCalendar.tsx` | `UI/Components/Habits/*.razor` |
 | `components/Calendar.tsx` | `UI/Components/Calendar.razor` |
 | `components/PreferenceSections.tsx` | `UI/Pages/Settings/{Appearance,Menu,Writing,Editing,Features}Section.razor` (Adapt: no link previews), and from web 1.15.0 `PhotoSizeChoice.razor` and `DailyTemplateSetting.razor` |

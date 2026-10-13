@@ -1,9 +1,13 @@
 @* Port of FeaturesSection in components/PreferenceSections.tsx (Maple Notes 1.15.0), adapted (docs/07, Settings →
    Features): without Link previews; "Shrink photos before uploading" becomes "Shrink photos before adding" (docs/08,
    Pictures, video and files); with Help out of the menu, the guide is opened from the foot of Settings, since there
-   is no address to type. *@
+   is no address to type. New here: Export to PDF, off by default, on a platform that can write one (docs/07,
+   Export to PDF). *@
+@using FalconNotes.Core.Pdf
 @using FalconNotes.UI.State
+@using Microsoft.Extensions.DependencyInjection
 @inject AppState State
+@inject IServiceProvider Services
 
 <Section Title="Pages">
     <Description>Each one adds a page to the side menu. Turning one off hides it; nothing is deleted.</Description>
@@ -60,5 +64,11 @@
                                  ValueChanged="@(size => State.UpdatePreferencesAsync(p => p with { PhotoSize = size }))" />
             }
         </div>
+        @if (Services.GetService<PdfExportService>() is not null)
+        {
+            <PreferenceSwitch Label="Export to PDF"
+                               Description="Adds Export to PDF… to the ⋯ menu of notes, quick notes and todo lists. It saves the note, with its pictures, as a PDF file where you choose on this device. The PDF is not encrypted, so keep it somewhere safe."
+                               Checked="State.Preferences.PdfExport" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { PdfExport = on }))" />
+        }
     </div>
 </Section>

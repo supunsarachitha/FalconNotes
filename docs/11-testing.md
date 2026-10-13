@@ -256,6 +256,14 @@ in light and dark mode:
       Export ZIP… and turning automatic backups on ask for the PIN, and the ZIP holds the note; restored on another
       install, it is not locked; turning the app lock on asks for the same PIN; Change PIN… with the app lock off;
       Note lock turned off again leaves the locked notes locked, with Unlock… in their menus.
+- [ ] Export to PDF: with the switch off (as installed) no menu offers it; turned on in Settings → Features, a note
+      with a title, a checklist, a table, a code block, a link, Sinhala or Tamil text, an emoji and two photos (one
+      taken on its side) saves as a PDF from its ⋯ menu, under its title as the file's name; opened in another app
+      it has the text as text (English words can be selected and searched), the boxes ticked as in the note, the photos upright
+      and the date under the title; a note long enough for three pages breaks between lines and numbers its pages; a
+      todo list and a quick note; a note with a video names the file at the end; cancelling the save dialog saves
+      nothing and says nothing; a locked note offers it only while it is unlocked; nothing is left in
+      `cache/export/`; and the app still has no storage permission.
 - [ ] App lock: set, lock after delay, biometrics, wrong PIN ×5, Lock now, background cover, screenshots blocked
       (Android), Forgot PIN → erase.
 - [ ] Erase all data → Welcome. Removing the device key with the Debug-only developer action leads to Key lost, where

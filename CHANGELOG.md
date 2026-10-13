@@ -142,6 +142,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the backup format is unchanged, and a restored note is not locked. Turning Note lock off only takes **Lock** out
   of the menus: notes already locked stay locked and can still be unlocked. Schema migration 3 adds
   `Notes.IsLocked`. Help has a new section, **Locked notes**.
+- **Export to PDF** (docs/04, docs/07; this app's own, the web app has none), **off by default**: turn on **Export
+  to PDF** in Settings → Features. **Export to PDF…** in the ⋯ menu of a note, quick note or todo list then saves
+  that note as a PDF where you choose on the device, under its first line as the file's name. The PDF has the note's
+  text as the screen formats it (headings, lists, ticked and open boxes, quotes, code, tables, links with their
+  addresses written out), when it was written, and its pictures; files that cannot be on a page, such as a video,
+  are named at the end. It is A4, black on white whatever your theme, with real text in any script the device
+  shows, which can be selected and searched (Sinhala, Tamil and Arabic look right, but do not copy out exactly), and
+  numbered pages when there are several. A locked note can be exported only
+  while it is unlocked to be read. A PDF is not encrypted, and it is not a backup: it cannot be restored. Android
+  only for now; it uses Android's own PDF drawing, so the app gains no library and needs no new permission. Help
+  describes it.
 - A rule and its test, at the owner's request: an update never loses notes (CLAUDE.md, docs/11). `UpgradeKeepsNotesTests`
   takes a database with one of everything back to the schema of each earlier version, starts it as an update does,
   and compares every row and file with what was there; a migration added without its undo fails a test.

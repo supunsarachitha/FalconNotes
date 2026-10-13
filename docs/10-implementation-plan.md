@@ -617,6 +617,66 @@ with.
   trimming the bindings in full, which risks the release build for a warning about code that is never reached, so it
   is left until MAUI or Material moves.
 
+Version 1.5.0 (versionCode 8), 2026-10-13, on the `release-1.5.0` branch: **Export to PDF**, at the owner's request
+("a new feature to setting for enable export to PDF option. by default it is disabled. when enabled, each note can
+export to pdf. this export file should save in device."; [04](04-domain-rules.md#export-to-pdf),
+[07](07-screens.md#export-to-pdf), [12](12-platforms.md)). It is this app's own; Maple Notes has no such thing, so
+there was nothing to port. The owner gave the three rules above; the rest was decided while building, and is
+written into the documents:
+
+- The switch, **Export to PDF**, is with the other features in Settings → Features, last in Notes and files, kept
+  with the other preferences (`pdfExport`). No schema change and no migration: preferences saved by an earlier
+  version have no such key and read as off.
+- **No library.** Core says what is on the page (`PdfNote`, built from the note's Markdown by the pipeline the
+  screen uses), and the platform draws it (`IPdfWriter`; Android's `PdfDocument` and `StaticLayout`). A PDF library
+  in Core would have needed the owner's approval, a licence review, and its own fonts and text shaping for Sinhala
+  and Tamil, which Android already has. The WebView's own printing would have matched the screen exactly, but can
+  be driven without the system's print dialog only through constructors Android hides from apps.
+- "Save in device" is the system's "save to" dialog, as for an export and Save a copy: the user chooses the place,
+  and the app needs no storage permission. Saving straight into Download without asking would need
+  `WRITE_EXTERNAL_STORAGE` on Android 8 and 9.
+- The PDF holds the note's text as the screen formats it, when it was written, and its pictures; files a page
+  cannot show are named. Labels and the pin are left out. A4, black on white whatever the theme.
+- The file is named after the note's first line, not by an export's slug, which would misspell Sinhala and Tamil.
+- A locked note can be exported only while it is open to be read, with no second PIN. A note in the trash and a
+  habit have no export.
+- The PDF is not encrypted and is not a backup; the switch says the first, Help says both. The backup format is
+  untouched.
+
+**Checked on the emulator** (`MAUI_Emulator_API_36`, started `-read-only`, so nothing of this stays on it), which
+held a Debug install of 1.2.0 with 35 notes and 8 files. **The update** ([11](11-testing.md#updates-keep-every-note)):
+a Debug build of the released **1.4.0** (the `v1.4.0` tag, built in a copy outside the repository) was installed
+over it and a note written in it; then the Debug **1.5.0** was installed over that with `adb install -r`.
+`scripts/update-check/` found every card on every page, the tags, the storage line (36 notes, 8 files) and the
+appearance identical; the one line it listed was the new note's "just now" turned "2 minutes ago".
+
+Then, in 1.5.0 on that data: no menu offered **Export to PDF…** as installed, and Settings → Features showed the
+switch off, with its text. Turned on, the item stood after Copy text in a note's menu and after Clear completed in a
+list's. A note written for the purpose (a title with Sinhala in it, bold, italic, struck and code text, a link,
+emoji, Tamil, Sinhala and Arabic words, ticked and open boxes, a nested bullet, a numbered list, a quote, a table, a
+code block, a rule, a second heading and 45 paragraphs): the save dialog suggested "PDF check සටහන් පොත.pdf", **SAVE**
+put it in Download, and the toast said "Saved as a PDF." The file, pulled off the emulator and rendered on the Mac
+with PDFKit, was three A4 pages of 132 KB, numbered at the foot: every script and both emoji drawn as on the screen,
+the date under the title, the link's address after it, the boxes ticked as in the note, the table with its header
+tinted, the code on its tint, and the pages broken between two lines of a paragraph. Its English text extracted
+exactly; its Sinhala, Tamil and Arabic, drawn correctly, extracted with signs missing
+([12](12-platforms.md), PDF). The demo note with three pictures gave three pages and 677 KB, each picture whole
+under the text or on a page of its own. A todo list gave its title, "· edited" with the second date, and eight boxes
+ticked as in the Todo tab. The switch was still on after the app was installed again over itself. With **Note lock**
+on, a locked note's menu had no export; unlocked with its PIN it had; choosing it opened the save dialog, and Back
+there saved nothing, said nothing, and left the note locked again, the app having been left. `cache/export/` was
+empty after every export, saved or cancelled. The app's permissions were as before (`INTERNET` is the Debug
+build's).
+
+The Core tests (457, one skipped: the budgets) and the component tests (233) pass; 26 and 8 of them are new.
+
+Not checked, still open: a **Release build** of this version (R8 and trimming over the new code) built, installed
+or run, and so the update between release-signed builds; a real phone, and the PDF opened in a phone's own viewer;
+Android 8.0 and 8.1, where pictures take the older decoder; a photo taken on its side (the decoding is the photo
+shrinker's, which is checked for that); a picture the device cannot decode, and a note with a video, on the device
+(Core tests cover what the PDF says for each); a table wider or a row taller than a page; TalkBack; the tablet
+layout; the dark theme, which the PDF's colours do not depend on.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._

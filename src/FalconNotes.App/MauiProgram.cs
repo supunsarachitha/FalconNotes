@@ -9,6 +9,7 @@ using FalconNotes.Core.Labels;
 using FalconNotes.Core.Maintenance;
 using FalconNotes.Core.Markdown;
 using FalconNotes.Core.Notes;
+using FalconNotes.Core.Pdf;
 using FalconNotes.Core.Settings;
 using FalconNotes.Core.Storage;
 using FalconNotes.Core.Platform;
@@ -52,6 +53,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IImageCodec, Services.AndroidImageCodec>();
         builder.Services.AddSingleton<IBackupFolders, AndroidBackupFolders>();
         builder.Services.AddSingleton<PhotoShrinker>();
+        builder.Services.AddSingleton<IPdfWriter, Services.AndroidPdfWriter>();
+        builder.Services.AddSingleton<PdfExportService>();
 #endif
 
         // Core and start-up (docs/02, Runtime model): stateless services are singletons.

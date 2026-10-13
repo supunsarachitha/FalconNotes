@@ -265,8 +265,8 @@ are in [03](03-data-storage-and-security.md#locked-notes); the screens are in [0
   Unlocking it takes your PIN."
 - **Unlock** (the owner's change of 2026-10-12: at first it took the lock off): after the PIN or a biometric check,
   the note is **open to be read**. `IsLocked` stays 1 and nothing is written; `NoteLocks` remembers it in memory.
-  While it is open the note shows and works as any note does (edit, labels, moves, Copy text, its files), with an
-  open lock where the lock mark was. It is still locked for everything below: search, tags, the template, exports.
+  While it is open the note shows and works as any note does (edit, labels, moves, Copy text, Export to PDF where
+  that is turned on, its files), with an open lock where the lock mark was. It is still locked for everything below: search, tags, the template, exports.
   Toast: "Unlocked. It locks again when you leave this page or the app."
 - **It locks again by itself** (`NoteLocks.CloseAll`): when another page is opened (any change of address, a filter
   too), when the app goes to the background, when the app lock locks, and when the app is closed, since nothing was
@@ -296,6 +296,59 @@ are in [03](03-data-storage-and-security.md#locked-notes); the screens are in [0
   an export asks for the PIN first (`NoteService.AnyLockedAsync`).
 - The rules are decided in `NoteService`, `AttachmentService` and `NoteLocks`, not by the screens, so that no list or
   handler can forget one. Lists read `IsLocked` with the row; there is no extra query.
+
+## Export to PDF
+
+New in this app (1.5.0, 2026-10-13, at the owner's request); the web app has nothing like it, so there is no
+reference to port. The screens are in [07](07-screens.md#export-to-pdf) and the platform's side in
+[12](12-platforms.md).
+
+- **The switch**: **Export to PDF…** is in the menus only while the preference `pdfExport` (**Export to PDF** in
+  Settings → Features) is on. It is **off by default**: a PDF is a plain copy of a note outside the app, and nobody
+  should make one by a slip of the thumb. Off, nothing else changes. The switch and the item exist only on a
+  platform that has an `IPdfWriter` ([02](02-architecture.md#platform-services)): Android, for now.
+- **What can be exported**: a timeline note (a daily note too), a quick note and a todo list, archived ones too,
+  one at a time. Not a habit, whose row has no such menu, and not a note in the trash. A **locked** note has the
+  item only while it is open to be read ([Locked notes](#locked-notes)), like Copy text, and it asks for no PIN
+  again: the PIN was just given, and what leaves the app is the one note on the screen, not every locked note as
+  in an export.
+- **What the PDF holds** (`PdfNoteBuilder`): the note's text as the card shows it at that moment, a tick still
+  being saved included, read with the same Markdig pipeline as the screen
+  ([Markdown rendering](#markdown-rendering)): headings, bold, italic, strikethrough, inline code and code blocks,
+  bullet and numbered lists with their levels, task items as boxes, quotes, rules, tables and footnotes. A single
+  line break joins its lines and raw HTML stays text, as on the screen. With it:
+  - **When it was written**, in small grey text: "Sep 28, 2026, 14:30", as the card's tooltip writes it, followed
+    by " · edited {date}" when the card says "edited". Under the title when the note starts with one (a first-level
+    heading), otherwise at the very top.
+  - **Links**: the link's text, underlined, and after it the address in brackets where the text does not already
+    show it, because paper cannot be tapped. Only an address the screen would open (the safe protocols), and not
+    one of the app's own pages. A `#tag` is the plain text it is.
+  - **Pictures**: the note's attached images (`Attachment.IsImage`), one under the other after the text, in the
+    order they were added, upright, an animation as its first frame. One the device cannot decode leaves a grey
+    line, "Picture not shown: {name}". A picture written into the text (`![…](…)`) shows its description.
+  - **Other files** (video, audio, documents, an SVG) cannot be on a page: one last grey line names them, "Attached
+    files, not in this PDF: clip.mp4, budget.xlsx".
+  - **Not in it**: labels, the pin, and the tags as anything but the text they are.
+- **The page** (`IPdfWriter`): A4, upright, with 0.75 inch margins; black on white whatever the theme, accent or
+  background. The text is text, not a picture of it, set by the platform's own text engine, so every script and
+  emoji the device shows comes out as on the screen. How well it can then be selected, copied and searched is up to
+  the platform's PDF writer: on Android, Latin text copies out exactly, while scripts whose letters join into
+  combined shapes (Sinhala, Tamil, Arabic) look right on the page and lose some of their signs when copied
+  ([12](12-platforms.md)). A block that does not fit goes on to the next page
+  between two lines, never through one; a table row and a picture move whole; a heading is not left alone at the
+  foot of a page. Pages are numbered at the foot when there is more than one. A picture is drawn from at most 1,240
+  pixels on its longest side (150 to the inch across the page), and never larger than its own size at 96 to the inch.
+- **The file**: written to `cache/export/{random}.pdf`, handed to the system's save dialog (`IFileSaver`) and
+  deleted whatever happens, as an export is ([05](05-backup-compatibility.md#writing-the-file)). The dialog
+  suggests the note's first line as a person would write it: "Shopping list.pdf". Heading, list and quote marks
+  and `#tags` are left out (a line that is only a tag keeps its word); letters and digits are kept in any script,
+  with the marks that belong to them; anything else separates words; at most 60 characters; "note.pdf" when no word
+  is left. This is **not** an export's slug (`ExportNaming.Slug`): a slug keeps letters and digits only, which
+  takes the vowel signs out of Sinhala, Tamil, Hindi and Thai words and would leave the name misspelt.
+- **Toasts**: "Saved as a PDF." Cancelling the dialog says nothing. Any failure: "The PDF could not be made. Please
+  try again."
+- **It is not a backup**, and not part of one: a PDF cannot be restored, and the backup format is untouched (D6).
+  **It is not encrypted**, and the switch's description says so.
 
 ## Labels
 
@@ -347,6 +400,7 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `habitTracker` | false | `accent` | `Falcon` (Falcon, Ocean, Forest, Teal, Plum, Amber, Slate) |
 | `menuTextSize` | `Medium` (Small, Medium, Large) | `weekStart` | `Auto` (Auto, Sunday, Monday, Saturday) |
 | `menuOrder` | `""` | `background` | `None` (None, Halloween, Christmas, NewYear, Valentine, Easter, Diwali, Vesak, Eid, LunarNewYear) |
+| `pdfExport` | false | | |
 
 - `Falcon` is the web app's `Maple` accent under this app's name, with the same colours (D12). Preferences are not
   part of backups, so nothing needs mapping.
@@ -354,6 +408,8 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
   key, and a value this app does not offer reads as `None`, like every other preference.
 - `noteLock` is this app's own too ([Locked notes](#locked-notes)): whether **Lock** is in the menus. Preferences
   saved before 1.4.0 have no such key and read as off.
+- `pdfExport` is this app's own as well ([Export to PDF](#export-to-pdf)): whether **Export to PDF…** is in the
+  menus. Preferences saved before 1.5.0 have no such key and read as off.
 - A change shows at once and is saved in the background. If saving fails, it is rolled back with "Your setting could
   not be saved. Please try again."
 - Turning a feature off hides its page or tool and deletes nothing. A page whose feature is off shows "{Feature} is

@@ -73,13 +73,15 @@ src/
     Backup/Export/   NoteExporter, NoteFormatter, ExportNaming, ExportModels (ported from the server);
                      ExportService, AutoExportService and AutoExportSettings (this app's)
     Backup/Restore/  RestoreReader (port of parse.ts), RestoreRunner (port of importer.ts)
+    Pdf/             PdfNote (what a note's PDF shows), PdfNoteBuilder (from its Markdown), PdfExportService (this app's)
     Maintenance/     StartupTasks, TrashPurge, AttachmentCleanup, TempFiles, DatabaseBackups
-    Platform/        IFileSaver, IFilePicker, IFileOpener, IClipboard, IAppLock, IThemeSource, IAppInfo, IBackupFolders
+    Platform/        IFileSaver, IFilePicker, IFileOpener, IClipboard, IAppLock, IThemeSource, IAppInfo, IBackupFolders,
+                     IPdfWriter
     Events/          ChangeFeed (NotesChanged, LabelsChanged, PreferencesChanged, ProfileChanged)
   FalconNotes.UI/
     Layout/          AppShell, Sidebar, Drawer, MainLayout
     Pages/           Home, Archive, Todo, Quick, Habits, Tags, Trash, Settings/*, Help, Welcome, Lock, KeyLost
-    Components/      NoteCard, NoteLock, NoteList, Composer, FormatToolbar, TagSuggestions, Markdown, AttachmentGallery,
+    Components/      NoteCard, NoteLock, NotePdfExport, NoteList, Composer, FormatToolbar, TagSuggestions, Markdown, AttachmentGallery,
                      ImageViewer, TodoCard, HabitRow, HabitChart, HabitCalendar, Calendar, Labels, LabelPicker,
                      LabelSettings, MenuOrderEditor, PreferenceSections, ExportSection, RestorePanel, ui/* primitives
     State/           AppState (profile, preferences, lock state), Toasts, Dialogs
@@ -252,9 +254,12 @@ Core defines the interfaces; the App implements them per platform; tests use fak
 | `IShare` (the viewer's share button) | `Share.RequestAsync` with the cached copy | with that head | with that head |
 | `IWindowInsets` (the system bars' insets) | `AndroidWindowInsets`, from the decor view | not needed | not needed |
 | `IBackupFolders` (the folder for automatic backups) | `AndroidBackupFolders`: `ACTION_OPEN_DOCUMENT_TREE` with a persisted grant, then `DocumentsContract` | a folder picker and plain files, with that head | a folder picker and a security-scoped bookmark, with that head |
+| `IPdfWriter` (a note's PDF) | `AndroidPdfWriter`: `PdfDocument` pages, with `StaticLayout` setting the text | with that head | with that head (Core Graphics and Core Text) |
 
 A platform that has no `IImageCodec` yet registers no `PhotoShrinker`, and the composer then adds photos as they are.
 A platform that has no `IBackupFolders` yet registers none, and Settings then does not offer automatic backups.
+A platform that has no `IPdfWriter` yet registers no `PdfExportService`, and Settings then does not offer Export to
+PDF ([04](04-domain-rules.md#export-to-pdf)).
 
 See [12-platforms.md](12-platforms.md) for the platform details.
 
@@ -273,6 +278,7 @@ Only these, unless a decision is recorded here first. Every one must be on the a
 | `SkiaSharp` (+ native assets per platform) | MIT, but see below | **Not added, and not needed** (2026-10-08): photos are shrunk by each platform's own codec behind `IImageCodec`, with no third-party code (Android: `AndroidImageCodec`, [12](12-platforms.md); Windows `BitmapDecoder`/`BitmapEncoder` and Apple ImageIO come with those heads). The licence question that held it back since 2026-10-01 was never settled. Its native library bundles code under other terms: Adobe's DNG SDK (a custom licence), the GIF decoder (MPL 1.1 / GPL / LGPL), FreeType (FTL, an advertising clause), and it lists libmicrohttpd (LGPL). The licence policy puts custom, MPL and LGPL terms under "review first". |
 | `CommunityToolkit.Maui` | MIT | File saver, status bar colour |
 | `Xamarin.AndroidX.Biometric` 1.1.0.30 | MIT (the binding) and Apache-2.0 (AndroidX) | Biometric unlock (`IAppLock` on Android). **Approved by the owner, 2026-10-08.** The version is pinned to the one built against the AndroidX versions MAUI 10.0.110 brings, so it adds one package and changes no other; raise it together with MAUI. Its manifest adds two permissions ([12](12-platforms.md)). |
+| A PDF library | | **Not added, and not needed** (2026-10-13): a note's PDF is drawn by each platform's own PDF and text drawing behind `IPdfWriter`, with no third-party code (Android: `PdfDocument` and `StaticLayout`, [12](12-platforms.md)). Core only says what is on the page (`PdfNote`). A library in Core would also have had to bring its own fonts and text shaping for Sinhala, Tamil, Arabic and emoji, which the platform already has. |
 | Tailwind CSS 4 standalone CLI | MIT | Build-time only, generates `app.css` |
 | Lucide icons (SVG paths, copied into `Icon.razor`) | ISC | Icons |
 | `Microsoft.Extensions.Logging.Abstractions` | MIT | Logging interfaces in Core (already part of MAUI) |
