@@ -63,7 +63,7 @@ All are **Port** to Razor with the same markup and classes, unless noted.
 | `components/NoteCard.tsx` | `UI/Components/NoteCard.razor` + `MenuItem.razor`, `DropdownMenu.razor`; new `NoteLock.razor`, for the locked notes the web app does not have ([07](07-screens.md#locked-notes)), and `NotePdfExport.cs`, for Export to PDF ([07](07-screens.md#export-to-pdf)) |
 | `components/NoteList.tsx` | `UI/Components/NoteList.razor` |
 | `components/NoteRemoval.tsx` | `UI/Components/NoteRemoval.cs` (helper) |
-| `components/Composer.tsx` | `UI/Components/Composer.razor` (Adapt: native picker) |
+| `components/Composer.tsx` | `UI/Components/Composer.razor` (Adapt: native picker); new `MoodPicker.razor` and `Moods.cs`, for the moods the web app does not have yet ([07](07-screens.md#moods)) |
 | `components/FormatToolbar.tsx` | `UI/Components/FormatToolbar.razor` |
 | `components/TagSuggestions.tsx` | `UI/Components/TagSuggestions.razor` |
 | `components/Markdown.tsx` | `Core/Markdown/MarkdownRenderer.cs` + `UI/Components/Markdown.razor` + `markdown.js` |

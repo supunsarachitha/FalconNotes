@@ -108,6 +108,21 @@ public class SettingsTests
         Assert.Contains("\"pdfExport\":true", stored, StringComparison.Ordinal);
     }
 
+    // New: the web app has no mood tracker (docs/04, Moods).
+    [Fact]
+    public async Task The_mood_tracker_is_off_until_it_is_turned_on()
+    {
+        using var app = await TestApp.StartAsync();
+        Assert.False((await app.Preferences.GetAsync()).MoodTracker);
+        Assert.False(new Preferences().MoodTracker); // and for preferences saved before there was such a switch
+
+        await app.Preferences.SaveAsync(new Preferences { MoodTracker = true });
+
+        Assert.True((await app.Preferences.GetAsync()).MoodTracker);
+        var stored = await app.Storage.Database.ReadAsync(connection => SettingsStore.GetRaw(connection, "preferences"));
+        Assert.Contains("\"moodTracker\":true", stored, StringComparison.Ordinal);
+    }
+
     // Ported from the server's PreferencesTests.cs (Maple Notes 1.9.0 to 1.15.0). There a value that is not offered
     // is refused; here it falls back to its default, as every preference does.
     [Fact]

@@ -145,6 +145,22 @@ New tests the reference does not have:
   from its menu, shows locked in its tab, is the list's own card while it is open and locks again; the trash hides
   it; an export and the automatic backups' folder ask for the PIN while a note is locked, and not otherwise; turning
   the app lock on asks for the PIN in use instead of a new one.
+- Moods (1.7.0; this app's own, so every test is new). Core, `MoodTests`: a note has no mood unless one is chosen;
+  a change of mood alone leaves `UpdatedAt` and raises `Revision`; an edit saves the text and the mood together
+  and keeps the mood when none is given; other changes leave it; only notes and quick notes can have one, and a
+  note that becomes a todo list gives it up; the daily note takes the mood chosen with its first words and keeps
+  it when more are added without one; the names backups use, and the stored numbers. `MoodBackupTests`: in each
+  format a mood is one more line, in its place, and nothing else in the note file or the manifest changes; a
+  backup restored into an empty app brings each mood back, in each format; a mood is read in any case and an
+  unknown one is none; a todo list or a habit that names one arrives without it. The mood tracker is off until it
+  is turned on (`SettingsTests`). A version 3 database upgrades with no moods (`DatabaseStartupTests`), and every
+  earlier version updates with every row kept ([Updates keep every note](#updates-keep-every-note)). The screens,
+  bUnit, `MoodTests`: the switch is off as installed; no smilies where a note is written until it is on; the
+  smiley button opens five, worst to best, each named, and shows the one chosen; choosing it again takes it off; a
+  note and a quick note are posted with the mood and the next starts without; a mood alone cannot be posted; the
+  daily note; editing shows the note's mood, and changing it alone does not make the note edited; an edit saves
+  both; with the switch off an edit keeps the mood; a todo list is offered none; the card shows the smiley with
+  its name, nothing with the switch off, and nothing on a locked note.
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 
@@ -264,6 +280,13 @@ in light and dark mode:
       todo list and a quick note; a note with a video names the file at the end; cancelling the save dialog saves
       nothing and says nothing; a locked note offers it only while it is unlocked; nothing is left in
       `cache/export/`; and the app still has no storage permission.
+- [ ] Moods: as installed no smiley button stands by the paperclip and no note shows a smiley; with **Mood
+      tracker** on in Settings → Features the button is there on Home, in the Today card and in Quick notes; it
+      opens five smilies, drawn in colour by the device, that fit beside each other on a narrow phone; a note
+      posted with one shows it after its time, in light and dark; edited to another, the note does not turn
+      "· edited"; chosen again, it is gone; a locked note hides it; an export holds `mood:` for that note alone,
+      and restored on another install the smiley is back; with the switch off again every smiley is hidden, and on
+      again they are all there; TalkBack reads "Mood: Good".
 - [ ] The app made again: leave Home with Back, open the app again from the launcher before Android has ended its
       process, and open the drawer: its name and mark are under the status bar's clock, not behind it, and its last
       row is above the navigation bar; the theme, accent and background are as chosen; rotate, and it still fits.

@@ -5,7 +5,8 @@
    unless the trash is off (NoteRemoval). Link previews are gone (docs/07). New here: a note can be locked, and then
    shows a lock in its corner and none of what is in it, with a menu that cannot show it either, until it is
    unlocked to be read; it locks again by itself (docs/07, Locked notes). With Export to PDF turned on, the menu
-   saves the note as a PDF (docs/07, Export to PDF). *@
+   saves the note as a PDF (docs/07, Export to PDF). With the mood tracker turned on, a note's mood shows as a
+   smiley after its time (docs/07, Moods). *@
 @using System.Globalization
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
@@ -37,6 +38,11 @@ else
             @if (Edited)
             {
                 <span title="@($"Edited {RelativeTime.Absolute(Note.UpdatedAtUtc, Time.LocalTimeZone, Uses24Hour)}")">· edited</span>
+            }
+            @if (ShowsMood)
+            {
+                <span role="img" aria-label="@($"Mood: {Moods.Label(Note.Mood)}")" title="@($"Mood: {Moods.Label(Note.Mood)}")"
+                      class="text-base leading-none">@Moods.Emoji(Note.Mood)</span>
             }
             @if (ShowKind && Note.Kind != NoteKind.Note)
             {
@@ -179,6 +185,9 @@ else
     private bool Hidden => Note.IsLocked && !Locks.IsOpen(Note.Id);
 
     private bool TapToEdit => State.Preferences.DoubleTapToEdit && !Note.IsArchived && !Hidden;
+
+    // How its writer felt is part of what a locked note hides.
+    private bool ShowsMood => State.Preferences.MoodTracker && Note.Mood != NoteMood.None && !Hidden;
 
     private bool IsTemplate => Note.Id.ToString("D") == State.Preferences.DailyNoteTemplate;
 

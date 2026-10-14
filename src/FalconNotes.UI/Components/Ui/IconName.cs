@@ -171,6 +171,9 @@ public enum IconName
     /// <summary>Lucide <c>shield-check</c>.</summary>
     ShieldCheck,
 
+    /// <summary>Lucide <c>smile</c>.</summary>
+    Smile,
+
     /// <summary>Lucide <c>sun</c>.</summary>
     Sun,
 

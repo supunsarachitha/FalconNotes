@@ -38,7 +38,7 @@ public static class NoteFormatter
     };
 
     /// <summary>
-    /// Markdown with YAML front matter (id, kind, daily date, dates, tags, labels, state, attachments), the original text, and an
+    /// Markdown with YAML front matter (id, kind, daily date, dates, tags, labels, state, mood, attachments), the original text, and an
     /// "Attachments" section that embeds images and links other files by relative path.
     /// </summary>
     /// <param name="note">The note.</param>
@@ -60,6 +60,11 @@ public static class NoteFormatter
         text.Append("labels: [").Append(string.Join(", ", note.LabelNames.Select(Quote))).Append("]\n");
         text.Append("pinned: ").Append(note.Pinned ? "true" : "false").Append('\n');
         text.Append("archived: ").Append(note.Archived ? "true" : "false").Append('\n');
+        if (note.MoodName is { } mood)
+        {
+            text.Append("mood: ").Append(mood).Append('\n');
+        }
+
         if (note.Attachments.Count > 0)
         {
             text.Append("attachments:\n");
@@ -87,7 +92,7 @@ public static class NoteFormatter
     }
 
     /// <summary>
-    /// Plain text: a short header (dates, kind and daily date when they matter, tags, labels, state, attachment paths), a blank
+    /// Plain text: a short header (dates, kind and daily date when they matter, tags, labels, state, mood, attachment paths), a blank
     /// line, then the note text.
     /// </summary>
     /// <param name="note">The note.</param>
@@ -127,6 +132,11 @@ public static class NoteFormatter
             text.Append("State: ").Append(string.Join(", ", new[] { note.Pinned ? "pinned" : null, note.Archived ? "archived" : null }.OfType<string>())).Append('\n');
         }
 
+        if (note.MoodName is { } mood)
+        {
+            text.Append("Mood: ").Append(mood).Append('\n');
+        }
+
         foreach (var attachment in note.Attachments)
         {
             text.Append("Attachment: ").Append(attachment.RelativePath).Append('\n');
@@ -139,8 +149,9 @@ public static class NoteFormatter
     /// <summary>One JSON document with the note and its metadata.</summary>
     /// <param name="note">The note.</param>
     /// <returns>The JSON document.</returns>
-    public static string Json(ExportedNote note) =>
-        JsonSerializer.Serialize(new
+    public static string Json(ExportedNote note)
+    {
+        var document = new
         {
             note.Id,
             Kind = note.KindName,
@@ -153,7 +164,17 @@ public static class NoteFormatter
             note.Archived,
             note.Content,
             Attachments = note.Attachments.Select(a => new { a.FileName, a.ContentType, a.SizeBytes, Path = a.RelativePath }),
-        }, JsonOptions) + "\n";
+        };
+        if (note.MoodName is not { } mood)
+        {
+            // Written by the server's own lines, so a note without a mood is byte for byte what the web app writes.
+            return JsonSerializer.Serialize(document, JsonOptions) + "\n";
+        }
+
+        var withMood = JsonSerializer.SerializeToNode(document, JsonOptions)!.AsObject();
+        withMood.Insert(withMood.IndexOf("archived") + 1, "mood", mood);
+        return withMood.ToJsonString(JsonOptions) + "\n";
+    }
 
     /// <summary>Serializes the export manifest.</summary>
     /// <param name="manifest">The manifest object.</param>

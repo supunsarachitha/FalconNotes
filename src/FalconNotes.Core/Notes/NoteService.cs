@@ -100,12 +100,14 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
     /// <param name="attachmentIds">Files added while writing, not yet attached.</param>
     /// <param name="dailyDate">The day it is the daily note of, if any.</param>
     /// <param name="isPinned">Whether it starts pinned.</param>
+    /// <param name="mood">How its writer felt, if they chose a smiley (docs/04, Moods).</param>
     /// <returns>The new note.</returns>
-    /// <exception cref="UserFacingException">The text is too long or empty without files, or a daily note is not a
-    /// timeline note.</exception>
+    /// <exception cref="UserFacingException">The text is too long or empty without files, a daily note is not a
+    /// timeline note, or a mood is given to a todo list or a habit.</exception>
     /// <exception cref="DailyNoteExistsException">The day has a daily note already.</exception>
     public async Task<Note> CreateAsync(
-        string content, NoteKind kind = NoteKind.Note, IReadOnlyCollection<Guid>? attachmentIds = null, DateOnly? dailyDate = null, bool isPinned = false)
+        string content, NoteKind kind = NoteKind.Note, IReadOnlyCollection<Guid>? attachmentIds = null, DateOnly? dailyDate = null, bool isPinned = false,
+        NoteMood mood = NoteMood.None)
     {
         attachmentIds ??= [];
         ValidateContent(content, attachmentIds.Count);
@@ -114,6 +116,8 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
             throw new UserFacingException("Only timeline notes can be daily notes.", "dailyDate");
         }
 
+        ValidateMood(mood, kind);
+
         var id = Guid.CreateVersion7();
         var now = Now;
         try
@@ -121,14 +125,14 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
             await Db.InTransactionAsync((connection, transaction) =>
             {
                 using (var insert = Sql.Command(connection, """
-                    INSERT INTO Notes (Id, Kind, DailyDate, IsPinned, CreatedAt, UpdatedAt, ContentBytes)
-                    VALUES ($id, $kind, $daily, $pinned, $now, $now, $bytes);
+                    INSERT INTO Notes (Id, Kind, DailyDate, IsPinned, CreatedAt, UpdatedAt, ContentBytes, Mood)
+                    VALUES ($id, $kind, $daily, $pinned, $now, $now, $bytes, $mood);
                     INSERT INTO NoteBodies (NoteId, Content) VALUES ($id, $content);
                     """, transaction))
                 {
                     insert.With("$id", Sql.Id(id)).With("$kind", (int)kind).With("$daily", Sql.Date(dailyDate))
                         .With("$pinned", isPinned ? 1 : 0).With("$now", Sql.Time(now))
-                        .With("$bytes", NoteRepository.ContentBytes(content)).With("$content", content)
+                        .With("$bytes", NoteRepository.ContentBytes(content)).With("$content", content).With("$mood", (int)mood)
                         .ExecuteNonQuery();
                 }
 
@@ -148,21 +152,29 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
 
     /// <summary>
     /// Replaces a note's text and, when <paramref name="attachmentIds"/> is given, its files: files left out are
-    /// deleted, new ones attached. <c>UpdatedAt</c> changes; tags are read again from the text.
+    /// deleted, new ones attached. <c>UpdatedAt</c> changes; tags are read again from the text. The mood is saved with
+    /// the text when one is given, so an edit that changes both is one change.
     /// </summary>
     /// <param name="id">The note.</param>
     /// <param name="content">The new text.</param>
     /// <param name="attachmentIds">The files it should have; null to keep them as they are.</param>
+    /// <param name="mood">The mood it should have, none to take it off; null to keep it as it is.</param>
     /// <returns>The note, or null when there is none.</returns>
-    /// <exception cref="UserFacingException">The text is too long or empty without files.</exception>
-    public async Task<Note?> UpdateAsync(Guid id, string content, IReadOnlyCollection<Guid>? attachmentIds = null)
+    /// <exception cref="UserFacingException">The text is too long or empty without files, or a mood is given to a todo
+    /// list or a habit.</exception>
+    public async Task<Note?> UpdateAsync(Guid id, string content, IReadOnlyCollection<Guid>? attachmentIds = null, NoteMood? mood = null)
     {
         var now = Now;
         var removed = await Db.InTransactionAsync<List<string>?>((connection, transaction) =>
         {
-            if (NoteRepository.GetRow(connection, id, transaction) is null)
+            if (NoteRepository.GetRow(connection, id, transaction) is not { } note)
             {
                 return null;
+            }
+
+            if (mood is { } wantedMood)
+            {
+                ValidateMood(wantedMood, note.Kind);
             }
 
             var current = NoteRepository.AttachmentsOf(connection, [id], transaction).GetValueOrDefault(id, []);
@@ -171,11 +183,11 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
 
             using (var update = Sql.Command(connection, """
                 UPDATE NoteBodies SET Content = $content WHERE NoteId = $id;
-                UPDATE Notes SET UpdatedAt = $now, ContentBytes = $bytes, Revision = Revision + 1 WHERE Id = $id;
+                UPDATE Notes SET UpdatedAt = $now, ContentBytes = $bytes, Mood = $mood, Revision = Revision + 1 WHERE Id = $id;
                 """, transaction))
             {
                 update.With("$id", Sql.Id(id)).With("$content", content).With("$now", Sql.Time(now))
-                    .With("$bytes", NoteRepository.ContentBytes(content)).ExecuteNonQuery();
+                    .With("$bytes", NoteRepository.ContentBytes(content)).With("$mood", (int)(mood ?? note.Mood)).ExecuteNonQuery();
             }
 
             var gone = new List<string>();
@@ -207,14 +219,14 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
     }
 
     /// <summary>
-    /// Pins, archives, trashes, moves, labels, locks or unlocks a note (each change only when given).
-    /// <c>UpdatedAt</c> stays. Unlocking is not checked here: the caller has already asked for the PIN.
+    /// Pins, archives, trashes, moves, labels, locks or unlocks a note, or changes its mood (each change only when
+    /// given). <c>UpdatedAt</c> stays. Unlocking is not checked here: the caller has already asked for the PIN.
     /// </summary>
     /// <param name="id">The note.</param>
     /// <param name="change">The changes.</param>
     /// <returns>The note, or null when there is none.</returns>
-    /// <exception cref="UserFacingException">A move to or from habits, a lock on a habit, too many labels, or a label
-    /// that does not exist.</exception>
+    /// <exception cref="UserFacingException">A move to or from habits, a lock on a habit, a mood on a todo list or a
+    /// habit, too many labels, or a label that does not exist.</exception>
     public async Task<Note?> PatchAsync(Guid id, NotePatch change)
     {
         var now = Now;
@@ -245,16 +257,25 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
             // A daily note moved out of the timeline, or to the trash, gives up its day; restored, it is an ordinary note.
             var dailyDate = kind != NoteKind.Note || trashedAt is not null ? null : note.DailyDate;
 
+            if (change.Mood is { } wantedMood)
+            {
+                ValidateMood(wantedMood, kind);
+            }
+
+            // A note that becomes a todo list gives up its mood: a list shows none and has nowhere to change one.
+            var mood = NoteMoods.Allowed(kind) ? change.Mood ?? note.Mood : NoteMood.None;
+
             using (var update = Sql.Command(connection, """
                 UPDATE Notes SET Kind = $kind, IsPinned = $pinned, ArchivedAt = $archived, TrashedAt = $trashed,
-                                 DailyDate = $daily, IsLocked = $locked, Revision = Revision + 1
+                                 DailyDate = $daily, IsLocked = $locked, Mood = $mood, Revision = Revision + 1
                 WHERE Id = $id
                 """, transaction))
             {
                 update.With("$id", Sql.Id(id)).With("$kind", (int)kind).With("$pinned", (change.IsPinned ?? note.IsPinned) ? 1 : 0)
                     .With("$archived", archivedAt is { } a ? Sql.Time(a) : null)
                     .With("$trashed", trashedAt is { } t ? Sql.Time(t) : null)
-                    .With("$daily", Sql.Date(dailyDate)).With("$locked", (change.IsLocked ?? note.IsLocked) ? 1 : 0).ExecuteNonQuery();
+                    .With("$daily", Sql.Date(dailyDate)).With("$locked", (change.IsLocked ?? note.IsLocked) ? 1 : 0)
+                    .With("$mood", (int)mood).ExecuteNonQuery();
             }
 
             if (change.LabelIds is { } labelIds)
@@ -463,6 +484,14 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
         }
     }
 
+    private static void ValidateMood(NoteMood mood, NoteKind kind)
+    {
+        if (mood != NoteMood.None && !NoteMoods.Allowed(kind))
+        {
+            throw new UserFacingException("Only notes and quick notes can have a mood.", "mood");
+        }
+    }
+
     private static NoteQuery Normalise(NoteQuery query)
     {
         var tag = string.IsNullOrWhiteSpace(query.Tag) ? null : query.Tag.Trim().TrimStart('#').ToLowerInvariant();
@@ -486,9 +515,10 @@ public sealed class NoteService(StorageContext storage, AttachmentStore files, C
 /// <param name="Kind">Move to another kind (never to or from habits).</param>
 /// <param name="LabelIds">The labels it should have.</param>
 /// <param name="IsLocked">Lock or unlock (never a habit).</param>
+/// <param name="Mood">The mood it should have, none to take it off (only notes and quick notes).</param>
 public sealed record NotePatch(
     bool? IsPinned = null, bool? IsArchived = null, bool? IsTrashed = null, NoteKind? Kind = null, IReadOnlyList<Guid>? LabelIds = null,
-    bool? IsLocked = null);
+    bool? IsLocked = null, NoteMood? Mood = null);
 
 /// <summary>How much the notes and files take (Settings → Profile → Storage).</summary>
 /// <param name="NotesBytes">The text of every note, in UTF-8 bytes.</param>

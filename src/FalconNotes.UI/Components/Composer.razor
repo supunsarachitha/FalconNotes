@@ -6,7 +6,10 @@
    Adapted per docs/02 and docs/07: the paperclip opens the native file picker (IFilePicker) instead of a hidden
    HTML input, so there is no local blob preview while a file is "uploading" — it streams straight into the
    encrypted store, which the Phase 0 spike found fast even for large files. Paste and drag-and-drop are a
-   follow-up. *@
+   follow-up.
+
+   New here (docs/07, Moods): with the mood tracker on, a smiley button beside the paperclip opens five smilies to
+   choose the note's mood from, saved with the note. *@
 @using FalconNotes.Core.Attachments
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
@@ -91,8 +94,27 @@
         </ul>
     }
 
+    @if (OffersMood && _choosingMood)
+    {
+        <MoodPicker Id="@MoodPickerId" Value="_mood" ValueChanged="ChooseMood" />
+    }
+
     <div class="mt-2 flex items-center gap-2 border-t border-stone-100 pt-2 dark:border-stone-800">
         <IconButton Label="Attach files" OnClick="PickFilesAsync"><Icon Name="IconName.Paperclip" Class="size-5" /></IconButton>
+        @if (OffersMood)
+        {
+            <IconButton Label="@(_mood == NoteMood.None ? "Mood" : $"Mood: {Moods.Label(_mood)}")" OnClick="() => _choosingMood = !_choosingMood"
+                        aria-expanded="@(_choosingMood ? "true" : "false")" aria-controls="@MoodPickerId">
+                @if (_mood == NoteMood.None)
+                {
+                    <Icon Name="IconName.Smile" Class="size-5" />
+                }
+                else
+                {
+                    <span aria-hidden="true" class="text-xl leading-none">@Moods.Emoji(_mood)</span>
+                }
+            </IconButton>
+        }
         @if (Content.Length > MaxLength * 0.9)
         {
             <span class="@Classes.Join("text-xs", Content.Length > MaxLength ? "text-red-700" : "text-stone-500")">
@@ -128,6 +150,8 @@
     private string _suggestedTitle = "";
     private string _text = "";
     private bool _saving;
+    private NoteMood _mood;
+    private bool _choosingMood;
 
     /// <summary>The note to edit; omit to write a new note.</summary>
     [Parameter] public Note? Note { get; set; }
@@ -159,6 +183,11 @@
 
     private string TextareaId => Editing ? $"edit-{Note!.Id}" : "composer";
 
+    private string MoodPickerId => $"{TextareaId}-mood";
+
+    // The smilies, with the mood tracker on, for the notes that can have a mood: not a todo list edited from a search.
+    private bool OffersMood => State.Preferences.MoodTracker && NoteMoods.Allowed(Note?.Kind ?? Kind);
+
     private string Content => Daily is not null
         ? Titles.Join(Daily.Title, _text)
         : WithTitle ? Titles.Join(_title, _text) : _text;
@@ -180,6 +209,7 @@
         _suggestedTitle = SuggestTitle();
         _title = initialTitle.Length > 0 ? initialTitle : _suggestedTitle;
         _text = initialBody;
+        _mood = Note?.Mood ?? NoteMood.None;
         _files.AddRange((Note?.Attachments ?? []).Select(FromAttachment));
     }
 
@@ -271,6 +301,12 @@
     {
         _text = text;
         return Task.CompletedTask;
+    }
+
+    private void ChooseMood(NoteMood mood)
+    {
+        _mood = mood;
+        _choosingMood = false;
     }
 
     private async Task PickFilesAsync()
@@ -365,17 +401,28 @@
         _saving = true;
         try
         {
+            // Only where the smilies are offered: with them off, a note keeps the mood it has.
+            var mood = OffersMood ? _mood : (NoteMood?)null;
             if (Editing)
             {
-                await Notes.UpdateAsync(Note!.Id, Content, AttachmentIds);
+                if (mood is { } changed && changed != Note!.Mood && Content == Note.Content
+                    && AttachmentIds.SequenceEqual(Note.Attachments.Select(a => a.Id)))
+                {
+                    // The mood alone changed: the note was not rewritten, so it does not show as edited (docs/04, Moods).
+                    await Notes.PatchAsync(Note.Id, new NotePatch(Mood: changed));
+                }
+                else
+                {
+                    await Notes.UpdateAsync(Note!.Id, Content, AttachmentIds, mood);
+                }
             }
             else if (Daily is { } daily)
             {
-                await DailyNotes.SaveAsync(daily.Date, daily.Title, _text, AttachmentIds);
+                await DailyNotes.SaveAsync(daily.Date, daily.Title, _text, AttachmentIds, mood ?? NoteMood.None);
             }
             else
             {
-                await Notes.CreateAsync(Content, Kind, AttachmentIds);
+                await Notes.CreateAsync(Content, Kind, AttachmentIds, mood: mood ?? NoteMood.None);
             }
 
             if (!Editing)
@@ -383,6 +430,8 @@
                 _suggestedTitle = SuggestTitle();
                 _title = _suggestedTitle;
                 _text = "";
+                _mood = NoteMood.None;
+                _choosingMood = false;
                 _files.Clear();
                 var module = await ModuleAsync();
                 await module.InvokeVoidAsync("growNow", _textarea, MaxTextareaPixels);

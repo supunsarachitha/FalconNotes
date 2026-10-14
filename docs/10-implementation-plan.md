@@ -749,6 +749,59 @@ cover what the PDF is given, and the PDF drawing is unchanged); a checklist item
 the device, and the Archive and the trash; ticking a box in a note with kept line breaks on the device; the switch
 turned off again on the device; TalkBack; the tablet layout.
 
+Version 1.7.0 (versionCode 10), 2026-10-13, on the `release-1.7.0` branch: the **mood tracker**, at the owner's
+request ([04](04-domain-rules.md#moods), [07](07-screens.md#moods)): "a new feature for mood tracker using
+smilies". Maple Notes has none, so there was nothing to port. Asked three things before anything was built, the
+owner answered: on where moods are kept and whether backups carry them, "i will add this option to maple notes
+next. so this will be compatible with it"; on how many moods a day can hold, "this is just show in the note"; and
+on the smilies, **emoji**, over faces drawn in the app's icon style. So a mood belongs to a note and is shown on
+it, there is no log of days, page or chart, and backups carry it. Decided while building, and written into the
+documents:
+
+- Five moods, from awful to great (😢 🙁 😐 🙂 😄), on a note or a quick note, a daily note too; never on a todo
+  list or a habit. Kept in `Notes.Mood` (**migration 4**, a column with a default, so it only adds), 0 for none.
+- The switch, **Mood tracker**, is in Settings → Features after Labels, **off by default**, kept with the other
+  preferences (`moodTracker`). Off, the smilies are hidden and every mood is kept.
+- The mood is chosen where the note is written: a smiley button after the paperclip opens the five. It is changed
+  by editing the note; a change of mood alone does not rewrite the note, so it does not turn "· edited". Choosing
+  the chosen smiley takes it off. The card shows the smiley after its time; a locked note hides it.
+- **Backups**: one optional line per note that has a mood (`mood: great`, `Mood: great`, `"mood": "great"`), the
+  manifest untouched and still version 3 ([05](05-backup-compatibility.md#moods-in-backups)). This is the first
+  part of the format defined here before Maple Notes has it, on the owner's word above. Maple Notes' export and
+  restore code and its vectors were read first, at its `main` (`b8f3601`, release 1.16.1): unchanged since
+  1.16.0, the vectors identical to `fixtures/export-vectors.json`, and no mood anywhere in the repository. Its
+  `parse.ts` reads the fields it knows by name, in all three formats, so it passes the new line over.
+
+Checked: the Core tests (485, one skipped: the budgets) and the component tests (253) pass; 22 and 15 of them are
+new. The 13 export vectors still match entry for entry, and `UpgradeKeepsNotesTests` now covers the update from
+schema 3 as well, its undo being in `SchemaHistory`.
+
+**The update** ([11](11-testing.md#updates-keep-every-note)), on the emulator (`MAUI_Emulator_API_36`, started
+`-read-only`, so nothing of this stays on it), which held a Debug install of 1.2.0 with 35 notes and 8 files. A
+Debug build of the released **1.6.0** (the `v1.6.0` tag, built in a copy outside the repository; built twice,
+because the first build of a fresh copy leaves the stylesheet out of the APK) was installed over it and a note
+written in it. Then the Debug **1.7.0** was installed over that with `adb install -r`. `scripts/update-check/`
+found every card on every page, the tags, the storage line (36 notes, 8 files) and the appearance identical; the
+one line it listed was the new note's "just now" turned "2 minutes ago".
+
+Then, in 1.7.0 on that data: as installed, no smiley button stood by the paperclip and no note showed a smiley,
+and Settings → Features showed **Mood tracker** off, with its text. Turned on, the button was on Home and in Quick
+notes; it opened five smilies, in colour (Noto Color Emoji), each 40 px wide, in a row that did not scroll. A note
+posted with **Great** showed 😄 after "just now", named "Mood: Great", and the composer was back to "Mood" with
+no smiley. The note written in 1.6.0, edited only to choose **Okay**, showed 😐 and did not turn "· edited". The
+switch turned off hid both smilies and the button; on again, both were back. Help had the new paragraph. **Export
+ZIP…**, saved through the system dialog and pulled off the emulator: 33 notes, of which exactly those two had a
+`mood:` line (`great`, `okay`), after `archived`, and the manifest did not mention moods. In the dark theme the
+chosen smiley's tint came out light: the class named an accent shade the palette does not have. It now uses the
+tint the app uses elsewhere (`dark:bg-maple-600/20`), and the build was made and looked at again. The app's
+permissions were as before (`INTERNET` is the Debug build's).
+
+Not checked, still open: **the release build** (`dotnet publish` from clean, the owner's key, R8 and trimming over
+the new code, and the update from the release-signed 1.6.0); a real phone; a restore of that ZIP on the device
+(`MoodBackupTests` restores each format into an empty database); a restore into a real Maple Notes server (its
+reader was read, not run); the Today card and a locked note on the device (both in the component tests); TalkBack;
+the tablet layout; how the emoji look on Windows and macOS, which have no build yet.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._

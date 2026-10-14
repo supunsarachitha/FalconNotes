@@ -1,0 +1,29 @@
+@* New here (docs/07, Moods; the web app has none): the five smilies to choose a note's mood from, worst to best.
+   Each is a toggle: choosing the one already chosen takes the mood off, so there is no sixth button for "none". *@
+@using FalconNotes.Core.Domain
+
+<div id="@Id" role="group" aria-label="Mood" class="mt-2 flex items-center gap-1 border-t border-stone-100 pt-2 dark:border-stone-800">
+    @foreach (var mood in NoteMoods.All)
+    {
+        var chosen = mood == Value;
+        <button type="button" aria-pressed="@(chosen ? "true" : "false")" aria-label="@Moods.Label(mood)" title="@Moods.Label(mood)"
+                @onclick="() => ValueChanged.InvokeAsync(chosen ? NoteMood.None : mood)"
+                class="@Classes.Join(
+                           "inline-flex size-10 shrink-0 items-center justify-center rounded-full text-2xl leading-none transition-colors",
+                           chosen ? "bg-maple-100 ring-2 ring-maple-500 dark:bg-maple-600/20" : "hover:bg-stone-100 dark:hover:bg-stone-800",
+                           Classes.FocusRing)">
+            <span aria-hidden="true">@Moods.Emoji(mood)</span>
+        </button>
+    }
+</div>
+
+@code {
+    /// <summary>The row's ID, which the button that opens it names in <c>aria-controls</c>.</summary>
+    [Parameter] public string? Id { get; set; }
+
+    /// <summary>The mood chosen, or none.</summary>
+    [Parameter] public NoteMood Value { get; set; }
+
+    /// <summary>Called with the mood chosen, or none when the chosen one is taken off.</summary>
+    [Parameter] public EventCallback<NoteMood> ValueChanged { get; set; }
+}

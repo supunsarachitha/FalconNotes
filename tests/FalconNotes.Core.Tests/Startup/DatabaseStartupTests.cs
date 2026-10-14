@@ -121,12 +121,50 @@ public class DatabaseStartupTests
         Assert.Equal(StartupOutcome.Ready, outcome);
         await using (var connection = await upgraded!.OpenAsync(TestContext.Current.CancellationToken))
         {
-            Assert.Equal(3, Migrations.ReadVersion(connection));
+            Assert.Equal(Migrations.Latest, Migrations.ReadVersion(connection));
             await using var command = connection.CreateCommand();
             command.CommandText = "SELECT COUNT(*), SUM(IsLocked) FROM Notes";
             await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
             Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
             Assert.Equal((1L, 0L), (reader.GetInt64(0), reader.GetInt64(1)));
+        }
+
+        second.Close();
+    }
+
+    [Fact]
+    public async Task A_database_from_before_notes_could_have_a_mood_is_upgraded_with_no_moods()
+    {
+        using var dir = new TempDirectory();
+        var secrets = new FakeSecretStore();
+        var first = new StorageContext();
+        var (_, created) = await Create(dir, secrets, first).RunAsync();
+        await using (var connection = await created!.OpenAsync(TestContext.Current.CancellationToken))
+        {
+            // Back to schema version 3, with a locked note as that version wrote it.
+            SchemaHistory.RewindTo(connection, 3);
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                INSERT INTO Notes (Id, Kind, CreatedAt, UpdatedAt, ContentBytes, IsLocked) VALUES ('0199a1b2-0000-7000-8000-000000000003', 0, 0, 0, 5, 1);
+                """;
+            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+
+        first.Close();
+        SqliteConnection.ClearAllPools();
+
+        var second = new StorageContext();
+        var (outcome, upgraded) = await Create(dir, secrets, second).RunAsync();
+
+        Assert.Equal(StartupOutcome.Ready, outcome);
+        await using (var connection = await upgraded!.OpenAsync(TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(4, Migrations.ReadVersion(connection));
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*), SUM(IsLocked), SUM(Mood) FROM Notes";
+            await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+            Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
+            Assert.Equal((1L, 1L, 0L), (reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2)));
         }
 
         second.Close();

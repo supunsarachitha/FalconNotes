@@ -158,6 +158,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   them. Turn on **Keep line breaks** in Settings → Writing to have every line shown on its own line, as you typed
   it, on the screen and in a note's PDF. Only how notes are shown changes: no note is rewritten, backups are the
   same, and turning it off puts every note back as it was. Help says so under **New lines**.
+- **Mood tracker** (docs/04, Moods; this app's own, Maple Notes has none yet), **off by default**: turn on **Mood
+  tracker** in Settings → Features, and a smiley button sits beside the paperclip where you write a note or quick
+  note, the Today card too. It opens five smilies, from awful to great; the one you choose is saved with the note
+  and shows after its time. To change it, edit the note and choose another; choose the same one again to take it
+  off. Changing only the mood does not mark a note as edited, a locked note hides its mood, and todo lists and
+  habits have none. Turning the switch off hides the smilies and keeps every mood. **Backups keep it**: each
+  format writes one more line for a note that has a mood (`mood: great`), and restoring brings it back; a note
+  without one is exported exactly as before, and Maple Notes and earlier versions of Falcon Notes restore such a
+  backup as before, without the moods. The database gains a column for it (schema version 4), and a copy is kept
+  before the upgrade. Help describes it.
 - A rule and its test, at the owner's request: an update never loses notes (CLAUDE.md, docs/11). `UpgradeKeepsNotesTests`
   takes a database with one of everything back to the schema of each earlier version, starts it as an update does,
   and compares every row and file with what was there; a migration added without its undo fails a test.

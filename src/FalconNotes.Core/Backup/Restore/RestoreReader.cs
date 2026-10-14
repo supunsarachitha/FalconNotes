@@ -193,7 +193,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
     /// <summary>What a note file says about itself, before its files are found.</summary>
     private sealed record ParsedNote(
         Guid? Id, string Content, DateTimeOffset? CreatedAt, DateTimeOffset? UpdatedAt, bool Pinned, bool Archived,
-        NoteKind Kind, string? DailyDate, IReadOnlyList<string> Labels, IReadOnlyList<(string Path, string? Name, string? Type)> Attachments);
+        NoteKind Kind, string? DailyDate, IReadOnlyList<string> Labels, IReadOnlyList<(string Path, string? Name, string? Type)> Attachments,
+        NoteMood Mood = NoteMood.None);
 
     /// <summary>Reads a note file in any export format; anything else becomes a note with the file's text.</summary>
     private static ParsedNote ParseNote(string name, string text, DateTimeOffset modified)
@@ -296,7 +297,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             KindOf(fields.GetValueOrDefault("kind")),
             Day(fields.GetValueOrDefault("daily")),
             JsonNames(fields.GetValueOrDefault("labels")),
-            paths.Select((path, i) => (path, names.Count == paths.Count ? names[i] : null, (string?)null)).ToList());
+            paths.Select((path, i) => (path, names.Count == paths.Count ? names[i] : null, (string?)null)).ToList(),
+            NoteMoods.Parse(fields.GetValueOrDefault("mood")));
     }
 
     /// <summary>Plain text with the export's header lines; null if the file does not start with one.</summary>
@@ -342,7 +344,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             KindOf(fields.GetValueOrDefault("Kind")),
             Day(fields.GetValueOrDefault("Daily")),
             JsonNames(fields.GetValueOrDefault("Labels")),
-            paths.Select(path => (path, (string?)null, (string?)null)).ToList());
+            paths.Select(path => (path, (string?)null, (string?)null)).ToList(),
+            NoteMoods.Parse(fields.GetValueOrDefault("Mood")));
     }
 
     /// <summary>One note as JSON, as the export writes it; null for any other JSON.</summary>
@@ -386,7 +389,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             return new ParsedNote(
                 UuidOrNull(Text("id")), content.GetString()!, Date(Text("createdAt")), Date(Text("updatedAt")),
                 True("pinned"), True("archived"), KindOf(Text("kind")), Day(Text("dailyDate")),
-                note.TryGetProperty("labels", out var labels) ? Names(labels) : [], attachments);
+                note.TryGetProperty("labels", out var labels) ? Names(labels) : [], attachments, NoteMoods.Parse(Text("mood")));
         }
     }
 
@@ -422,7 +425,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             parsed.DailyDate ?? Day(Field("dailyDate")),
             parsed.Labels.Count == 0 && manifest is { } ml && ml.TryGetProperty("labels", out var listedLabels) ? Names(listedLabels) : parsed.Labels,
             attachments,
-            missing);
+            missing,
+            parsed.Mood);
     }
 
     /// <summary>Resolves a path relative to a file inside the archive, e.g. <c>../attachments/x</c> from <c>2026-09/note.md</c>.</summary>

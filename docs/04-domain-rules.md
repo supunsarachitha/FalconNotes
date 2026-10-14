@@ -13,7 +13,7 @@ reference show the edge cases (see [11-testing.md](11-testing.md)). Paths are re
 | Kinds | `Note` (Home timeline), `Todo`, `Quick`, `Habit` | `server/Domain/NoteKind.cs` |
 | Text length | At most **100,000 characters** (UTF-16 length, as `string.Length`). Over it: "A note can be at most 100,000 characters long." | `server/Features/Notes/NoteService.cs` `ValidateContent` |
 | Not empty | Text that is blank (`string.IsNullOrWhiteSpace`) is refused unless the note has a file: "Write something or attach a file." | same |
-| Times | `CreatedAt` is set once. `UpdatedAt` changes only when the **text or files** change (`UpdateAsync`). Pinning, archiving, trashing, labels, moves and locking leave it. A note shows "· edited" when `UpdatedAt − CreatedAt > 60 s`. | `NoteService.UpdateAsync`/`PatchAsync`, `web/components/NoteCard.tsx` |
+| Times | `CreatedAt` is set once. `UpdatedAt` changes only when the **text or files** change (`UpdateAsync`). Pinning, archiving, trashing, labels, moves, locking and a change of mood leave it. A note shows "· edited" when `UpdatedAt − CreatedAt > 60 s`. | `NoteService.UpdateAsync`/`PatchAsync`, `web/components/NoteCard.tsx` |
 | Revision | +1 on every change to the row; used for stale-save checks and media URLs | `server/Domain/IRevisioned.cs` |
 | Tags | Re-extracted from the text on every create, edit and restore ([Tags](#tags)) | `NoteService.SetTagsAsync` |
 
@@ -361,6 +361,44 @@ reference to port. The screens are in [07](07-screens.md#export-to-pdf) and the 
 - **It is not a backup**, and not part of one: a PDF cannot be restored, and the backup format is untouched (D6).
   **It is not encrypted**, and the switch's description says so.
 
+## Moods
+
+New in this app (1.7.0, 2026-10-13, at the owner's request); the web app has nothing like it yet, so there is no
+reference to port. The owner is adding the same option to Maple Notes next, and until it is there this section is
+the definition. `Notes.Mood`; the screens are in [07](07-screens.md#moods), and what a backup holds is in
+[05](05-backup-compatibility.md#moods-in-backups).
+
+- **A mood is how its writer felt**, chosen as a smiley and shown on the note. There are five, from worst to best:
+  **Awful** 😢, **Bad** 🙁, **Okay** 😐, **Good** 🙂 and **Great** 😄, stored as 1 to 5; 0 is none, the default
+  and every note written before 1.7.0. The numbers and the names never change: a later mood takes the next number.
+  The smilies are emoji, drawn by the device's own emoji font.
+- **It belongs to the note**, not to the day: there is no log of days, no page and no chart. Three notes written
+  on one day can have three moods.
+- **What can have one**: a timeline note (a daily note too) and a quick note, in any state. **Not a todo list and
+  not a habit**: "Only notes and quick notes can have a mood." (`NoteService`, field `mood`). Taking a mood off
+  is never refused.
+- **The switch**: the smilies are offered, and shown on notes, only while the preference `moodTracker` (**Mood
+  tracker** in Settings → Features) is on. It is off by default. Off, nothing is deleted: every note keeps its
+  mood, edits leave it as it is, backups still hold it, and it shows again when the switch is turned back on.
+- **Choosing**: where the note is written ([07](07-screens.md#moods)), and it is saved with the note
+  (`CreateAsync`; the Today card through `DailyNotes.SaveAsync`). A mood alone is not enough to post: a note
+  still needs text or a file.
+- **Changing**: by editing the note. With the text or files changed too, the mood is saved in the same change
+  (`UpdateAsync`, whose `mood` is null to keep the one there is). With **only the mood** changed, the note is not
+  rewritten: `PatchAsync` saves it, `UpdatedAt` stays and `Revision` goes up, so the note does not turn "· edited"
+  for a smiley. Choosing the chosen smiley again takes the mood off.
+- **Words added to a day's note that appeared meanwhile** ([Daily notes](#daily-notes)) bring their mood when one
+  was chosen, and leave the note's mood as it is when none was.
+- **Other changes leave it**: pinning, archiving, the trash, locking, and a move between Home and Quick notes. A
+  note that becomes a todo list gives its mood up, and does not get it back.
+- **A locked note hides it** with everything else it hides ([Locked notes](#locked-notes)): how someone felt is
+  part of what the note says.
+- **Not searched, not filtered, not counted**: a mood is shown on its note and nowhere else. The trash and a
+  note's PDF do not show it.
+- **Backups keep it** ([05](05-backup-compatibility.md#moods-in-backups)): a restored note has its mood, here and,
+  once it reads them, in Maple Notes.
+
+
 ## Labels
 
 `server/Domain/Label.cs`, `server/Features/Labels/LabelService.cs`, `web/lib/labels.ts`, `web/components/Labels.tsx`,
@@ -412,6 +450,7 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `menuTextSize` | `Medium` (Small, Medium, Large) | `weekStart` | `Auto` (Auto, Sunday, Monday, Saturday) |
 | `menuOrder` | `""` | `background` | `None` (None, Halloween, Christmas, NewYear, Valentine, Easter, Diwali, Vesak, Eid, LunarNewYear) |
 | `pdfExport` | false | `lineBreaks` | false |
+| `moodTracker` | false | | |
 
 - `Falcon` is the web app's `Maple` accent under this app's name, with the same colours (D12). Preferences are not
   part of backups, so nothing needs mapping.
@@ -423,6 +462,8 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
   menus. Preferences saved before 1.5.0 have no such key and read as off.
 - `lineBreaks` is this app's own too ([Markdown rendering](#markdown-rendering)): whether a single line break in a
   note is shown as a new line. Preferences saved before 1.6.0 have no such key and read as off.
+- `moodTracker` is this app's own too ([Moods](#moods)): whether the smilies are offered where a note is written
+  and shown on notes. Preferences saved before 1.7.0 have no such key and read as off.
 - A change shows at once and is saved in the background. If saving fails, it is rolled back with "Your setting could
   not be saved. Please try again."
 - Turning a feature off hides its page or tool and deletes nothing. A page whose feature is off shows "{Feature} is

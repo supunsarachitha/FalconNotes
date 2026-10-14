@@ -69,6 +69,7 @@ public class UpgradeKeepsNotesTests
         Assert.Equal("# Trip\n\nPack the bags #travel/packing", read.Content);
         Assert.True(read.IsPinned);
         Assert.False(read.IsLocked);
+        Assert.Equal(NoteMood.None, read.Mood);
         Assert.Equal(["travel/packing"], read.Tags);
         Assert.Equal([label.Id], read.LabelIds);
         await using var file = (await app.Attachments.OpenAsync(read.Attachments.Single().Id))!.Content;

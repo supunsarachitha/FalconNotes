@@ -28,6 +28,7 @@ public sealed record RestoreAttachment(string Name, string ContentType, long Siz
 /// <param name="Labels">The names of its labels.</param>
 /// <param name="Attachments">Its files found in the archive.</param>
 /// <param name="Missing">Its files the archive does not contain.</param>
+/// <param name="Mood">Its mood, if the backup gives one (docs/05, Moods in backups).</param>
 public sealed record RestoreItem(
     string Source,
     Guid? Id,
@@ -40,7 +41,8 @@ public sealed record RestoreItem(
     string? DailyDate,
     IReadOnlyList<string> Labels,
     IReadOnlyList<RestoreAttachment> Attachments,
-    IReadOnlyList<string> Missing);
+    IReadOnlyList<string> Missing,
+    NoteMood Mood = NoteMood.None);
 
 /// <summary>
 /// What a restore found in the chosen files: the notes and the files that could not be read. Holds the archives open

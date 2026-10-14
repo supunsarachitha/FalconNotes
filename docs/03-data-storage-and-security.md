@@ -10,6 +10,7 @@
 | Device key | OS secure storage (`ISecretStore`) | By the OS (Keystore, DPAPI, Keychain) |
 | App lock settings and PIN hash | `Settings['appLock']` in the database | Yes (inside the database) |
 | Whether a note is locked | `Notes.IsLocked` in the database | Yes (inside the database) |
+| A note's mood | `Notes.Mood` in the database | Yes (inside the database) |
 | Which locked notes are open to be read just now | Memory only (`NoteLocks`) | Not stored: closing the app locks them all |
 | Decrypted copies for **Open** | `{FileSystem.CacheDirectory}/open/{random}/{file name}` | **No**: deleted at the next start, and at most 24 h old |
 | Export being written, restore archive being read | `{CacheDirectory}/export/`, `{CacheDirectory}/restore/` | **No** (exports are plain by design); deleted when done and at start |
@@ -80,10 +81,12 @@ gets the encrypted files without the Keystore key: notes that can never be opene
 
 ## Schema
 
-Migration 1; migration 2, which added `Labels.HideNotes` with Maple Notes 1.16.0; and migration 3, which added
-`Notes.IsLocked` and its index with Falcon Notes 1.4.0. A migration only ever adds: an update must leave every note,
+Migration 1; migration 2, which added `Labels.HideNotes` with Maple Notes 1.16.0; migration 3, which added
+`Notes.IsLocked` and its index with Falcon Notes 1.4.0; and migration 4, which added `Notes.Mood` with Falcon
+Notes 1.7.0. A migration only ever adds: an update must leave every note,
 label and file as it found them, and a test proves it for each one ([11](11-testing.md#updates-keep-every-note)). Times are UTC `DateTime.Ticks` (INTEGER), IDs are lower-case canonical UUID text (`Guid.ToString("D")`),
-and kinds are integers (0 Note, 1 Todo, 2 Quick, 3 Habit). Note text lives in `NoteBodies`, so lists and counts never
+and kinds are integers (0 Note, 1 Todo, 2 Quick, 3 Habit), as are moods (0 none, 1 Awful, 2 Bad, 3 Okay, 4 Good,
+5 Great; a number a later version adds reads as none here and is left as it is). Note text lives in `NoteBodies`, so lists and counts never
 decrypt pages of text ([13](13-storage-benchmark.md#reading-the-results)).
 
 ```sql
@@ -103,7 +106,8 @@ CREATE TABLE Notes (
   UpdatedAt     INTEGER NOT NULL,
   Revision      INTEGER NOT NULL DEFAULT 0,     -- +1 on every change; the media URL's ?v= and stale-save checks
   ContentBytes  INTEGER NOT NULL,               -- UTF-8 length of the text, for storage use
-  IsLocked      INTEGER NOT NULL DEFAULT 0      -- 1: hidden until the PIN takes the lock off (migration 3)
+  IsLocked      INTEGER NOT NULL DEFAULT 0,     -- 1: hidden until the PIN takes the lock off (migration 3)
+  Mood          INTEGER NOT NULL DEFAULT 0      -- 0 none, 1 awful … 5 great; notes and quick notes only (migration 4)
 );
 CREATE TABLE NoteBodies (
   NoteId  TEXT NOT NULL PRIMARY KEY REFERENCES Notes(Id) ON DELETE CASCADE,

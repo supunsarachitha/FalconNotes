@@ -72,6 +72,10 @@ Added with Export to PDF (1.5.0, 2026-10-13): the second paragraph of `features`
 app has no such feature. `writing` does not name it among a note's menu actions, because **Export to PDF** is off
 until it is turned on.
 
+Added with the mood tracker (1.7.0, 2026-10-13): the third paragraph of `features`. It is this app's own; the web
+app has no such feature yet. `writing` does not name the smilies, because **Mood tracker** is off until it is
+turned on.
+
 Added with Keep line breaks (1.6.0, 2026-10-13): the **New lines** item of `writing`. It is this app's own: the web
 app's guide does not say that lines typed one under another are joined, and it has no such switch. The guide itself
 is always shown with its lines joined, whatever the switch says.
@@ -181,6 +185,11 @@ on again. With Help hidden from the menu, this guide is opened from the foot of 
 To keep or send a single note as a document, turn on **Export to PDF** in the same place. **Export to PDF…** in the
 ⋯ menu of a note, quick note or todo list then saves it as a PDF file, with its pictures, where you choose on this
 device. A PDF is not encrypted, so keep it somewhere safe. It is not a backup either: it cannot be restored.
+
+To keep track of how you feel, turn on **Mood tracker** in the same place. A smiley button then sits beside the
+paperclip where you write a note or quick note: choose it, then one of the five smilies, from awful to great, and the
+smiley shows on the note next to its time. To change it, edit the note and choose another; choose the same one
+again to take it off. Backups keep each note's mood.
 ````
 
 ## 15. Keeping your notes private (`privacy`)

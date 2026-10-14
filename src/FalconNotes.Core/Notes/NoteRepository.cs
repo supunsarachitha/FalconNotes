@@ -8,7 +8,7 @@ namespace FalconNotes.Core.Notes;
 /// <summary>A note's row without its text, tags, files or labels.</summary>
 internal sealed record NoteRow(
     Guid Id, NoteKind Kind, DateOnly? DailyDate, bool IsPinned, DateTime? ArchivedAtUtc, DateTime? TrashedAtUtc,
-    DateTime CreatedAtUtc, DateTime UpdatedAtUtc, long Revision, bool IsLocked);
+    DateTime CreatedAtUtc, DateTime UpdatedAtUtc, long Revision, bool IsLocked, NoteMood Mood);
 
 /// <summary>An attachment's row, with where its file is.</summary>
 internal sealed record AttachmentRow(Attachment Attachment, string StorageKey);
@@ -21,7 +21,10 @@ internal sealed record AttachmentRow(Attachment Attachment, string StorageKey);
 internal static class NoteRepository
 {
     private const string Columns =
-        "n.Id, n.Kind, n.DailyDate, n.IsPinned, n.ArchivedAt, n.TrashedAt, n.CreatedAt, n.UpdatedAt, n.Revision, n.IsLocked";
+        "n.Id, n.Kind, n.DailyDate, n.IsPinned, n.ArchivedAt, n.TrashedAt, n.CreatedAt, n.UpdatedAt, n.Revision, n.IsLocked, n.Mood";
+
+    /// <summary>How many columns <see cref="Columns"/> selects: a query that adds one of its own reads it from here.</summary>
+    private const int ColumnCount = 11;
 
     /// <summary>Reads a page of rows of a list, newest first (the trash: most recently deleted first).</summary>
     public static List<NoteRow> ListRows(SqliteConnection connection, NoteQuery query, NoteCursor? cursor, int count, bool hideLabelled)
@@ -68,7 +71,7 @@ internal static class NoteRepository
             }
 
             var row = ReadRow(reader);
-            var content = reader.GetString(10);
+            var content = reader.GetString(ColumnCount);
             if (accept(row, content))
             {
                 accepted.Add((row, content));
@@ -358,7 +361,8 @@ internal static class NoteRepository
             tags.GetValueOrDefault(row.Id, []).Order(StringComparer.Ordinal).ToList(),
             files.GetValueOrDefault(row.Id, []).Select(f => f.Attachment).ToList(),
             labels.GetValueOrDefault(row.Id, []).Order(StringComparer.Ordinal).Select(id => Guid.ParseExact(id, "D")).ToList(),
-            row.IsLocked))
+            row.IsLocked,
+            row.Mood))
             .ToList();
     }
 
@@ -489,7 +493,8 @@ internal static class NoteRepository
             reader.GetTime(6),
             reader.GetTime(7),
             reader.GetInt64(8),
-            reader.GetInt64(9) != 0);
+            reader.GetInt64(9) != 0,
+            NoteMoods.FromStored(reader.GetInt64(10)));
 
     /// <summary>The UTF-8 length of a note's text, for storage use.</summary>
     public static long ContentBytes(string content) => Encoding.UTF8.GetByteCount(content);

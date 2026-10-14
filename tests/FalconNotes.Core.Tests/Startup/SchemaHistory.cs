@@ -16,6 +16,7 @@ internal static class SchemaHistory
     [
         "ALTER TABLE Labels DROP COLUMN HideNotes;",
         "DROP INDEX IX_Notes_Locked; ALTER TABLE Notes DROP COLUMN IsLocked;",
+        "ALTER TABLE Notes DROP COLUMN Mood;",
     ];
 
     /// <summary>Undoes every migration after <paramref name="version"/>, newest first, keeping the rows.</summary>

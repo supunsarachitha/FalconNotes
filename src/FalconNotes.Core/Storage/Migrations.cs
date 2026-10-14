@@ -89,6 +89,11 @@ public static class Migrations
         ALTER TABLE Notes ADD COLUMN IsLocked INTEGER NOT NULL DEFAULT 0;
         CREATE INDEX IX_Notes_Locked ON Notes (Id) WHERE IsLocked = 1;
         """,
+
+        // 4: a note or quick note can have a mood, chosen as a smiley (docs/04, Moods). None for every note there is.
+        """
+        ALTER TABLE Notes ADD COLUMN Mood INTEGER NOT NULL DEFAULT 0;
+        """,
     ];
 
     /// <summary>Reads the schema version of an open database (0 for a new one).</summary>
