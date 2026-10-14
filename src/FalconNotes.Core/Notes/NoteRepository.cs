@@ -297,7 +297,7 @@ internal static class NoteRepository
 
         using var command = Sql.Command(connection, "", transaction);
         command.CommandText = $"""
-            SELECT Id, NoteId, FileName, ContentType, SizeBytes, CreatedAt, Revision, StorageKey FROM Attachments
+            SELECT Id, NoteId, FileName, ContentType, SizeBytes, CreatedAt, Revision, StorageKey, IsSticker FROM Attachments
             WHERE NoteId IN ({command.InList("$id", noteIds.Select(id => (object)Sql.Id(id)))})
             ORDER BY CreatedAt, Id
             """;
@@ -324,7 +324,7 @@ internal static class NoteRepository
         {
             rows.Add(new AttachmentRow(
                 new Attachment(reader.GetId(0), reader.GetIdOrNull(1), reader.GetString(2), reader.GetString(3),
-                    reader.GetInt64(4), reader.GetTime(5), reader.GetInt64(6)),
+                    reader.GetInt64(4), reader.GetTime(5), reader.GetInt64(6), reader.GetInt64(8) != 0),
                 reader.GetString(7)));
         }
 

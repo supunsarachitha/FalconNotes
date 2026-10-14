@@ -97,7 +97,8 @@ public sealed class RestoreRunner(StorageContext storage, AttachmentService atta
                     foreach (var attachment in item.Attachments)
                     {
                         await using var content = attachment.Open();
-                        stored.Add((await attachments.AddAsync(content, attachment.Name, attachment.ContentType, cancellationToken: cancellationToken)).Id);
+                        stored.Add((await attachments.AddAsync(
+                            content, attachment.Name, attachment.ContentType, cancellationToken: cancellationToken, sticker: attachment.IsSticker)).Id);
                     }
 
                     Validate(item, stored.Count);

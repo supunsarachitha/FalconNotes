@@ -13,7 +13,8 @@ public sealed record RestoreSource(string Name, Func<Task<Stream>> OpenReadAsync
 /// <param name="ContentType">Its type.</param>
 /// <param name="Size">Its size.</param>
 /// <param name="Open">Opens its content.</param>
-public sealed record RestoreAttachment(string Name, string ContentType, long Size, Func<Stream> Open);
+/// <param name="IsSticker">Listed as a sticker by the note's file (docs/05, Stickers in backups).</param>
+public sealed record RestoreAttachment(string Name, string ContentType, long Size, Func<Stream> Open, bool IsSticker = false);
 
 /// <summary>A note read from a backup, ready to restore. Port of <c>ImportItem</c> in <c>web/import/parse.ts</c>.</summary>
 /// <param name="Source">Where it came from, for messages: a file name or a path inside an archive.</param>

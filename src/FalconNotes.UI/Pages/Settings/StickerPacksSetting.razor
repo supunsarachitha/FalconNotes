@@ -1,0 +1,137 @@
+@* New here (docs/07, Stickers; the web app has none): the sticker packs on this device, under the Stickers switch.
+   A pack is added from a ZIP file chosen in the system picker, since the app never downloads anything; one with the
+   same ID replaces the pack it updates. Removing a pack leaves the stickers already on notes, which are the notes'
+   own copies. *@
+@using FalconNotes.Core.Domain
+@using FalconNotes.Core.Platform
+@using FalconNotes.Core.Stickers
+@using FalconNotes.UI.State
+@inject StickerPackService Packs
+@inject IFilePicker Picker
+@inject Toasts Toasts
+
+<div class="py-3">
+    <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+            <p class="text-sm font-medium">Sticker packs</p>
+            <p class="text-sm text-stone-600 dark:text-stone-300">
+                A sticker pack is a ZIP file of pictures. Download one in your browser, or make your own, then add it here.
+            </p>
+        </div>
+        <Button Variant="ButtonVariant.Secondary" OnClick="AddAsync" Busy="_adding" Class="shrink-0">Add pack…</Button>
+    </div>
+
+    @if (_packs is { Count: > 0 })
+    {
+        <ul class="mt-3 divide-y divide-stone-100 rounded-xl border border-stone-200 dark:divide-stone-800 dark:border-stone-800" aria-label="Sticker packs">
+            @foreach (var pack in _packs)
+            {
+                <li class="flex items-center gap-3 px-3 py-2">
+                    @if (pack.Stickers.FirstOrDefault() is { } cover)
+                    {
+                        <img src="@MediaUrl.For(pack, cover)" alt="" loading="lazy" class="size-10 shrink-0 object-contain" />
+                    }
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate text-sm font-medium">@pack.Name</p>
+                        <p class="truncate text-xs text-stone-500 dark:text-stone-400">@Details(pack)</p>
+                    </div>
+                    <button type="button" @onclick="() => _removing = pack" aria-label="@($"Remove {pack.Name}")"
+                            class="shrink-0 text-sm font-medium text-red-700 underline-offset-2 hover:underline dark:text-red-400">
+                        Remove
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+    else if (_packs is not null)
+    {
+        <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">No sticker packs yet.</p>
+    }
+</div>
+
+<ConfirmDialog Open="_removing is not null" OpenChanged="@(open => { if (!open) { _removing = null; } })"
+                Title="@($"Remove “{_removing?.Name}”?")" ConfirmLabel="Remove" Busy="_busyRemoving" OnConfirm="RemoveAsync">
+    <Description>Its stickers leave the sticker picker. Stickers already on your notes stay where they are.</Description>
+</ConfirmDialog>
+
+@code {
+    private IReadOnlyList<StickerPack>? _packs;
+    private StickerPack? _removing;
+    private bool _adding;
+    private bool _busyRemoving;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync() => _packs = await Packs.ListAsync();
+
+    private static string Details(StickerPack pack) =>
+        string.Join(" · ", new[]
+        {
+            pack.Stickers.Count == 1 ? "1 sticker" : $"{pack.Stickers.Count:N0} stickers",
+            pack.Author is { } author ? $"by {author}" : null,
+            pack.Licence,
+        }.OfType<string>());
+
+    private async Task AddAsync()
+    {
+        var files = await Picker.PickFilesAsync([".zip"]);
+        if (files.Count == 0)
+        {
+            return;
+        }
+
+        _adding = true;
+        try
+        {
+            foreach (var file in files)
+            {
+                try
+                {
+                    var had = (await Packs.ListAsync()).Select(p => p.Id).ToHashSet(StringComparer.Ordinal);
+                    await using var content = await file.OpenReadAsync();
+                    var pack = await Packs.AddAsync(content, file.FileName);
+                    var count = pack.Stickers.Count == 1 ? "1 sticker" : $"{pack.Stickers.Count:N0} stickers";
+                    Toasts.Info(had.Contains(pack.Id) ? $"Updated “{pack.Name}”: {count}." : $"Added “{pack.Name}”: {count}.");
+                }
+                catch (UserFacingException e)
+                {
+                    Toasts.Error($"{file.FileName}: {e.Message}");
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+                {
+                    Toasts.Error($"{file.FileName}: Could not add this sticker pack.");
+                }
+            }
+
+            _packs = await Packs.ListAsync();
+        }
+        finally
+        {
+            _adding = false;
+        }
+    }
+
+    private async Task RemoveAsync()
+    {
+        if (_removing is not { } pack)
+        {
+            return;
+        }
+
+        _busyRemoving = true;
+        try
+        {
+            await Packs.RemoveAsync(pack.Id);
+            Toasts.Info($"Removed “{pack.Name}”.");
+            _packs = await Packs.ListAsync();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Toasts.Error("Could not remove this sticker pack.");
+        }
+        finally
+        {
+            _busyRemoving = false;
+            _removing = null;
+        }
+    }
+}

@@ -159,12 +159,52 @@ public class DatabaseStartupTests
         Assert.Equal(StartupOutcome.Ready, outcome);
         await using (var connection = await upgraded!.OpenAsync(TestContext.Current.CancellationToken))
         {
-            Assert.Equal(4, Migrations.ReadVersion(connection));
+            Assert.Equal(Migrations.Latest, Migrations.ReadVersion(connection));
             await using var command = connection.CreateCommand();
             command.CommandText = "SELECT COUNT(*), SUM(IsLocked), SUM(Mood) FROM Notes";
             await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
             Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
             Assert.Equal((1L, 1L, 0L), (reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2)));
+        }
+
+        second.Close();
+    }
+
+    [Fact]
+    public async Task A_database_from_before_stickers_is_upgraded_with_no_file_a_sticker()
+    {
+        using var dir = new TempDirectory();
+        var secrets = new FakeSecretStore();
+        var first = new StorageContext();
+        var (_, created) = await Create(dir, secrets, first).RunAsync();
+        await using (var connection = await created!.OpenAsync(TestContext.Current.CancellationToken))
+        {
+            // Back to schema version 4, with a picture on a note as that version wrote it.
+            SchemaHistory.RewindTo(connection, 4);
+            await using var command = connection.CreateCommand();
+            command.CommandText = """
+                INSERT INTO Notes (Id, Kind, CreatedAt, UpdatedAt, ContentBytes, Mood) VALUES ('0199a1b2-0000-7000-8000-000000000004', 0, 0, 0, 5, 4);
+                INSERT INTO Attachments (Id, NoteId, FileName, ContentType, SizeBytes, StorageKey, CreatedAt)
+                VALUES ('0199a1b2-0000-7000-8000-0000000000a4', '0199a1b2-0000-7000-8000-000000000004', 'cat.png', 'image/png', 10, 'a4/00/cat.bin', 0);
+                """;
+            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+
+        first.Close();
+        SqliteConnection.ClearAllPools();
+
+        var second = new StorageContext();
+        var (outcome, upgraded) = await Create(dir, secrets, second).RunAsync();
+
+        Assert.Equal(StartupOutcome.Ready, outcome);
+        await using (var connection = await upgraded!.OpenAsync(TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(5, Migrations.ReadVersion(connection));
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(*), SUM(IsSticker), (SELECT SUM(Mood) FROM Notes) FROM Attachments";
+            await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+            Assert.True(await reader.ReadAsync(TestContext.Current.CancellationToken));
+            Assert.Equal((1L, 0L, 4L), (reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2)));
         }
 
         second.Close();

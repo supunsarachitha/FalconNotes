@@ -161,6 +161,23 @@ New tests the reference does not have:
   daily note; editing shows the note's mood, and changing it alone does not make the note edited; an edit saves
   both; with the switch off an edit keeps the mood; a todo list is offered none; the card shows the smiley with
   its name, nothing with the switch off, and nothing on a locked note.
+- Stickers (1.7.0; this app's own, so every test is new). Core, `StickerPackServiceTests`: a ZIP of pictures is a
+  pack named after its file, every picture in path order, other files, hidden files and `__MACOSX/` passed over;
+  `sticker-pack.json` names the pack and lists its stickers, in a top folder too; a pack added again with its ID
+  replaces it; packs are listed by name; removing one deletes its files; a file that is not a pack is refused with
+  the reason (not a ZIP, no pictures, a picture that is not one by its bytes, one over 2 MB, a listed file not there,
+  an unreadable description, over 300 stickers) and leaves nothing behind; nothing in a ZIP names a path on the
+  device; only a sticker's own numbered file is opened; a new service reads the packs already there.
+  `StickerBackupTests`: in each format a sticker is one more list after the files, and a note without stickers has
+  none; a backup restored into an empty app brings each sticker back as a sticker, in each format; the list makes
+  only the note's own pictures stickers. `PdfNoteBuilderTests`: a sticker is a picture drawn small. A version 4
+  database upgrades with no file a sticker (`DatabaseStartupTests`), and every earlier version updates with every row
+  kept. The screens, bUnit, `StickerTests`: the switch is off as installed and shows the packs under it once on; a
+  pack is added from a ZIP and listed with its details; a file that is not a pack is refused with the reason;
+  removing a pack asks first and leaves the stickers on notes; no sticker button until the switch is on; with no
+  pack the picker says where to add one; a tab for each pack; stickers chosen are posted as the note's own sticker
+  files, in a note and a quick note, with the picker staying open; the stickers and the smilies close each other;
+  stickers show in a row of their own, out of the picture grid and the viewer.
 - Media handler: `Range` requests (start, middle, end, past the end → 416), content types, unknown IDs → 404.
 - Welcome, Key lost, Erase all data.
 
@@ -287,6 +304,12 @@ in light and dark mode:
       "· edited"; chosen again, it is gone; a locked note hides it; an export holds `mood:` for that note alone,
       and restored on another install the smiley is back; with the switch off again every smiley is hidden, and on
       again they are all there; TalkBack reads "Mood: Good".
+- [ ] Stickers: as installed no sticker button stands by the paperclip and Settings → Features shows **Stickers**
+      off; turned on, **Add pack…** opens the system picker for ZIP files, and a pack added shows with its first
+      sticker; the sticker button opens the picker on Home, in the Today card and in Quick notes, its stickers drawn
+      from `/_stickers/…`, an animated GIF moving; several chosen are posted and show small above the note's
+      pictures, in light and dark; removing the pack leaves them; a note's PDF draws them small; an export holds the
+      `stickers:` list, and restored on another install they are stickers again; TalkBack reads "Add sticker: …".
 - [ ] The app made again: leave Home with Back, open the app again from the launcher before Android has ended its
       process, and open the drawer: its name and mark are under the status bar's clock, not behind it, and its last
       row is above the navigation bar; the theme, accent and background are as chosen; rotate, and it still fits.

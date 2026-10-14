@@ -34,11 +34,15 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
     /// <param name="contentType">The type it came with, if any.</param>
     /// <param name="progress">Told how many bytes have been stored.</param>
     /// <param name="cancellationToken">Cancels; nothing is left behind.</param>
+    /// <param name="sticker">
+    /// Added as a sticker (docs/04, Stickers). Only a picture becomes one: any other file is added as an ordinary file.
+    /// </param>
     /// <returns>The new attachment.</returns>
     /// <exception cref="FileTooLargeException">The file is larger than 2 GiB.</exception>
     /// <exception cref="NotEnoughSpaceException">The device is full.</exception>
     public async Task<Attachment> AddAsync(
-        Stream content, string? fileName, string? contentType, IProgress<long>? progress = null, CancellationToken cancellationToken = default)
+        Stream content, string? fileName, string? contentType, IProgress<long>? progress = null, CancellationToken cancellationToken = default,
+        bool sticker = false)
     {
         var id = Guid.CreateVersion7();
         var storageKey = AttachmentStore.CreateStorageKey(id);
@@ -57,19 +61,19 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
         }
 
         var name = UploadPolicy.SanitizeFileName(fileName);
-        var attachment = new Attachment(id, null, name, UploadPolicy.ResolveContentType(contentType, name), metered.BytesRead,
-            time.GetUtcNow().UtcDateTime, 0);
+        var type = UploadPolicy.ResolveContentType(contentType, name);
+        var attachment = new Attachment(id, null, name, type, metered.BytesRead, time.GetUtcNow().UtcDateTime, 0, sticker && UploadPolicy.IsImage(type));
         try
         {
             await storage.Database.InTransactionAsync((connection, transaction) =>
             {
                 using var insert = Sql.Command(connection, """
-                    INSERT INTO Attachments (Id, NoteId, FileName, ContentType, SizeBytes, StorageKey, CreatedAt)
-                    VALUES ($id, NULL, $name, $type, $size, $key, $created)
+                    INSERT INTO Attachments (Id, NoteId, FileName, ContentType, SizeBytes, StorageKey, CreatedAt, IsSticker)
+                    VALUES ($id, NULL, $name, $type, $size, $key, $created, $sticker)
                     """, transaction);
                 return insert.With("$id", Sql.Id(id)).With("$name", attachment.FileName).With("$type", attachment.ContentType)
                     .With("$size", attachment.SizeBytes).With("$key", storageKey).With("$created", Sql.Time(attachment.CreatedAtUtc))
-                    .ExecuteNonQuery();
+                    .With("$sticker", attachment.IsSticker ? 1 : 0).ExecuteNonQuery();
             }, CancellationToken.None);
         }
         catch
@@ -176,7 +180,7 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
         {
             using var command = Sql.Command(connection, """
                 SELECT a.Id, a.NoteId, a.FileName, a.ContentType, a.SizeBytes, a.CreatedAt, a.Revision, a.StorageKey,
-                       COALESCE((SELECT n.IsLocked FROM Notes n WHERE n.Id = a.NoteId), 0)
+                       COALESCE((SELECT n.IsLocked FROM Notes n WHERE n.Id = a.NoteId), 0), a.IsSticker
                 FROM Attachments a WHERE a.Id = $id
                 """)
                 .With("$id", Sql.Id(id));
@@ -188,7 +192,7 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
 
             var row = new AttachmentRow(
                 new Attachment(reader.GetId(0), reader.GetIdOrNull(1), reader.GetString(2), reader.GetString(3),
-                    reader.GetInt64(4), reader.GetTime(5), reader.GetInt64(6)),
+                    reader.GetInt64(4), reader.GetTime(5), reader.GetInt64(6), reader.GetInt64(9) != 0),
                 reader.GetString(7));
             var hidden = reader.GetInt64(8) != 0 && !(row.Attachment.NoteId is { } noteId && locks.IsOpen(noteId));
             return hidden ? null : row;
@@ -198,7 +202,7 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
         storage.Database.ReadAsync(connection =>
         {
             using var command = Sql.Command(connection,
-                "SELECT Id, NoteId, FileName, ContentType, SizeBytes, CreatedAt, Revision, StorageKey FROM Attachments WHERE Id = $id")
+                "SELECT Id, NoteId, FileName, ContentType, SizeBytes, CreatedAt, Revision, StorageKey, IsSticker FROM Attachments WHERE Id = $id")
                 .With("$id", Sql.Id(id));
             return NoteRepository.ReadAttachments(command).SingleOrDefault();
         });

@@ -802,6 +802,48 @@ the new code, and the update from the release-signed 1.6.0); a real phone; a res
 reader was read, not run); the Today card and a locked note on the device (both in the component tests); TalkBack;
 the tablet layout; how the emoji look on Windows and macOS, which have no build yet.
 
+Then, 2026-10-14, on the same branch and in the same version: **stickers**, at the owner's request
+([04](04-domain-rules.md#stickers), [07](07-screens.md#stickers)): "add stickers to notes. should be able to
+download/ remove new sticker packs." Scoped first, because downloading clashed with D3. Offered an in-app store
+(network access, a hosted catalogue, a new privacy story) or packs added from a file, the owner chose **packs as ZIP
+files added through the system picker**, so the app stays offline; **several stickers per note**; and, asked how
+backups should carry them, the recommended way: **the sticker as an ordinary picture among the note's files, plus
+one list naming which files are stickers**. Mid-way the owner added: "add a feature setting to enable stickers.
+default off." Decided while building, and written into the documents:
+
+- A sticker is **copied** into the note's encrypted files (`Attachments.IsSticker`, **migration 5**, a column with a
+  default), so removing a pack never changes a note, a backup needs no pack, and locks, PDFs, the trash and storage
+  use treat it as the file it is.
+- Packs (`StickerPackService`) live unencrypted in `{data}/stickers/{id}/`, renumbered, with the app's own
+  `pack.json`; nothing in a ZIP names a path on the device. PNG, JPEG, GIF and WebP only, checked by their bytes; 2 MB
+  a sticker, 300 a pack, 200 MB a ZIP; an optional `sticker-pack.json`; the same ID updates a pack. The media handler
+  serves them at `/_stickers/{id}/{file}`.
+- The switch, **Stickers**, is in Settings → Features after Mood tracker, off by default, with the packs under it.
+  Off, the button goes and the stickers on notes stay.
+- **Backups**: `stickers:` / `Sticker:` / `"stickers"`, only for a note that has one
+  ([05](05-backup-compatibility.md#stickers-in-backups)). Maple Notes' `parse.ts` at `main` (`b8f3601`, 1.16.1) was
+  read first: any new front-matter key ends its `attachments` list, and it ignores unknown header lines and JSON
+  properties, so it restores a sticker as an ordinary picture. Its vectors are still identical to
+  `fixtures/export-vectors.json`.
+- No starter pack ships: its artwork needs a licence the owner chooses (D11).
+
+Checked: the Core tests (514, one skipped) and the component tests (264) pass; 30 and 11 of them are new, and the
+13 export vectors still match. On the emulator (`MAUI_Emulator_API_36`, started `-read-only`), a Debug build was
+installed over the Debug install there with its demo notes, which were all there after migration 5. As installed,
+no sticker button stood by the paperclip; turning **Stickers** on showed the packs, "No sticker packs yet.";
+**Add pack…** opened the system picker showing only ZIP files, and a test pack of four 256 px pictures (emoji drawn
+on this Mac, for the test only, with a `sticker-pack.json`) was added from Downloads, listed with its first sticker,
+"4 stickers · by Test · local test only", that sticker loaded through `/_stickers/`. On Home the sticker button
+opened the four, four across; two chosen showed whole among the composer's files, and the note posted with them
+showed both at 80 px in a row above its text's end, from `/_media/`, the picker closed. **Remove** asked with its
+text, the pack's folder was emptied, and with the switch then off the note still showed both stickers and no
+button stood by the paperclip.
+
+Not checked, still open: the release build (R8 and trimming over the new code); a real phone; an export pulled off
+the device and restored elsewhere (`StickerBackupTests` covers each format); a real Maple Notes restore (its reader
+was read, not run); a note's PDF with stickers on the device (the builder is tested, the drawing is not); an
+animated GIF; the dark theme; TalkBack; Windows and macOS, which have no build yet.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._

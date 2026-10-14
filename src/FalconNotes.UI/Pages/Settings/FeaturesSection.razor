@@ -2,7 +2,8 @@
    Features): without Link previews; "Shrink photos before uploading" becomes "Shrink photos before adding" (docs/08,
    Pictures, video and files); with Help out of the menu, the guide is opened from the foot of Settings, since there
    is no address to type. New here: Export to PDF, off by default, on a platform that can write one (docs/07,
-   Export to PDF); and the Mood tracker, off by default (docs/07, Moods). *@
+   Export to PDF); the Mood tracker, off by default (docs/07, Moods); and Stickers, off by default, with the packs on
+   this device under the switch while it is on (docs/07, Stickers). *@
 @using FalconNotes.Core.Pdf
 @using FalconNotes.UI.State
 @using Microsoft.Extensions.DependencyInjection
@@ -49,6 +50,15 @@
         <PreferenceSwitch Label="Mood tracker"
                            Description="A smiley button where you write a note or quick note: choose one of five smilies for how you feel, and it shows on the note. Turning it off hides the smilies; the moods you chose are kept."
                            Checked="State.Preferences.MoodTracker" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { MoodTracker = on }))" />
+        <div class="py-3 first:pt-0 last:pb-0">
+            <PreferenceSwitch Label="Stickers"
+                               Description="A sticker button where you write a note or quick note: add stickers from the sticker packs on this device. Turning it off hides the button; stickers already on your notes stay."
+                               Checked="State.Preferences.Stickers" CheckedChanged="@(on => State.UpdatePreferencesAsync(p => p with { Stickers = on }))" />
+            @if (State.Preferences.Stickers)
+            {
+                <StickerPacksSetting />
+            }
+        </div>
     </div>
 </Section>
 

@@ -398,6 +398,74 @@ the definition. `Notes.Mood`; the screens are in [07](07-screens.md#moods), and 
 - **Backups keep it** ([05](05-backup-compatibility.md#moods-in-backups)): a restored note has its mood, here and,
   once it reads them, in Maple Notes.
 
+## Stickers
+
+New in this app (1.7.0, 2026-10-14, at the owner's request: "add stickers to notes … should be able to download /
+remove new sticker packs"); the web app has nothing like it. `StickerPackService` and `Attachments.IsSticker`; the
+screens are in [07](07-screens.md#stickers), and what a backup holds is in
+[05](05-backup-compatibility.md#stickers-in-backups).
+
+- **A sticker is a picture from a sticker pack, put on a note.** A note can have **several**, and they show small,
+  whole and in a row of their own above its other files ([07](07-screens.md#stickers)).
+- **On the note, a sticker is one of its files**: when chosen, its picture is **copied** into the encrypted
+  attachment store as an attachment with `IsSticker` set (`AttachmentService.AddAsync(…, sticker: true)`; only an
+  image can be one). Everything that holds for files holds for it: it is saved with the note, removed by editing
+  the note, counted in storage use, hidden on a locked note, deleted with the note, and kept in backups. Because it
+  is a copy, **removing its pack never changes a note**, and a backup restored on a device without the pack shows it
+  all the same.
+- **What can have them**: a timeline note (a daily note too) and a quick note, where the composer offers them, as for
+  moods (`StickerPackService.Allowed`). A todo list or a habit restored with a sticker keeps it as a file.
+- **The switch**: the sticker button is offered, and the packs listed in Settings, only while the preference
+  `stickers` (**Stickers** in Settings → Features) is on. It is **off by default** (the owner's wish, 2026-10-14).
+  Off, nothing is deleted: **stickers already on notes still show**, because they are the notes' own pictures, unlike
+  a mood, and the packs stay on the device.
+- **A sticker alone is enough to post**, as any file is.
+- **In a note's PDF** a sticker is drawn as a picture at most an inch across ([Export to PDF](#export-to-pdf)).
+
+### Sticker packs
+
+- **The app never downloads anything** (D3). A pack is a **ZIP file** the user gets outside the app, from a website
+  in the browser, a message or a friend, and adds in Settings → Features → Sticker packs → **Add pack…** through
+  the system file picker, as a backup is restored. **Remove** deletes it from the device, after a confirmation.
+  The owner chose this over an in-app store, which would have needed network access (2026-10-14).
+- **What a pack holds**: PNG, JPEG, GIF (animated too) and WebP pictures, each **at most 2 MB**, **at most 300** in
+  a pack, in a ZIP of **at most 200 MB**. Each picture's type is read from its first bytes, not its name: anything
+  else, SVG included (it can carry script), is refused with the picture's name.
+- **`sticker-pack.json`**, optional, at the top of the ZIP or in its one top folder, describes the pack. Every
+  field is optional:
+
+  ```json
+  {
+    "id": "falcon-friends",
+    "name": "Falcon friends",
+    "author": "Supun",
+    "licence": "CC0-1.0",
+    "version": "1.0",
+    "stickers": [
+      { "file": "art/wave.png", "name": "Waving" },
+      { "file": "art/sleep.gif" }
+    ]
+  }
+  ```
+
+  `id` is made of lower-case letters, digits and dashes (anything else is turned into that); without one, it is
+  made from the name. `name` defaults to the ZIP's file name. `licence` (or `license`) and `author` are shown in
+  Settings. `stickers` lists the stickers in order, by path relative to the JSON file, each with an optional
+  `name` (the default is the file name without its extension); a listed file that is not there refuses the pack.
+  **Without `stickers`**, or without the file at all, every picture in the ZIP is a sticker, in path order. Hidden
+  files, `__MACOSX/` and other files (a README, a licence) are passed over.
+- **Adding a pack with an ID already here replaces it**: that is how a pack is updated. The toast says "Updated" and
+  not "Added".
+- **On the device** a pack is `{data}/stickers/{id}/`: its pictures renamed `001.png`, `002.gif`… and a `pack.json`
+  the app writes itself. Nothing in the ZIP names a path on the device. A pack is put together in a hidden folder
+  and moved into place, so it is there whole or not at all; folders left by an add cut short are removed at the
+  next. The packs are **not encrypted**: they are not the user's writing, and which stickers were used is in the
+  notes, which are. **Erase all data** deletes them; **Delete all notes and files** does not.
+- **The page** shows a pack's pictures from `/_stickers/{id}/{file}`, answered by the media handler, which serves
+  only a pack's own numbered pictures ([02](02-architecture.md#serving-attachments-to-the-webview)).
+- **Packs are not in backups**, being neither notes nor the user's; the stickers on notes are. A new device needs
+  its packs added again only to put new stickers on notes.
+
 
 ## Labels
 
@@ -450,7 +518,7 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
 | `menuTextSize` | `Medium` (Small, Medium, Large) | `weekStart` | `Auto` (Auto, Sunday, Monday, Saturday) |
 | `menuOrder` | `""` | `background` | `None` (None, Halloween, Christmas, NewYear, Valentine, Easter, Diwali, Vesak, Eid, LunarNewYear) |
 | `pdfExport` | false | `lineBreaks` | false |
-| `moodTracker` | false | | |
+| `moodTracker` | false | `stickers` | false |
 
 - `Falcon` is the web app's `Maple` accent under this app's name, with the same colours (D12). Preferences are not
   part of backups, so nothing needs mapping.
@@ -464,6 +532,9 @@ The web app's `Preferences` (`web/lib/types.ts`, `web/lib/preferences.ts`) witho
   note is shown as a new line. Preferences saved before 1.6.0 have no such key and read as off.
 - `moodTracker` is this app's own too ([Moods](#moods)): whether the smilies are offered where a note is written
   and shown on notes. Preferences saved before 1.7.0 have no such key and read as off.
+- `stickers` is this app's own too ([Stickers](#stickers)): whether the sticker button is offered where a note is
+  written and the packs are listed in Settings. Stickers on notes show either way. Preferences saved before 1.7.0
+  have no such key and read as off.
 - A change shows at once and is saved in the background. If saving fails, it is rolled back with "Your setting could
   not be saved. Please try again."
 - Turning a feature off hides its page or tool and deletes nothing. A page whose feature is off shows "{Feature} is

@@ -37,8 +37,9 @@ public enum ExportLayout
 /// <param name="IsImage">Whether it is an image (embedded rather than linked in Markdown).</param>
 /// <param name="ArchivePath">Path inside the archive, e.g. <c>attachments/5d1e0a7c_sunset.png</c>.</param>
 /// <param name="RelativePath">Path relative to the note file that references it, e.g. <c>../attachments/…</c>.</param>
+/// <param name="IsSticker">A sticker, listed once more under <c>stickers</c> (docs/05, Stickers in backups).</param>
 public sealed record ExportedAttachment(
-    string FileName, string ContentType, long SizeBytes, bool IsImage, string ArchivePath, string RelativePath);
+    string FileName, string ContentType, long SizeBytes, bool IsImage, string ArchivePath, string RelativePath, bool IsSticker = false);
 
 /// <summary>A note as written into an export (always decrypted).</summary>
 /// <param name="Id">Note ID.</param>
@@ -78,4 +79,10 @@ public sealed record ExportedNote(
     /// note without one, which is written exactly as it was before moods.
     /// </summary>
     public string? MoodName => NoteMoods.Name(Mood);
+
+    /// <summary>
+    /// The attachments that are stickers; empty for a note without any, which is written exactly as it was before
+    /// stickers.
+    /// </summary>
+    public IReadOnlyList<ExportedAttachment> Stickers => Attachments.Where(a => a.IsSticker).ToList();
 }

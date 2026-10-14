@@ -174,6 +174,9 @@ public enum IconName
     /// <summary>Lucide <c>smile</c>.</summary>
     Smile,
 
+    /// <summary>Lucide <c>sticker</c>.</summary>
+    Sticker,
+
     /// <summary>Lucide <c>sun</c>.</summary>
     Sun,
 

@@ -168,6 +168,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without one is exported exactly as before, and Maple Notes and earlier versions of Falcon Notes restore such a
   backup as before, without the moods. The database gains a column for it (schema version 4), and a copy is kept
   before the upgrade. Help describes it.
+- **Stickers** (docs/04, Stickers; this app's own, Maple Notes has none), **off by default**: turn on **Stickers** in
+  Settings → Features, and add sticker packs under it with **Add pack…**. A pack is a ZIP file of PNG, JPEG, GIF or
+  WebP pictures, with an optional `sticker-pack.json` for its name, author, licence and order; the app still never
+  goes online, so packs are downloaded in the browser or made by hand. Adding a pack with the same ID updates it, and
+  **Remove** deletes one. A sticker button then sits beside the paperclip (and the smiley) where you write a note or
+  quick note; choose as many stickers as you like, and they show small, in a row above the note's other files. Each
+  sticker is copied into the note as one of its encrypted files, so removing its pack leaves the notes as they are,
+  and turning the switch off hides only the button. A note's PDF draws them an inch across. **Backups keep them**:
+  each sticker is an ordinary picture among the note's files, plus one more list saying which files are stickers
+  (`stickers:`, `Sticker:`, `"stickers"`), written only for a note that has one; Maple Notes and earlier versions of
+  Falcon Notes restore them as ordinary pictures. Packs are not in backups. The database gains a column for it
+  (schema version 5). Help describes it.
 - A rule and its test, at the owner's request: an update never loses notes (CLAUDE.md, docs/11). `UpgradeKeepsNotesTests`
   takes a database with one of everything back to the schema of each earlier version, starts it as an update does,
   and compares every row and file with what was there; a migration added without its undo fails a test.

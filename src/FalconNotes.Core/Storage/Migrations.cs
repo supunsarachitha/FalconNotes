@@ -94,6 +94,11 @@ public static class Migrations
         """
         ALTER TABLE Notes ADD COLUMN Mood INTEGER NOT NULL DEFAULT 0;
         """,
+
+        // 5: a picture on a note can be a sticker, copied from a sticker pack (docs/04, Stickers). No file there is one.
+        """
+        ALTER TABLE Attachments ADD COLUMN IsSticker INTEGER NOT NULL DEFAULT 0;
+        """,
     ];
 
     /// <summary>Reads the schema version of an open database (0 for a new one).</summary>

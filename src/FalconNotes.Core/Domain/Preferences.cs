@@ -207,6 +207,13 @@ public sealed record Preferences
     /// </summary>
     public bool MoodTracker { get; init; }
 
+    /// <summary>
+    /// Offer the sticker packs when a note or quick note is written, and manage them in Settings (docs/04, Stickers).
+    /// This app's own; off by default. Turning it off only takes the stickers button away: stickers already on notes
+    /// stay and show, as they are the notes' own pictures, and the packs stay on the device.
+    /// </summary>
+    public bool Stickers { get; init; }
+
     /// <summary>Light or dark.</summary>
     public Theme Theme { get; init; } = Theme.System;
 

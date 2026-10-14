@@ -176,7 +176,7 @@ public sealed class NoteExporter(
                 {
                     exportedAttachments.Add(new ExportedAttachment(
                         attachment.FileName, attachment.ContentType, attachment.SizeBytes, UploadPolicy.IsImage(attachment.ContentType),
-                        archivePath, ExportNaming.RelativePath(notePath, archivePath)));
+                        archivePath, ExportNaming.RelativePath(notePath, archivePath), attachment.IsSticker));
                 }
             }
         }

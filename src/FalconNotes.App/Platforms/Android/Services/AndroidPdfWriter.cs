@@ -33,6 +33,7 @@ public sealed class AndroidPdfWriter(IMediaSource media) : IPdfWriter
     private const int Margin = 54;
     private const int ContentWidth = PageWidth - (2 * Margin);
     private const int ContentHeight = PageHeight - (2 * Margin);
+    private const int StickerPoints = 72; // an inch
     private const int IndentStep = 18;
     private const int QuoteStep = 12;
     private const float CodePadding = 6;
@@ -311,7 +312,9 @@ public sealed class AndroidPdfWriter(IMediaSource media) : IPdfWriter
         }
 
         pages.Keep(bitmap);
-        var scale = Math.Min(PointsPerPixel, Math.Min((float)ContentWidth / bitmap.Width, (float)ContentHeight / bitmap.Height));
+        // A sticker fits in an inch square, as small as the screen shows it; any other picture in the page.
+        var (boxWidth, boxHeight) = picture.IsSticker ? (StickerPoints, StickerPoints) : (ContentWidth, ContentHeight);
+        var scale = Math.Min(PointsPerPixel, Math.Min((float)boxWidth / bitmap.Width, (float)boxHeight / bitmap.Height));
         var width = bitmap.Width * scale;
         var height = bitmap.Height * scale;
         var gap = pages.AtTop ? 0 : 10;

@@ -194,7 +194,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
     private sealed record ParsedNote(
         Guid? Id, string Content, DateTimeOffset? CreatedAt, DateTimeOffset? UpdatedAt, bool Pinned, bool Archived,
         NoteKind Kind, string? DailyDate, IReadOnlyList<string> Labels, IReadOnlyList<(string Path, string? Name, string? Type)> Attachments,
-        NoteMood Mood = NoteMood.None);
+        NoteMood Mood = NoteMood.None, IReadOnlyList<string>? Stickers = null);
 
     /// <summary>Reads a note file in any export format; anything else becomes a note with the file's text.</summary>
     private static ParsedNote ParseNote(string name, string text, DateTimeOffset modified)
@@ -236,15 +236,16 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
 
         var fields = new Dictionary<string, string>(StringComparer.Ordinal);
         var paths = new List<string>();
-        var inAttachments = false;
+        var stickers = new List<string>();
+        List<string>? list = null; // the list the item lines belong to: attachments, stickers (docs/05), or none
         foreach (var line in text[4..end].Split('\n'))
         {
             var item = FrontMatterItem().Match(line);
-            if (inAttachments && item.Success)
+            if (list is not null && item.Success)
             {
                 if (JsonString(item.Groups[1].Value) is { } path)
                 {
-                    paths.Add(path);
+                    list.Add(path);
                 }
 
                 continue;
@@ -256,7 +257,12 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
                 continue;
             }
 
-            inAttachments = field.Groups[1].Value == "attachments";
+            list = field.Groups[1].Value switch
+            {
+                "attachments" => paths,
+                "stickers" => stickers,
+                _ => null,
+            };
             fields[field.Groups[1].Value] = field.Groups[2].Value;
         }
 
@@ -298,7 +304,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             Day(fields.GetValueOrDefault("daily")),
             JsonNames(fields.GetValueOrDefault("labels")),
             paths.Select((path, i) => (path, names.Count == paths.Count ? names[i] : null, (string?)null)).ToList(),
-            NoteMoods.Parse(fields.GetValueOrDefault("mood")));
+            NoteMoods.Parse(fields.GetValueOrDefault("mood")),
+            stickers);
     }
 
     /// <summary>Plain text with the export's header lines; null if the file does not start with one.</summary>
@@ -314,6 +321,7 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
         var body = split < 0 ? "" : text[(split + 2)..];
         var fields = new Dictionary<string, string>(StringComparer.Ordinal);
         var paths = new List<string>();
+        var stickers = new List<string>();
         foreach (var line in header.Split('\n'))
         {
             var field = PlainTextField().Match(line);
@@ -325,6 +333,10 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             if (field.Groups[1].Value == "Attachment")
             {
                 paths.Add(field.Groups[2].Value);
+            }
+            else if (field.Groups[1].Value == "Sticker")
+            {
+                stickers.Add(field.Groups[2].Value);
             }
             else
             {
@@ -345,7 +357,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             Day(fields.GetValueOrDefault("Daily")),
             JsonNames(fields.GetValueOrDefault("Labels")),
             paths.Select(path => (path, (string?)null, (string?)null)).ToList(),
-            NoteMoods.Parse(fields.GetValueOrDefault("Mood")));
+            NoteMoods.Parse(fields.GetValueOrDefault("Mood")),
+            stickers);
     }
 
     /// <summary>One note as JSON, as the export writes it; null for any other JSON.</summary>
@@ -389,7 +402,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             return new ParsedNote(
                 UuidOrNull(Text("id")), content.GetString()!, Date(Text("createdAt")), Date(Text("updatedAt")),
                 True("pinned"), True("archived"), KindOf(Text("kind")), Day(Text("dailyDate")),
-                note.TryGetProperty("labels", out var labels) ? Names(labels) : [], attachments, NoteMoods.Parse(Text("mood")));
+                note.TryGetProperty("labels", out var labels) ? Names(labels) : [], attachments, NoteMoods.Parse(Text("mood")),
+                note.TryGetProperty("stickers", out var stickers) ? Names(stickers) : []);
         }
     }
 
@@ -408,7 +422,8 @@ public sealed partial class RestoreReader(IAppDirectories directories, TimeProvi
             }
 
             var name = recordedName ?? OriginalName(path);
-            attachments.Add(new RestoreAttachment(name, recordedType ?? UploadPolicy.GuessFromName(name), entry.Length, () => OpenEntry(entry)));
+            attachments.Add(new RestoreAttachment(name, recordedType ?? UploadPolicy.GuessFromName(name), entry.Length, () => OpenEntry(entry),
+                parsed.Stickers?.Contains(relative, StringComparer.Ordinal) == true));
         }
 
         string? Field(string property) => manifest is { } m && m.TryGetProperty(property, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;

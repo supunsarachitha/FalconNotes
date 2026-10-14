@@ -76,6 +76,9 @@ Added with the mood tracker (1.7.0, 2026-10-13): the third paragraph of `feature
 app has no such feature yet. `writing` does not name the smilies, because **Mood tracker** is off until it is
 turned on.
 
+Added with stickers (1.7.0, 2026-10-14): the fourth paragraph of `features`. It is this app's own; the web app has no
+such feature. It says how a pack is had without the app going online, and that removing one leaves the notes.
+
 Added with Keep line breaks (1.6.0, 2026-10-13): the **New lines** item of `writing`. It is this app's own: the web
 app's guide does not say that lines typed one under another are joined, and it has no such switch. The guide itself
 is always shown with its lines joined, whatever the switch says.
@@ -190,6 +193,12 @@ To keep track of how you feel, turn on **Mood tracker** in the same place. A smi
 paperclip where you write a note or quick note: choose it, then one of the five smilies, from awful to great, and the
 smiley shows on the note next to its time. To change it, edit the note and choose another; choose the same one
 again to take it off. Backups keep each note's mood.
+
+To put stickers on your notes, turn on **Stickers** in the same place, then add a sticker pack under it with **Add
+pack…**. A sticker pack is a ZIP file of pictures: download one in your browser, or make your own, since Falcon
+Notes never goes online. A sticker button then sits beside the paperclip where you write a note or quick note: choose
+it, then as many stickers as you like. Each one is copied into the note, so removing its pack later leaves your notes
+as they are. Backups keep the stickers on your notes, but not the packs.
 ````
 
 ## 15. Keeping your notes private (`privacy`)

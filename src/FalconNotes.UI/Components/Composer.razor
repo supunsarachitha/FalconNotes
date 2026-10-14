@@ -9,11 +9,13 @@
    follow-up.
 
    New here (docs/07, Moods): with the mood tracker on, a smiley button beside the paperclip opens five smilies to
-   choose the note's mood from, saved with the note. *@
+   choose the note's mood from, saved with the note. With stickers on, a sticker button opens the packs on this
+   device; each sticker chosen is copied in as one of the note's files, marked as a sticker (docs/07, Stickers). *@
 @using FalconNotes.Core.Attachments
 @using FalconNotes.Core.Domain
 @using FalconNotes.Core.Notes
 @using FalconNotes.Core.Platform
+@using FalconNotes.Core.Stickers
 @using FalconNotes.Core.Text
 @using FalconNotes.UI.State
 @using Microsoft.Extensions.DependencyInjection
@@ -22,6 +24,7 @@
 @inject NoteService Notes
 @inject DailyNotes DailyNotes
 @inject AttachmentService Attachments
+@inject StickerPackService Stickers
 @inject IFilePicker Picker
 @inject AppState State
 @inject Toasts Toasts
@@ -60,7 +63,11 @@
             {
                 <li class="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-stone-50 dark:border-stone-700 dark:bg-stone-800"
                     title="@($"{file.Name} ({Bytes.Format(file.Size)})")">
-                    @if (file.Attachment is { IsImage: true } shown)
+                    @if (file.Attachment is { IsSticker: true } sticker)
+                    {
+                        <AttachmentThumbnail Attachment="sticker" Contain="true" />
+                    }
+                    else if (file.Attachment is { IsImage: true } shown)
                     {
                         <AttachmentThumbnail Attachment="shown" />
                     }
@@ -99,11 +106,16 @@
         <MoodPicker Id="@MoodPickerId" Value="_mood" ValueChanged="ChooseMood" />
     }
 
+    @if (OffersStickers && _choosingSticker)
+    {
+        <StickerPicker Id="@StickerPickerId" OnChosen="AddSticker" />
+    }
+
     <div class="mt-2 flex items-center gap-2 border-t border-stone-100 pt-2 dark:border-stone-800">
         <IconButton Label="Attach files" OnClick="PickFilesAsync"><Icon Name="IconName.Paperclip" Class="size-5" /></IconButton>
         @if (OffersMood)
         {
-            <IconButton Label="@(_mood == NoteMood.None ? "Mood" : $"Mood: {Moods.Label(_mood)}")" OnClick="() => _choosingMood = !_choosingMood"
+            <IconButton Label="@(_mood == NoteMood.None ? "Mood" : $"Mood: {Moods.Label(_mood)}")" OnClick="ToggleMoods"
                         aria-expanded="@(_choosingMood ? "true" : "false")" aria-controls="@MoodPickerId">
                 @if (_mood == NoteMood.None)
                 {
@@ -113,6 +125,13 @@
                 {
                     <span aria-hidden="true" class="text-xl leading-none">@Moods.Emoji(_mood)</span>
                 }
+            </IconButton>
+        }
+        @if (OffersStickers)
+        {
+            <IconButton Label="Stickers" OnClick="ToggleStickers"
+                        aria-expanded="@(_choosingSticker ? "true" : "false")" aria-controls="@StickerPickerId">
+                <Icon Name="IconName.Sticker" Class="size-5" />
             </IconButton>
         }
         @if (Content.Length > MaxLength * 0.9)
@@ -152,6 +171,7 @@
     private bool _saving;
     private NoteMood _mood;
     private bool _choosingMood;
+    private bool _choosingSticker;
 
     /// <summary>The note to edit; omit to write a new note.</summary>
     [Parameter] public Note? Note { get; set; }
@@ -185,8 +205,13 @@
 
     private string MoodPickerId => $"{TextareaId}-mood";
 
+    private string StickerPickerId => $"{TextareaId}-stickers";
+
     // The smilies, with the mood tracker on, for the notes that can have a mood: not a todo list edited from a search.
     private bool OffersMood => State.Preferences.MoodTracker && NoteMoods.Allowed(Note?.Kind ?? Kind);
+
+    // The packs, with stickers on, for the same notes as moods. Stickers already on a note stay either way.
+    private bool OffersStickers => State.Preferences.Stickers && StickerPackService.Allowed(Note?.Kind ?? Kind);
 
     private string Content => Daily is not null
         ? Titles.Join(Daily.Title, _text)
@@ -307,6 +332,60 @@
     {
         _mood = mood;
         _choosingMood = false;
+    }
+
+    // One picker at a time: the smilies and the stickers take the same place under the text.
+    private void ToggleMoods()
+    {
+        _choosingMood = !_choosingMood;
+        _choosingSticker = false;
+    }
+
+    private void ToggleStickers()
+    {
+        _choosingSticker = !_choosingSticker;
+        _choosingMood = false;
+    }
+
+    private void AddSticker(Sticker sticker)
+    {
+        // The picture is copied from its pack into the note's files, so the note keeps it if the pack is removed.
+        var name = sticker.Name + Path.GetExtension(sticker.File);
+        var entry = new ComposerFile { Key = $"new-{Guid.NewGuid():N}", Name = name, IsImage = true, Existing = false };
+        _files.Add(entry);
+        _ = AddStickerAsync(entry, sticker);
+    }
+
+    private async Task AddStickerAsync(ComposerFile entry, Sticker sticker)
+    {
+        try
+        {
+            if (Stickers.Open(sticker.PackId, sticker.File) is not { } opened)
+            {
+                throw new UserFacingException("This sticker's pack was removed.");
+            }
+
+            await using (opened.Content)
+            {
+                entry.Size = opened.Content.Length;
+                entry.Attachment = await Attachments.AddAsync(
+                    opened.Content, entry.Name, opened.ContentType, cancellationToken: entry.Cancel.Token, sticker: true);
+            }
+
+            entry.Progress = 1;
+        }
+        catch (OperationCanceledException)
+        {
+            // removed while it was being added
+        }
+        catch (Exception e)
+        {
+            entry.Error = e is UserFacingException ? e.Message : "Could not add this sticker.";
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task PickFilesAsync()
@@ -432,6 +511,7 @@
                 _text = "";
                 _mood = NoteMood.None;
                 _choosingMood = false;
+                _choosingSticker = false;
                 _files.Clear();
                 var module = await ModuleAsync();
                 await module.InvokeVoidAsync("growNow", _textarea, MaxTextareaPixels);

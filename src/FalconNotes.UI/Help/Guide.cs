@@ -169,6 +169,12 @@ public static class Guide
             paperclip where you write a note or quick note: choose it, then one of the five smilies, from awful to great, and the
             smiley shows on the note next to its time. To change it, edit the note and choose another; choose the same one
             again to take it off. Backups keep each note's mood.
+
+            To put stickers on your notes, turn on **Stickers** in the same place, then add a sticker pack under it with **Add
+            pack…**. A sticker pack is a ZIP file of pictures: download one in your browser, or make your own, since Falcon
+            Notes never goes online. A sticker button then sits beside the paperclip where you write a note or quick note: choose
+            it, then as many stickers as you like. Each one is copied into the note, so removing its pack later leaves your notes
+            as they are. Backups keep the stickers on your notes, but not the packs.
             """),
 
         new("trash", "The trash", """

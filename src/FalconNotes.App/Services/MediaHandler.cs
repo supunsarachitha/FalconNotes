@@ -1,5 +1,6 @@
 using System.Globalization;
 using FalconNotes.Core.Attachments;
+using FalconNotes.Core.Stickers;
 using Microsoft.Extensions.Logging;
 
 namespace FalconNotes.App.Services;
@@ -8,14 +9,19 @@ namespace FalconNotes.App.Services;
 /// Answers <c>/_media/{attachmentId}</c> requests from the page with the decrypted attachment, honouring
 /// <c>Range</c> so videos seek (docs/02, Serving attachments to the WebView). Uses <c>BlazorWebView</c>'s
 /// <c>WebResourceRequested</c> (option A; Phase 0 spike S3). Reads nothing else from the request and never serves a
-/// path outside the attachment store.
+/// path outside the attachment store. It also answers <c>/_stickers/{pack}/{file}</c> with a sticker from a pack on
+/// the device, for the sticker picker (docs/04, Stickers).
 /// </summary>
 /// <param name="source">Finds attachments by ID.</param>
+/// <param name="stickers">The sticker packs.</param>
 /// <param name="logger">Logs IDs and counts, never names.</param>
-public sealed class MediaHandler(IMediaSource source, ILogger<MediaHandler> logger)
+public sealed class MediaHandler(IMediaSource source, StickerPackService stickers, ILogger<MediaHandler> logger)
 {
     /// <summary>The path prefix the handler answers.</summary>
     public const string PathPrefix = "/_media/";
+
+    /// <summary>The path prefix for stickers in packs.</summary>
+    public const string StickerPrefix = "/_stickers/";
 
     /// <summary>The passive types the page may display; everything else is sent as <c>application/octet-stream</c>.</summary>
     private static readonly HashSet<string> InlineTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -30,6 +36,12 @@ public sealed class MediaHandler(IMediaSource source, ILogger<MediaHandler> logg
     /// <param name="e">The request.</param>
     public void Handle(WebViewWebResourceRequestedEventArgs e)
     {
+        if (e.Uri.AbsolutePath.StartsWith(StickerPrefix, StringComparison.Ordinal))
+        {
+            HandleSticker(e);
+            return;
+        }
+
         if (!e.Uri.AbsolutePath.StartsWith(PathPrefix, StringComparison.Ordinal))
         {
             return;
@@ -50,6 +62,29 @@ public sealed class MediaHandler(IMediaSource source, ILogger<MediaHandler> logg
         var (status, reason, headers, body, limit) = response.GetAwaiter().GetResult();
         logger.LogDebug("Media {Id}: range {Range} -> {Status}", id, rangeHeader, status);
         Respond(e, status, reason, headers, body, limit);
+    }
+
+    /// <summary>
+    /// Answers a sticker from a pack. The pack service checks both parts of the path, so nothing outside the packs'
+    /// own pictures is served. The files are small, so there are no ranges.
+    /// </summary>
+    private void HandleSticker(WebViewWebResourceRequestedEventArgs e)
+    {
+        e.Handled = true;
+        var headers = new Dictionary<string, string> { ["X-Content-Type-Options"] = "nosniff", ["Cache-Control"] = "no-store" };
+        var parts = e.Uri.AbsolutePath[StickerPrefix.Length..].Split('/');
+        if (!string.Equals(e.Method, "GET", StringComparison.OrdinalIgnoreCase) || parts.Length != 2
+            || stickers.Open(parts[0], parts[1]) is not { } sticker)
+        {
+            Respond(e, 404, "Not Found", headers, new MemoryStream(), 0);
+            return;
+        }
+
+        var length = sticker.Content.Length;
+        headers["Content-Type"] = sticker.ContentType;
+        headers["Content-Length"] = length.ToString(CultureInfo.InvariantCulture);
+        logger.LogDebug("Sticker {Pack}/{File} -> 200", parts[0], parts[1]);
+        Respond(e, 200, "OK", headers, sticker.Content, length);
     }
 
     /// <summary>
