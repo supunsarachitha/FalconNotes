@@ -844,6 +844,14 @@ the device and restored elsewhere (`StickerBackupTests` covers each format); a r
 was read, not run); a note's PDF with stickers on the device (the builder is tested, the drawing is not); an
 animated GIF; the dark theme; TalkBack; Windows and macOS, which have no build yet.
 
+**The release build**, 2026-10-14, from the working tree with moods and stickers, before its commit: `dotnet
+publish`, from clean, made the signed AAB and APK; the 1.6.0 output was moved to
+`src/FalconNotes.App/bin/Release-1.6.0/` (git-ignored) first. Checked: the same certificate as 1.6.0 (`apksigner
+verify --print-certs`; `jarsigner -verify` on the AAB), versionCode 10, versionName 1.7.0, `targetSdkVersion` 36,
+arm64-v8a and x86_64, not debuggable, and the permissions the same as 1.6.0's: `USE_BIOMETRIC` and
+`USE_FINGERPRINT`, with no `INTERNET` and no storage permission. Not yet done with these files: the release-signed
+1.6.0 updated to this 1.7.0 on the emulator, and a real phone.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
