@@ -3,10 +3,15 @@
 Backups made by this app must restore in the web app and on any Maple Notes server, and backups made there must restore
 here. The format is the web app's **export ZIP, manifest version 3**, unchanged: version 2 as in Maple Notes 1.8.0,
 plus the labels Maple Notes 1.9.0 added ([Labels in backups](#labels-in-backups)). It is the format of the latest
-Maple Notes, 1.16.0 (checked 2026-10-10).
+Maple Notes, 1.16.1 (checked 2026-10-13: its export and restore code and its vectors are as in 1.16.0), with one
+line of this app's own for a note that has a mood ([Moods in backups](#moods-in-backups)) and one list for a note
+that has stickers ([Stickers in backups](#stickers-in-backups)).
 
 **Never change this format in only one of the two projects.** Any change needs a new manifest version, implemented and
-released in the web app first, with its vectors, and then here.
+released in the web app first, with its vectors, and then here. The one exception so far is a note's mood, added
+here first on the owner's word that Maple Notes gets it next ([Moods in backups](#moods-in-backups)), and which
+attachments are stickers ([Stickers in backups](#stickers-in-backups)); each is built so
+that it breaks nothing in either app meanwhile.
 
 ## Proof: the shared export vectors
 
@@ -98,15 +103,18 @@ Exactly as `NoteFormatter`:
 
 - **Markdown**: front matter with `id`, `kind` (`note`, `todo`, `quick`, `habit`), `daily` (only for daily notes),
   `created`, `updated`, `tags` (JSON strings in `[…]`), `labels` (the same, always written, `[]` when there are none),
-  `pinned`, `archived`, and `attachments` (relative paths, JSON strings). Then a blank line, the text with trailing white space trimmed, and `\n`. Then, with files,
+  `pinned`, `archived`, `mood` (only for a note that has one: [Moods in backups](#moods-in-backups)), and
+  `attachments` (relative paths, JSON strings), then `stickers` (only for a note that has one: [Stickers in
+  backups](#stickers-in-backups)). Then a blank line, the text with trailing white space trimmed, and `\n`. Then, with files,
   `\n## Attachments\n\n` and one `- ![name](target)` (images) or `- [name](target)` line each. The name escapes `\ [ ]`;
   the target is percent-encoded per segment with `Uri.EscapeDataString`, keeping `..`.
 - **Plain text**: `Created:`, `Updated:` (only if more than one minute after Created), `Kind:` (not for notes),
   `Daily:`, `Tags: #a #b`, `Labels: ["a", "b"]` (only with labels; a JSON array, because names may hold spaces and
-  commas), `State: pinned, archived`, one `Attachment:` line per file. Then a blank line, the trimmed
+  commas), `State: pinned, archived`, `Mood:` (only with a mood), one `Attachment:` line per file, one `Sticker:` line per sticker. Then a blank line, the trimmed
   text and `\n`.
 - **JSON**: `{id, kind, dailyDate, createdAt, updatedAt, tags, labels, pinned, archived, content, attachments:
-  [{fileName, contentType, sizeBytes, path}]}`, then `\n`.
+  [{fileName, contentType, sizeBytes, path}]}`, then `\n`. A note with a mood has `mood` between `archived` and
+  `content`; a note without one has no such property, not a null one. A note with stickers ends with `stickers`.
 - **Labels** are written by name, sorted ordinal like tags. A note's label that no longer exists is left out.
 - **JSON settings**: `JsonSerializerDefaults.Web` (camelCase), `WriteIndented = true` (two spaces), and
   `JavaScriptEncoder.UnsafeRelaxedJsonEscaping`. Tags are sorted ordinal.
@@ -265,7 +273,7 @@ As `importer.ts` and the server's `NoteService.ImportAsync`, in transactions of 
 ## Moving between devices
 
 Exporting on one device and restoring on another is the only way to move notes. Labels travel with the notes that
-carry them. Labels on no note, preferences, the profile, the app lock and the locks on single notes stay behind. Help says so
+carry them, and so do each note's mood and stickers. Labels on no note, sticker packs, preferences, the profile, the app lock and the locks on single notes stay behind. Help says so
 ([08](08-help-guide.md)).
 
 ## Labels in backups
@@ -303,6 +311,84 @@ again by hand.
 Since an export holds a locked note's text, the screen asks for the PIN, or the fingerprint or face where the app
 lock allows it, before it writes one, while any note is locked ([07](07-screens.md#settings--backup--data)).
 `ExportService` and `NoteExporter` are unchanged, and the conformance vectors with them.
+
+## Moods in backups
+
+New in Falcon Notes 1.7.0 (2026-10-13). A note's mood ([04](04-domain-rules.md#moods)) is written into its file in
+every format, and read back on restore. **This is the one part of the format defined here first**: Maple Notes
+1.16.1 has no moods. Asked whether backups should carry them, the owner answered that the same option is being
+added to Maple Notes next, so that it will be compatible. Until Maple Notes has it, this section is the definition
+it is to follow; if it settles on something else, this app follows it, as it does for everything else in the
+format, and keeps reading what 1.7.0 wrote.
+
+What is written, and only for a note that has a mood:
+
+| Format | Line | Where |
+|---|---|---|
+| Markdown | `mood: great` in the front matter | after `archived`, before `attachments` |
+| Plain text | `Mood: great` in the header | after `State`, before the `Attachment` lines |
+| JSON | `"mood": "great"` | after `archived`, before `content` |
+
+- **The value** is the mood's name in lower case: `awful`, `bad`, `okay`, `good` or `great`. A name and not a
+  number or a smiley, as kinds and label colours are names, so each app can draw the mood as it likes.
+- **A note without a mood is written exactly as before**: no line, no `null`. So every export of notes without
+  moods is byte for byte what the web app writes, and the 13 shared vectors, which hold no mood, pass unchanged;
+  `MoodBackupTests` proves that a mood adds its one line and changes nothing else.
+- **The manifest is untouched**: version 3, and no `mood` in its `notes`. The note file is the one place a mood
+  is read from, in every format, so the manifest needs no copy.
+- **Reading**: `mood` (Markdown), `Mood` (plain text) and `mood` (JSON, a string), matched ignoring case. Anything
+  else, such as a mood a later version adds, is no mood, and the note is restored without one and without a
+  problem being reported. A todo list or a habit that names a mood arrives without it.
+- **Older readers** pass the line over: Maple Notes up to 1.16.1 and Falcon Notes up to 1.6.0 read the fields they
+  know from the front matter, the header and the JSON, and ignore the rest (`parse.ts`, `RestoreReader`). The note
+  restores as before, without its mood.
+
+| Backup made by | Restored in | Moods |
+|---|---|---|
+| Falcon Notes 1.7.0 or later | Falcon Notes 1.7.0 or later | Kept |
+| Falcon Notes 1.7.0 or later | Maple Notes up to 1.16.1, Falcon Notes up to 1.6.0 | Left out; the notes restore as before |
+| Falcon Notes 1.7.0 or later | A Maple Notes that reads moods | Kept, if it reads these lines; that is what it is asked to do |
+| Anything earlier | Anything | There are none in it |
+
+Whether the mood tracker is turned on is a preference and, like every preference, not in a backup
+([Settings in backups](#settings-in-backups)). A restored note has its mood either way, and shows it once the
+switch is on.
+
+
+## Stickers in backups
+
+New in Falcon Notes 1.7.0 (2026-10-14). A sticker ([04](04-domain-rules.md#stickers)) is one of its note's files,
+so it is written to the archive and listed among the note's attachments like any other picture. **One more list
+says which of those files are stickers**, written only for a note that has one:
+
+| Format | Lines | Where |
+|---|---|---|
+| Markdown | `stickers:` and one `  - "attachments/…"` item per sticker, in the front matter | after the `attachments` list |
+| Plain text | one `Sticker: attachments/…` line per sticker, in the header | after the `Attachment` lines |
+| JSON | `"stickers": ["attachments/…"]` | last, after `attachments` |
+
+- **Each item is the path already in `attachments`**, written the same way, so the sticker's file is in the
+  archive once. The pack it came from is not written: the picture is the note's own.
+- **A note without stickers is written exactly as before**: no list, no empty one. So the 13 shared vectors, which
+  hold none, pass unchanged; `StickerBackupTests` proves the lines and that nothing else changes.
+- **The manifest is untouched**: version 3. The note file is the one place stickers are read from.
+- **Reading**: a path in the list that is also among the note's attachments makes that file a sticker, if it is a
+  picture. Any other path is passed over without a problem reported, and so is a list in a backup that has no
+  attachments section.
+- **Maple Notes reads the sticker as an ordinary picture.** Checked against its `parse.ts` on `main` (1.16.1,
+  2026-10-14): in Markdown, any new front-matter key ends the `attachments` list, so the `stickers` items are not
+  read as more files; in plain text, a `Sticker:` line is an unknown field; in JSON, `stickers` is an unknown
+  property. The picture shows in the note's grid of pictures there, at its full size. The same holds for Falcon
+  Notes up to 1.6.0.
+
+| Backup made by | Restored in | Stickers |
+|---|---|---|
+| Falcon Notes 1.7.0 or later | Falcon Notes 1.7.0 or later | Kept, as stickers |
+| Falcon Notes 1.7.0 or later | Maple Notes up to 1.16.1, Falcon Notes up to 1.6.0 | Kept, as ordinary pictures |
+| Anything earlier | Anything | There are none in it |
+
+Sticker packs are not in backups ([04](04-domain-rules.md#sticker-packs)), and whether stickers are turned on is a
+preference, which is not either ([Settings in backups](#settings-in-backups)).
 
 ## Settings in backups
 

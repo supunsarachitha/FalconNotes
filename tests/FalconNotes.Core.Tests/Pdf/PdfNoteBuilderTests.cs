@@ -190,6 +190,18 @@ public class PdfNoteBuilderTests
     }
 
     [Fact]
+    public void A_sticker_is_a_picture_drawn_small()
+    {
+        var note = MakeNote("Beach day", null, File("beach.jpg", "image/jpeg"), File("Waving cat.png", "image/png") with { IsSticker = true });
+
+        var pdf = PdfNoteBuilder.Build(note, note.Content, TimeZoneInfo.Utc, use24Hour: true);
+
+        Assert.Equal(
+            [("beach.jpg", false), ("Waving cat.png", true)],
+            pdf.Blocks.OfType<PdfPicture>().Select(p => (p.FileName, p.IsSticker)));
+    }
+
+    [Fact]
     public void A_note_with_no_text_still_has_its_date()
     {
         var pdf = PdfNoteBuilder.Build(MakeNote(""), "", TimeZoneInfo.Utc, use24Hour: true);

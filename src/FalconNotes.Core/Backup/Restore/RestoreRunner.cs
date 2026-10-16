@@ -97,7 +97,8 @@ public sealed class RestoreRunner(StorageContext storage, AttachmentService atta
                     foreach (var attachment in item.Attachments)
                     {
                         await using var content = attachment.Open();
-                        stored.Add((await attachments.AddAsync(content, attachment.Name, attachment.ContentType, cancellationToken: cancellationToken)).Id);
+                        stored.Add((await attachments.AddAsync(
+                            content, attachment.Name, attachment.ContentType, cancellationToken: cancellationToken, sticker: attachment.IsSticker)).Id);
                     }
 
                     Validate(item, stored.Count);
@@ -285,14 +286,16 @@ public sealed class RestoreRunner(StorageContext storage, AttachmentService atta
                     }
 
                     using var insert = Sql.Command(connection, """
-                        INSERT INTO Notes (Id, Kind, DailyDate, IsPinned, ArchivedAt, CreatedAt, UpdatedAt, ContentBytes)
-                        VALUES ($id, $kind, $daily, $pinned, $archived, $created, $updated, $bytes);
+                        INSERT INTO Notes (Id, Kind, DailyDate, IsPinned, ArchivedAt, CreatedAt, UpdatedAt, ContentBytes, Mood)
+                        VALUES ($id, $kind, $daily, $pinned, $archived, $created, $updated, $bytes, $mood);
                         INSERT INTO NoteBodies (NoteId, Content) VALUES ($id, $content);
                         """, transaction);
                     insert.With("$id", Sql.Id(id)).With("$kind", (int)item.Kind).With("$daily", daily)
                         .With("$pinned", item.Pinned ? 1 : 0).With("$archived", item.Archived ? Sql.Time(updated) : null)
                         .With("$created", Sql.Time(created)).With("$updated", Sql.Time(updated))
-                        .With("$bytes", NoteRepository.ContentBytes(item.Content)).With("$content", item.Content).ExecuteNonQuery();
+                        .With("$bytes", NoteRepository.ContentBytes(item.Content)).With("$content", item.Content)
+                        // Only where a mood can be: a todo list or a habit that names one arrives without it.
+                        .With("$mood", (int)(NoteMoods.Allowed(item.Kind) ? item.Mood : NoteMood.None)).ExecuteNonQuery();
                     NoteRepository.Attach(connection, transaction, id, files);
                     NoteRepository.SetTags(connection, transaction, id, TagParser.Extract(item.Content));
 

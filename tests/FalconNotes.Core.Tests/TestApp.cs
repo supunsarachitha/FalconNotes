@@ -6,6 +6,7 @@ using FalconNotes.Core.Maintenance;
 using FalconNotes.Core.Notes;
 using FalconNotes.Core.Settings;
 using FalconNotes.Core.Startup;
+using FalconNotes.Core.Stickers;
 using FalconNotes.Core.Storage;
 using FalconNotes.Core.Tests.Fakes;
 using Microsoft.Data.Sqlite;
@@ -27,6 +28,7 @@ public sealed class TestApp : IDisposable
         Preferences = new PreferencesService(Storage, Feed);
         Profile = new ProfileService(Storage, Feed, Clock);
         Cleanup = new AttachmentCleanup(Storage, Store, Clock);
+        Stickers = new StickerPackService(Directories, Clock);
     }
 
     public FakeClock Clock { get; } = new(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
@@ -54,6 +56,8 @@ public sealed class TestApp : IDisposable
     public ProfileService Profile { get; }
 
     public AttachmentCleanup Cleanup { get; }
+
+    public StickerPackService Stickers { get; }
 
     public DatabaseStartup Startup => new(new DeviceKeyStore(Secrets), Directories, new DatabaseBackups(Directories, Clock), Storage);
 

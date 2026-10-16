@@ -13,7 +13,8 @@ public sealed record RestoreSource(string Name, Func<Task<Stream>> OpenReadAsync
 /// <param name="ContentType">Its type.</param>
 /// <param name="Size">Its size.</param>
 /// <param name="Open">Opens its content.</param>
-public sealed record RestoreAttachment(string Name, string ContentType, long Size, Func<Stream> Open);
+/// <param name="IsSticker">Listed as a sticker by the note's file (docs/05, Stickers in backups).</param>
+public sealed record RestoreAttachment(string Name, string ContentType, long Size, Func<Stream> Open, bool IsSticker = false);
 
 /// <summary>A note read from a backup, ready to restore. Port of <c>ImportItem</c> in <c>web/import/parse.ts</c>.</summary>
 /// <param name="Source">Where it came from, for messages: a file name or a path inside an archive.</param>
@@ -28,6 +29,7 @@ public sealed record RestoreAttachment(string Name, string ContentType, long Siz
 /// <param name="Labels">The names of its labels.</param>
 /// <param name="Attachments">Its files found in the archive.</param>
 /// <param name="Missing">Its files the archive does not contain.</param>
+/// <param name="Mood">Its mood, if the backup gives one (docs/05, Moods in backups).</param>
 public sealed record RestoreItem(
     string Source,
     Guid? Id,
@@ -40,7 +42,8 @@ public sealed record RestoreItem(
     string? DailyDate,
     IReadOnlyList<string> Labels,
     IReadOnlyList<RestoreAttachment> Attachments,
-    IReadOnlyList<string> Missing);
+    IReadOnlyList<string> Missing,
+    NoteMood Mood = NoteMood.None);
 
 /// <summary>
 /// What a restore found in the chosen files: the notes and the files that could not be read. Holds the archives open

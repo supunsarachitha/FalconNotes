@@ -201,6 +201,19 @@ public sealed record Preferences
     /// </summary>
     public bool PdfExport { get; init; }
 
+    /// <summary>
+    /// Offer the smilies when a note or quick note is written, and show the one chosen on the note (docs/04, Moods).
+    /// This app's own; off by default. Turning it off hides the smilies: the moods chosen stay with their notes.
+    /// </summary>
+    public bool MoodTracker { get; init; }
+
+    /// <summary>
+    /// Offer the sticker packs when a note or quick note is written, and manage them in Settings (docs/04, Stickers).
+    /// This app's own; off by default. Turning it off only takes the stickers button away: stickers already on notes
+    /// stay and show, as they are the notes' own pictures, and the packs stay on the device.
+    /// </summary>
+    public bool Stickers { get; init; }
+
     /// <summary>Light or dark.</summary>
     public Theme Theme { get; init; } = Theme.System;
 

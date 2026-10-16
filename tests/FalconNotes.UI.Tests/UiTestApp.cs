@@ -112,6 +112,7 @@ public sealed class UiTestApp : IDisposable
         services.AddSingleton(new DailyNotes(core.Notes));
         services.AddSingleton(core.Labels);
         services.AddSingleton(core.Attachments);
+        services.AddSingleton(core.Stickers);
         services.AddSingleton<MarkdownRenderer>();
         services.AddSingleton(core.Preferences);
         services.AddSingleton(core.Profile);

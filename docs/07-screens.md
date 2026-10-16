@@ -63,6 +63,8 @@ these:
   Windows and macOS. A file's tile shows a progress bar while it is encrypted and stored. On failure, the red tile's
   tooltip and label read "Could not add this file."
 - On phones, hide the "Ctrl/⌘ + Enter to post" hint, as at `sm` in the reference.
+- With the mood tracker on, a smiley button stands after the paperclip ([Moods](#moods)); with stickers on, a
+  sticker button follows it ([Stickers](#stickers)).
 
 ## Attachments
 
@@ -135,6 +137,64 @@ share.
   could not be made. Please try again." A second tap while a PDF is being made does nothing.
 - There is no progress text: the PDF of a note is made before the dialog has opened.
 
+## Moods
+
+New in this app (1.7.0, 2026-10-13, at the owner's request; the rules are in [04](04-domain-rules.md#moods)). The
+web app has no such thing yet, so the markup is this app's own, in the reference's classes. Nothing below is there
+while **Mood tracker** is off, which it is as installed.
+
+- **The smilies** are emoji, as the owner chose: 😢 Awful, 🙁 Bad, 😐 Okay, 🙂 Good, 😄 Great (`Moods.cs`). The
+  device's emoji font draws them, so they differ a little between Android, Windows and macOS, and the app ships no
+  picture for them. A smiley alone says too little to a screen reader, so each one carries its name.
+- **The composer** (Home, the Today card, Quick notes, and a note being edited) has a second round button after
+  the paperclip, an `IconButton` like it. With no mood chosen it shows the `Smile` icon and is named "Mood"; with
+  one, it shows that smiley and is named "Mood: Good". It has `aria-expanded` and `aria-controls`, and opens and
+  closes a row above the buttons (`MoodPicker`): a `group` named "Mood" of five round buttons, worst to best, each
+  a smiley named by its mood, with `aria-pressed`. The chosen one has the accent's ring and tint. Choosing one
+  closes the row; **choosing the chosen one takes the mood off**, so there is no sixth button for "none". After
+  **Post** the next note starts without a mood. A todo list opened for editing from a search has no such button.
+- **The note card** shows the smiley in its header, after the time and "· edited", as a `role="img"` named and
+  titled "Mood: Good". A note without a mood shows nothing there. A locked note that is not open shows none
+  ([Locked notes](#locked-notes)). The Archive shows it too; the trash does not.
+- **Settings → Features**, under Home and menu, after Labels: **Mood tracker**, off by default, "A smiley button
+  where you write a note or quick note: choose one of five smilies for how you feel, and it shows on the note.
+  Turning it off hides the smilies; the moods you chose are kept."
+- There is no page, no menu item, no filter and no chart: the owner asked for the mood to be shown in the note.
+
+
+## Stickers
+
+New in this app (1.7.0, 2026-10-14, at the owner's request; the rules are in [04](04-domain-rules.md#stickers)).
+The web app has no such thing, so the markup is this app's own, in the reference's classes. The sticker button and
+the packs are not there while **Stickers** is off, which it is as installed; stickers already on notes show either
+way.
+
+- **The composer** (Home, the Today card, Quick notes, and a note being edited) has a round `IconButton` after the
+  mood button, or after the paperclip without it: the `Sticker` icon (Lucide `sticker`), named "Stickers", with
+  `aria-expanded` and `aria-controls`. It opens and closes the **sticker picker** above the buttons
+  (`StickerPicker`), a `group` named "Stickers"; the smilies and the stickers take the same place, so opening one
+  closes the other. With several packs, a row of pill buttons, one per pack by name with `aria-pressed`, chooses
+  the pack shown; under it a grid of the pack's stickers, four across (six from `sm`), at most 16rem high and
+  scrolling, each a button named "Add sticker: {name}" with the picture whole inside. **Each sticker chosen is added
+  at once** to the composer's files, with the same progress and ✕ as any file, its thumbnail whole and not cropped,
+  and **the picker stays open**, so several can be added. After **Post** it closes. With no pack on the device it
+  says "No sticker packs yet. Add one in Settings → Features." with a link there.
+- **The note card** shows its stickers first in its files, before the pictures: a row that wraps, a list named
+  "Stickers", each picture whole in a 5rem square (6rem from `sm`), described by its name ("Waving cat"). They are
+  not in the picture grid and not in the full-screen viewer. A locked note that is not open shows none.
+- **Settings → Features**, under Home and menu, after Mood tracker: **Stickers**, off by default, "A sticker button
+  where you write a note or quick note: add stickers from the sticker packs on this device. Turning it off hides
+  the button; stickers already on your notes stay." While it is on, **Sticker packs** follows under it
+  (`StickerPacksSetting`): "A sticker pack is a ZIP file of pictures. Download one in your browser, or make your
+  own, then add it here." with **Add pack…** (a secondary `Button`, opening the system picker for `.zip` files,
+  several at once), then the packs by name, each with its first sticker, its name and "{n} stickers · by {author} ·
+  {licence}" where the pack says, and **Remove**. With none: "No sticker packs yet."
+- **Adding** says "Added “{name}”: {n} stickers." or, for a pack already here, "Updated “{name}”: {n} stickers."; a
+  file that is not a pack is an error toast with its name and the reason ([04](04-domain-rules.md#sticker-packs)).
+- **Removing** asks first: "Remove “{name}”?", "Its stickers leave the sticker picker. Stickers already on your notes
+  stay where they are.", **Remove**; then "Removed “{name}”."
+- There is no store and no download button: the app never goes online (D3).
+
 ## Todo, Quick notes, Habits, Tags, Archive, Trash, Calendar
 
 Port unchanged, apart from **Export to PDF…** and **Lock** in a list's menu and the locked cards ([Export to PDF](#export-to-pdf), [Locked notes](#locked-notes)): `pages/TodoPage.tsx` + `components/TodoCard.tsx`; `pages/QuickNotesPage.tsx`; `pages/HabitsPage.tsx` +
@@ -154,7 +214,7 @@ storage.
 | `appearance` | Appearance | "Light or dark, the accent colour, a background and the first day of the week." (the web app's, with "a background" added) | `AppearanceSection`, plus **Background** between Accent colour and Week starts on ([06](06-design-system.md#backgrounds)): a grid of radio choices, each a small picture of the background over its name — "None" (an empty swatch with a line across it), "Halloween", "Christmas", "New Year", "Valentine's Day", "Easter", "Diwali", "Vesak", "Eid", "Lunar New Year" — marked like the Theme choices when chosen. Hint: "A festive pattern behind your notes. It follows the light or dark theme. Choose None for no background." While a background is chosen, a secondary button **Remove background** under the hint does the same as choosing None: the owner did not find an empty first tile called "Plain" to be the way back (2026-10-08). |
 | `menu` | Side menu | unchanged | `MenuSection` |
 | `writing` | Writing | unchanged | `WritingSection`, `EditingSection`. Editing gains one switch of this app's own, last (1.6.0, 2026-10-13, at the owner's request; [04](04-domain-rules.md#markdown-rendering)): **Keep line breaks**, **off by default** ("Show every line of a note on its own line, as you typed it. Off, lines typed one under another are joined into one paragraph, as Markdown does, and a blank line starts a new one.") |
-| `features` | Features | unchanged | `FeaturesSection` as in web 1.15.0, **without Link previews**; "Shrink photos before uploading" becomes **Shrink photos before adding** ([08](08-help-guide.md#11-pictures-video-and-files-pictures)), with the **Photo size** choice under it while it is on; the **Daily-note template** line under Daily notes while they are on, without the web app's "could not be loaded" case, and reading "The template note was deleted, is locked or is in the trash, so new daily notes start empty." where the web app has no "is locked"; **Help in the menu**, whose description ends "the guide is then opened from the foot of Settings." where the web app says "the guide stays at /help."; and, this app's own, **Export to PDF** as the last switch of Notes and files, off by default ([Export to PDF](#export-to-pdf)) |
+| `features` | Features | unchanged | `FeaturesSection` as in web 1.15.0, **without Link previews**; with **Mood tracker** of this app's own after Labels ([Moods](#moods)) and **Stickers** after it, with the sticker packs under it while it is on ([Stickers](#stickers)); "Shrink photos before uploading" becomes **Shrink photos before adding** ([08](08-help-guide.md#11-pictures-video-and-files-pictures)), with the **Photo size** choice under it while it is on; the **Daily-note template** line under Daily notes while they are on, without the web app's "could not be loaded" case, and reading "The template note was deleted, is locked or is in the trash, so new daily notes start empty." where the web app has no "is locked"; **Help in the menu**, whose description ends "the guide is then opened from the foot of Settings." where the web app says "the guide stays at /help."; and, this app's own, **Export to PDF** as the last switch of Notes and files, off by default ([Export to PDF](#export-to-pdf)) |
 | `labels` | Labels | unchanged | `LabelSettings`. The note about end-to-end encryption is gone. The line under the list ends "Exports keep each note's labels, and restoring one brings them back.", as in the web app since 1.9.0 (2026-10-08; before that, "Exports do not include labels yet."). Since web 1.16.0 each label has an eye button that hides its notes from Home and Quick notes, with "Notes hidden" under its name while it does, and the line under the list starts with the sentence about the eye. |
 | `data` | Backup & data | "Export, restore, the trash and starting over." | Backup & restore, Trash, Delete all notes and files |
 | `security` | Privacy & security | "App lock, locked notes, and how your notes are protected." | App lock, Locked notes, Data protection |

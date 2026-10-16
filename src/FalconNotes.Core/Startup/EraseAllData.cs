@@ -51,7 +51,7 @@ public sealed class EraseAllData(DeviceKeyStore keys, StorageContext storage, IA
                 }
             }
 
-            foreach (var name in new[] { "attachments", "backups" })
+            foreach (var name in new[] { "attachments", "backups", "stickers" })
             {
                 var path = Path.Combine(directories.DataDirectory, name);
                 if (Directory.Exists(path))

@@ -67,6 +67,7 @@ src/
     Storage/         Database (open, pragmas, migrations), Repositories, Sql
     Crypto/          KeyMaterial, AttachmentCipher, DecryptingAttachmentStream, ISecretStore
     Attachments/     AttachmentStore, AttachmentService, UploadPolicy, PhotoShrinker
+    Stickers/        StickerPackService (packs added from ZIP files; this app's own)
     Notes/           NoteService, SearchService, CalendarService, TagService
     Labels/          LabelService
     Settings/        PreferencesService, ProfileService (not Preferences/: that name is the record's)
@@ -81,7 +82,7 @@ src/
   FalconNotes.UI/
     Layout/          AppShell, Sidebar, Drawer, MainLayout
     Pages/           Home, Archive, Todo, Quick, Habits, Tags, Trash, Settings/*, Help, Welcome, Lock, KeyLost
-    Components/      NoteCard, NoteLock, NotePdfExport, NoteList, Composer, FormatToolbar, TagSuggestions, Markdown, AttachmentGallery,
+    Components/      NoteCard, NoteLock, NotePdfExport, NoteList, Composer, MoodPicker, StickerPicker, FormatToolbar, TagSuggestions, Markdown, AttachmentGallery,
                      ImageViewer, TodoCard, HabitRow, HabitChart, HabitCalendar, Calendar, Labels, LabelPicker,
                      LabelSettings, MenuOrderEditor, PreferenceSections, ExportSection, RestorePanel, ui/* primitives
     State/           AppState (profile, preferences, lock state), Toasts, Dialogs
@@ -180,6 +181,11 @@ each platform: build URLs relative to the page (`/_media/...`). The handler:
 2. Sends `Content-Type` only for the passive inline types (`UploadPolicy.CanDisplayInline`), otherwise
    `application/octet-stream`. Always sends `X-Content-Type-Options: nosniff` and `Cache-Control: no-store`.
 3. Reads nothing else from the request, and never serves a path outside the attachment store.
+
+The same handler answers `/_stickers/{packId}/{file}` with a picture from a sticker pack on the device, for the
+sticker picker and Settings (1.7.0, [04](04-domain-rules.md#sticker-packs)). `StickerPackService.Open` serves only a
+pack's own numbered pictures (`001.png`…), and the type is always one of PNG, JPEG, GIF or WebP, checked when the
+pack was added. The files are small and unencrypted, so there are no ranges.
 
 Mechanism, in order of preference. **Chosen: A** (spike S3, Android, 2026-10-01; WebView2 and WKWebView still to
 verify). On Android the handler builds the native `WebResourceResponse` itself, because the WebView applies `Range`

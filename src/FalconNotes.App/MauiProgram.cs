@@ -11,6 +11,7 @@ using FalconNotes.Core.Markdown;
 using FalconNotes.Core.Notes;
 using FalconNotes.Core.Pdf;
 using FalconNotes.Core.Settings;
+using FalconNotes.Core.Stickers;
 using FalconNotes.Core.Storage;
 using FalconNotes.Core.Platform;
 using FalconNotes.Core.Startup;
@@ -69,6 +70,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AttachmentService>();
         builder.Services.AddSingleton<IMediaSource>(sp => sp.GetRequiredService<AttachmentService>());
         builder.Services.AddSingleton<NoteService>();
+        builder.Services.AddSingleton<StickerPackService>();
         builder.Services.AddSingleton<DailyNotes>();
         builder.Services.AddSingleton<LabelService>();
         builder.Services.AddSingleton<PreferencesService>();

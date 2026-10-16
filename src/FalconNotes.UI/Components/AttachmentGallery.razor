@@ -1,12 +1,27 @@
 @* Port of AttachmentGallery in components/AttachmentGallery.tsx: images (one at its own shape, several as a grid of
    thumbnails, each opening the image viewer), audio and video with native players, other files as chips. The media
    handler serves every file from its own URL (docs/02), so unlike the web app there is no decrypt-and-wait step and
-   no need to defer loading until a file nears the screen: the browser's own lazy loading and range requests do that. *@
+   no need to defer loading until a file nears the screen: the browser's own lazy loading and range requests do that.
+   New here: stickers come first, small and whole, in a row of their own, and are not in the image viewer (docs/07,
+   Stickers). *@
 @using FalconNotes.Core.Domain
 
 @if (Attachments.Count > 0)
 {
     <div class="mt-3 flex flex-col gap-2">
+        @if (Stickers.Count > 0)
+        {
+            <ul class="flex flex-wrap gap-1" aria-label="Stickers">
+                @foreach (var sticker in Stickers)
+                {
+                    <li>
+                        <img src="@MediaUrl.For(sticker)" alt="@StickerName(sticker)" title="@StickerName(sticker)" loading="lazy" decoding="async"
+                             class="block size-20 object-contain sm:size-24" />
+                    </li>
+                }
+            </ul>
+        }
+
         @if (Images.Count > 0)
         {
             <div class="@Classes.Join("gap-2", Images.Count == 1 ? "flex" : "grid grid-cols-2", Images.Count >= 3 ? "sm:grid-cols-3" : null)">
@@ -57,7 +72,9 @@
     /// <summary>The note's files.</summary>
     [Parameter, EditorRequired] public IReadOnlyList<Attachment> Attachments { get; set; } = [];
 
-    private List<Attachment> Images => Attachments.Where(a => a.IsImage).ToList();
+    private List<Attachment> Stickers => Attachments.Where(a => a.IsSticker).ToList();
+
+    private List<Attachment> Images => Attachments.Where(a => a.IsImage && !a.IsSticker).ToList();
 
     private List<Attachment> Videos =>
         Attachments.Where(a => a.ContentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase) && !a.IsImage).ToList();
@@ -66,5 +83,8 @@
         Attachments.Where(a => a.ContentType.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)).ToList();
 
     private List<Attachment> Files =>
-        Attachments.Where(a => !Images.Contains(a) && !Videos.Contains(a) && !Audio.Contains(a)).ToList();
+        Attachments.Where(a => !a.IsSticker && !Images.Contains(a) && !Videos.Contains(a) && !Audio.Contains(a)).ToList();
+
+    // What the sticker shows, from the name it was added with: "Waving cat.png" is "Waving cat".
+    private static string StickerName(Attachment sticker) => Path.GetFileNameWithoutExtension(sticker.FileName);
 }

@@ -82,6 +82,11 @@ tablets: install it from [Google Play](https://play.google.com/store/apps/detail
   full-screen viewer, where you can save a copy or share one; audio and video play in the note. Optionally, large
   photos are shrunk before they are added, to JPEG in one of three sizes, without their location and camera details.
 - **Search.** Finds text in your notes and the names of attached files.
+- **Moods.** Optional, and off until you turn on **Mood tracker** in Settings → Features. Choose one of five
+  smilies for how you feel when you write a note or quick note, and it shows on the note. Backups keep it.
+- **Stickers.** Optional, and off until you turn on **Stickers** in Settings → Features. Add sticker packs, ZIP files
+  of pictures you download in your browser or make yourself, then put stickers on your notes and quick notes. The app
+  still never goes online. Backups keep the stickers on your notes.
 - **Keep line breaks.** Optional: lines typed one under another are joined into a paragraph, as Markdown does,
   until you turn this on in Settings → Writing; then every line is shown as you typed it.
 - **Export to PDF.** Optional, and off until you turn it on in Settings → Features. A note, quick note or todo list

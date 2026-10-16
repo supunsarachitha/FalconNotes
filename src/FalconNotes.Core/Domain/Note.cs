@@ -18,6 +18,7 @@ namespace FalconNotes.Core.Domain;
 /// Locked: the screens show that it is there and when it was written, and nothing of what is in it, until the PIN
 /// takes the lock off (docs/04, Locked notes). The text is here all the same, for exports and for the unlocked note.
 /// </param>
+/// <param name="Mood">How its writer felt, chosen as a smiley; none for most notes (docs/04, Moods).</param>
 public sealed record Note(
     Guid Id,
     NoteKind Kind,
@@ -32,7 +33,8 @@ public sealed record Note(
     IReadOnlyList<string> Tags,
     IReadOnlyList<Attachment> Attachments,
     IReadOnlyList<Guid> LabelIds,
-    bool IsLocked = false)
+    bool IsLocked = false,
+    NoteMood Mood = NoteMood.None)
 {
     /// <summary>Whether the note is in the archive.</summary>
     public bool IsArchived => ArchivedAtUtc is not null;
@@ -49,8 +51,13 @@ public sealed record Note(
 /// <param name="SizeBytes">Its size before encryption.</param>
 /// <param name="CreatedAtUtc">When it was added.</param>
 /// <param name="Revision">Goes up when its content is replaced; part of the media URL.</param>
+/// <param name="IsSticker">
+/// A sticker: a picture copied from a sticker pack, shown small beside the note's other files (docs/04, Stickers).
+/// Only an image can be one.
+/// </param>
 public sealed record Attachment(
-    Guid Id, Guid? NoteId, string FileName, string ContentType, long SizeBytes, DateTime CreatedAtUtc, long Revision)
+    Guid Id, Guid? NoteId, string FileName, string ContentType, long SizeBytes, DateTime CreatedAtUtc, long Revision,
+    bool IsSticker = false)
 {
     /// <summary>Whether the file is an image the app shows inline.</summary>
     public bool IsImage => Attachments.UploadPolicy.IsImage(ContentType);

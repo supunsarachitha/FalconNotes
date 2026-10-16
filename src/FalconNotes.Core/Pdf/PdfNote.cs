@@ -67,4 +67,5 @@ public sealed record PdfTable(IReadOnlyList<IReadOnlyList<IReadOnlyList<PdfSpan>
 /// <summary>One of the note's attached pictures. The writer reads it from the attachment store.</summary>
 /// <param name="AttachmentId">The attachment.</param>
 /// <param name="FileName">Its name, set in its place when the device cannot decode it.</param>
-public sealed record PdfPicture(Guid AttachmentId, string FileName) : PdfBlock;
+/// <param name="IsSticker">A sticker: drawn small, at most an inch across, as the screen shows it (docs/04, Stickers).</param>
+public sealed record PdfPicture(Guid AttachmentId, string FileName, bool IsSticker = false) : PdfBlock;

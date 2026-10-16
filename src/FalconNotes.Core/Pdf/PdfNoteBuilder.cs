@@ -39,7 +39,7 @@ public static class PdfNoteBuilder
             blocks.Count > 0 && blocks[0] is PdfText { Style: PdfTextStyle.Heading1 } ? 1 : 0,
             new PdfText(PdfTextStyle.Caption, [new PdfSpan(written)]));
 
-        blocks.AddRange(note.Attachments.Where(file => file.IsImage).Select(file => new PdfPicture(file.Id, file.FileName)));
+        blocks.AddRange(note.Attachments.Where(file => file.IsImage).Select(file => new PdfPicture(file.Id, file.FileName, file.IsSticker)));
 
         var others = note.Attachments.Where(file => !file.IsImage).Select(file => file.FileName).ToList();
         if (others.Count > 0)

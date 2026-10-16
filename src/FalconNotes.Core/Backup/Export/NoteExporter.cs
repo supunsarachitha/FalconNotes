@@ -176,14 +176,14 @@ public sealed class NoteExporter(
                 {
                     exportedAttachments.Add(new ExportedAttachment(
                         attachment.FileName, attachment.ContentType, attachment.SizeBytes, UploadPolicy.IsImage(attachment.ContentType),
-                        archivePath, ExportNaming.RelativePath(notePath, archivePath)));
+                        archivePath, ExportNaming.RelativePath(notePath, archivePath), attachment.IsSticker));
                 }
             }
         }
 
         var exported = new ExportedNote(
             note.Id, content, created, updated, note.Tags, note.IsPinned, note.IsArchived, exportedAttachments, note.Kind, note.DailyDate,
-            labels.Select(l => l.Name).Order(StringComparer.Ordinal).ToList());
+            labels.Select(l => l.Name).Order(StringComparer.Ordinal).ToList(), note.Mood);
         await WriteTextAsync(zip, notePath, NoteFormatter.Render(exported, options.Format), updated, cancellationToken);
         return (notePath, exported);
     }

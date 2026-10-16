@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FalconNotes.Core.Backup.Export;
 
@@ -38,7 +39,7 @@ public static class NoteFormatter
     };
 
     /// <summary>
-    /// Markdown with YAML front matter (id, kind, daily date, dates, tags, labels, state, attachments), the original text, and an
+    /// Markdown with YAML front matter (id, kind, daily date, dates, tags, labels, state, mood, attachments, stickers), the original text, and an
     /// "Attachments" section that embeds images and links other files by relative path.
     /// </summary>
     /// <param name="note">The note.</param>
@@ -60,12 +61,27 @@ public static class NoteFormatter
         text.Append("labels: [").Append(string.Join(", ", note.LabelNames.Select(Quote))).Append("]\n");
         text.Append("pinned: ").Append(note.Pinned ? "true" : "false").Append('\n');
         text.Append("archived: ").Append(note.Archived ? "true" : "false").Append('\n');
+        if (note.MoodName is { } mood)
+        {
+            text.Append("mood: ").Append(mood).Append('\n');
+        }
+
         if (note.Attachments.Count > 0)
         {
             text.Append("attachments:\n");
             foreach (var attachment in note.Attachments)
             {
                 text.Append("  - ").Append(Quote(attachment.RelativePath)).Append('\n');
+            }
+        }
+
+        if (note.Stickers.Count > 0)
+        {
+            // Which of the files above are stickers. Maple Notes reads the first list only, and shows them as pictures.
+            text.Append("stickers:\n");
+            foreach (var sticker in note.Stickers)
+            {
+                text.Append("  - ").Append(Quote(sticker.RelativePath)).Append('\n');
             }
         }
 
@@ -87,7 +103,7 @@ public static class NoteFormatter
     }
 
     /// <summary>
-    /// Plain text: a short header (dates, kind and daily date when they matter, tags, labels, state, attachment paths), a blank
+    /// Plain text: a short header (dates, kind and daily date when they matter, tags, labels, state, mood, attachment and sticker paths), a blank
     /// line, then the note text.
     /// </summary>
     /// <param name="note">The note.</param>
@@ -127,9 +143,19 @@ public static class NoteFormatter
             text.Append("State: ").Append(string.Join(", ", new[] { note.Pinned ? "pinned" : null, note.Archived ? "archived" : null }.OfType<string>())).Append('\n');
         }
 
+        if (note.MoodName is { } mood)
+        {
+            text.Append("Mood: ").Append(mood).Append('\n');
+        }
+
         foreach (var attachment in note.Attachments)
         {
             text.Append("Attachment: ").Append(attachment.RelativePath).Append('\n');
+        }
+
+        foreach (var sticker in note.Stickers)
+        {
+            text.Append("Sticker: ").Append(sticker.RelativePath).Append('\n');
         }
 
         text.Append('\n').Append(note.Content.TrimEnd()).Append('\n');
@@ -139,8 +165,9 @@ public static class NoteFormatter
     /// <summary>One JSON document with the note and its metadata.</summary>
     /// <param name="note">The note.</param>
     /// <returns>The JSON document.</returns>
-    public static string Json(ExportedNote note) =>
-        JsonSerializer.Serialize(new
+    public static string Json(ExportedNote note)
+    {
+        var document = new
         {
             note.Id,
             Kind = note.KindName,
@@ -153,7 +180,26 @@ public static class NoteFormatter
             note.Archived,
             note.Content,
             Attachments = note.Attachments.Select(a => new { a.FileName, a.ContentType, a.SizeBytes, Path = a.RelativePath }),
-        }, JsonOptions) + "\n";
+        };
+        if (note.MoodName is null && note.Stickers.Count == 0)
+        {
+            // Written by the server's own lines, so a note without a mood or stickers is byte for byte what the web app writes.
+            return JsonSerializer.Serialize(document, JsonOptions) + "\n";
+        }
+
+        var extended = JsonSerializer.SerializeToNode(document, JsonOptions)!.AsObject();
+        if (note.MoodName is { } mood)
+        {
+            extended.Insert(extended.IndexOf("archived") + 1, "mood", mood);
+        }
+
+        if (note.Stickers.Count > 0)
+        {
+            extended.Add("stickers", new JsonArray(note.Stickers.Select(s => (JsonNode?)JsonValue.Create(s.RelativePath)).ToArray()));
+        }
+
+        return extended.ToJsonString(JsonOptions) + "\n";
+    }
 
     /// <summary>Serializes the export manifest.</summary>
     /// <param name="manifest">The manifest object.</param>

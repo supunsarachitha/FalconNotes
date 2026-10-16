@@ -749,6 +749,109 @@ cover what the PDF is given, and the PDF drawing is unchanged); a checklist item
 the device, and the Archive and the trash; ticking a box in a note with kept line breaks on the device; the switch
 turned off again on the device; TalkBack; the tablet layout.
 
+Version 1.7.0 (versionCode 10), 2026-10-13, on the `release-1.7.0` branch: the **mood tracker**, at the owner's
+request ([04](04-domain-rules.md#moods), [07](07-screens.md#moods)): "a new feature for mood tracker using
+smilies". Maple Notes has none, so there was nothing to port. Asked three things before anything was built, the
+owner answered: on where moods are kept and whether backups carry them, "i will add this option to maple notes
+next. so this will be compatible with it"; on how many moods a day can hold, "this is just show in the note"; and
+on the smilies, **emoji**, over faces drawn in the app's icon style. So a mood belongs to a note and is shown on
+it, there is no log of days, page or chart, and backups carry it. Decided while building, and written into the
+documents:
+
+- Five moods, from awful to great (😢 🙁 😐 🙂 😄), on a note or a quick note, a daily note too; never on a todo
+  list or a habit. Kept in `Notes.Mood` (**migration 4**, a column with a default, so it only adds), 0 for none.
+- The switch, **Mood tracker**, is in Settings → Features after Labels, **off by default**, kept with the other
+  preferences (`moodTracker`). Off, the smilies are hidden and every mood is kept.
+- The mood is chosen where the note is written: a smiley button after the paperclip opens the five. It is changed
+  by editing the note; a change of mood alone does not rewrite the note, so it does not turn "· edited". Choosing
+  the chosen smiley takes it off. The card shows the smiley after its time; a locked note hides it.
+- **Backups**: one optional line per note that has a mood (`mood: great`, `Mood: great`, `"mood": "great"`), the
+  manifest untouched and still version 3 ([05](05-backup-compatibility.md#moods-in-backups)). This is the first
+  part of the format defined here before Maple Notes has it, on the owner's word above. Maple Notes' export and
+  restore code and its vectors were read first, at its `main` (`b8f3601`, release 1.16.1): unchanged since
+  1.16.0, the vectors identical to `fixtures/export-vectors.json`, and no mood anywhere in the repository. Its
+  `parse.ts` reads the fields it knows by name, in all three formats, so it passes the new line over.
+
+Checked: the Core tests (485, one skipped: the budgets) and the component tests (253) pass; 22 and 15 of them are
+new. The 13 export vectors still match entry for entry, and `UpgradeKeepsNotesTests` now covers the update from
+schema 3 as well, its undo being in `SchemaHistory`.
+
+**The update** ([11](11-testing.md#updates-keep-every-note)), on the emulator (`MAUI_Emulator_API_36`, started
+`-read-only`, so nothing of this stays on it), which held a Debug install of 1.2.0 with 35 notes and 8 files. A
+Debug build of the released **1.6.0** (the `v1.6.0` tag, built in a copy outside the repository; built twice,
+because the first build of a fresh copy leaves the stylesheet out of the APK) was installed over it and a note
+written in it. Then the Debug **1.7.0** was installed over that with `adb install -r`. `scripts/update-check/`
+found every card on every page, the tags, the storage line (36 notes, 8 files) and the appearance identical; the
+one line it listed was the new note's "just now" turned "2 minutes ago".
+
+Then, in 1.7.0 on that data: as installed, no smiley button stood by the paperclip and no note showed a smiley,
+and Settings → Features showed **Mood tracker** off, with its text. Turned on, the button was on Home and in Quick
+notes; it opened five smilies, in colour (Noto Color Emoji), each 40 px wide, in a row that did not scroll. A note
+posted with **Great** showed 😄 after "just now", named "Mood: Great", and the composer was back to "Mood" with
+no smiley. The note written in 1.6.0, edited only to choose **Okay**, showed 😐 and did not turn "· edited". The
+switch turned off hid both smilies and the button; on again, both were back. Help had the new paragraph. **Export
+ZIP…**, saved through the system dialog and pulled off the emulator: 33 notes, of which exactly those two had a
+`mood:` line (`great`, `okay`), after `archived`, and the manifest did not mention moods. In the dark theme the
+chosen smiley's tint came out light: the class named an accent shade the palette does not have. It now uses the
+tint the app uses elsewhere (`dark:bg-maple-600/20`), and the build was made and looked at again. The app's
+permissions were as before (`INTERNET` is the Debug build's).
+
+Not checked, still open: **the release build** (`dotnet publish` from clean, the owner's key, R8 and trimming over
+the new code, and the update from the release-signed 1.6.0); a real phone; a restore of that ZIP on the device
+(`MoodBackupTests` restores each format into an empty database); a restore into a real Maple Notes server (its
+reader was read, not run); the Today card and a locked note on the device (both in the component tests); TalkBack;
+the tablet layout; how the emoji look on Windows and macOS, which have no build yet.
+
+Then, 2026-10-14, on the same branch and in the same version: **stickers**, at the owner's request
+([04](04-domain-rules.md#stickers), [07](07-screens.md#stickers)): "add stickers to notes. should be able to
+download/ remove new sticker packs." Scoped first, because downloading clashed with D3. Offered an in-app store
+(network access, a hosted catalogue, a new privacy story) or packs added from a file, the owner chose **packs as ZIP
+files added through the system picker**, so the app stays offline; **several stickers per note**; and, asked how
+backups should carry them, the recommended way: **the sticker as an ordinary picture among the note's files, plus
+one list naming which files are stickers**. Mid-way the owner added: "add a feature setting to enable stickers.
+default off." Decided while building, and written into the documents:
+
+- A sticker is **copied** into the note's encrypted files (`Attachments.IsSticker`, **migration 5**, a column with a
+  default), so removing a pack never changes a note, a backup needs no pack, and locks, PDFs, the trash and storage
+  use treat it as the file it is.
+- Packs (`StickerPackService`) live unencrypted in `{data}/stickers/{id}/`, renumbered, with the app's own
+  `pack.json`; nothing in a ZIP names a path on the device. PNG, JPEG, GIF and WebP only, checked by their bytes; 2 MB
+  a sticker, 300 a pack, 200 MB a ZIP; an optional `sticker-pack.json`; the same ID updates a pack. The media handler
+  serves them at `/_stickers/{id}/{file}`.
+- The switch, **Stickers**, is in Settings → Features after Mood tracker, off by default, with the packs under it.
+  Off, the button goes and the stickers on notes stay.
+- **Backups**: `stickers:` / `Sticker:` / `"stickers"`, only for a note that has one
+  ([05](05-backup-compatibility.md#stickers-in-backups)). Maple Notes' `parse.ts` at `main` (`b8f3601`, 1.16.1) was
+  read first: any new front-matter key ends its `attachments` list, and it ignores unknown header lines and JSON
+  properties, so it restores a sticker as an ordinary picture. Its vectors are still identical to
+  `fixtures/export-vectors.json`.
+- No starter pack ships: its artwork needs a licence the owner chooses (D11).
+
+Checked: the Core tests (514, one skipped) and the component tests (264) pass; 30 and 11 of them are new, and the
+13 export vectors still match. On the emulator (`MAUI_Emulator_API_36`, started `-read-only`), a Debug build was
+installed over the Debug install there with its demo notes, which were all there after migration 5. As installed,
+no sticker button stood by the paperclip; turning **Stickers** on showed the packs, "No sticker packs yet.";
+**Add pack…** opened the system picker showing only ZIP files, and a test pack of four 256 px pictures (emoji drawn
+on this Mac, for the test only, with a `sticker-pack.json`) was added from Downloads, listed with its first sticker,
+"4 stickers · by Test · local test only", that sticker loaded through `/_stickers/`. On Home the sticker button
+opened the four, four across; two chosen showed whole among the composer's files, and the note posted with them
+showed both at 80 px in a row above its text's end, from `/_media/`, the picker closed. **Remove** asked with its
+text, the pack's folder was emptied, and with the switch then off the note still showed both stickers and no
+button stood by the paperclip.
+
+Not checked, still open: the release build (R8 and trimming over the new code); a real phone; an export pulled off
+the device and restored elsewhere (`StickerBackupTests` covers each format); a real Maple Notes restore (its reader
+was read, not run); a note's PDF with stickers on the device (the builder is tested, the drawing is not); an
+animated GIF; the dark theme; TalkBack; Windows and macOS, which have no build yet.
+
+**The release build**, 2026-10-14, from the working tree with moods and stickers, before its commit: `dotnet
+publish`, from clean, made the signed AAB and APK; the 1.6.0 output was moved to
+`src/FalconNotes.App/bin/Release-1.6.0/` (git-ignored) first. Checked: the same certificate as 1.6.0 (`apksigner
+verify --print-certs`; `jarsigner -verify` on the AAB), versionCode 10, versionName 1.7.0, `targetSdkVersion` 36,
+arm64-v8a and x86_64, not debuggable, and the permissions the same as 1.6.0's: `USE_BIOMETRIC` and
+`USE_FINGERPRINT`, with no `INTERNET` and no storage permission. Not yet done with these files: the release-signed
+1.6.0 updated to this 1.7.0 on the emulator, and a real phone.
+
 ## Spike results
 
 _Append each spike's result here, with the date, the platform versions and the decision taken._
