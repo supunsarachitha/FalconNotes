@@ -36,6 +36,29 @@ public class AttachmentServiceTests
     }
 
     [Fact]
+    public async Task Files_added_at_the_same_moment_keep_the_order_they_were_added_in()
+    {
+        // The test clock stands still, as a fast device's clock can between two files: every file gets the same
+        // time, and the order on the note must still be the order they were added in (a restore relies on it).
+        using var app = await TestApp.StartAsync();
+        var names = Enumerable.Range(1, 30).Select(i => $"photo-{i:00}.png").ToList();
+        var added = new List<Attachment>();
+        foreach (var name in names)
+        {
+            added.Add(await app.Attachments.AddAsync(new MemoryStream([1, 2, 3]), name, "image/png"));
+        }
+
+        var ids = added.Select(a => a.Id).ToList();
+        // Ties are broken by the ID, which is ordered only to the millisecond: on a fast machine two files can share
+        // one, so the time itself must never tie.
+        Assert.All(added.Zip(added.Skip(1)), pair => Assert.True(pair.Second.CreatedAtUtc > pair.First.CreatedAtUtc));
+
+        var note = await app.Notes.CreateAsync("", attachmentIds: ids);
+
+        Assert.Equal(names, (await app.Notes.GetAsync(note.Id))!.Attachments.Select(a => a.FileName));
+    }
+
+    [Fact]
     public async Task Ranges_read_across_chunk_boundaries()
     {
         using var app = await TestApp.StartAsync();
