@@ -25,6 +25,25 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
     /// <summary>The largest file: 2 GiB.</summary>
     public const long MaxFileBytes = 2L * 1024 * 1024 * 1024;
 
+    private readonly Lock _createdGate = new();
+    private long _lastCreatedTicks;
+
+    /// <summary>
+    /// The time to record for a new attachment: now, or one tick after the previous attachment when the clock has not
+    /// moved on. A note lists its files by this time and then by ID, and IDs are ordered only to the millisecond, so
+    /// two files added in the same instant (a restore or a multi-file upload on a fast device) would otherwise come
+    /// back in random order.
+    /// </summary>
+    private DateTime NextCreatedAt()
+    {
+        var now = time.GetUtcNow().UtcDateTime.Ticks;
+        lock (_createdGate)
+        {
+            _lastCreatedTicks = Math.Max(now, _lastCreatedTicks + 1);
+            return new DateTime(_lastCreatedTicks, DateTimeKind.Utc);
+        }
+    }
+
     /// <summary>
     /// Encrypts a file into the store and records it, not yet attached to a note: the composer attaches it on Post, and
     /// clean-up removes it after 24 hours if it never is.
@@ -62,7 +81,7 @@ public sealed class AttachmentService(StorageContext storage, AttachmentStore st
 
         var name = UploadPolicy.SanitizeFileName(fileName);
         var type = UploadPolicy.ResolveContentType(contentType, name);
-        var attachment = new Attachment(id, null, name, type, metered.BytesRead, time.GetUtcNow().UtcDateTime, 0, sticker && UploadPolicy.IsImage(type));
+        var attachment = new Attachment(id, null, name, type, metered.BytesRead, NextCreatedAt(), 0, sticker && UploadPolicy.IsImage(type));
         try
         {
             await storage.Database.InTransactionAsync((connection, transaction) =>

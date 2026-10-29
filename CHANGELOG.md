@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A note's files keep the order they were added in when several are added at the same moment (a restore, or a
+  multi-file upload on a fast device). Before, files that got the same time could come back in random order.
+
 ### Added
 
 - Phase 0 skeleton, Android first: the solution (`FalconNotes.Core`, `FalconNotes.UI`, `FalconNotes.App`, and their
