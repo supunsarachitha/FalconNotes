@@ -1,0 +1,8 @@
+title = "gitleaks allowlist for reference test-vector fixtures"
+
+# The reference/ folder holds a read-only copy of an old Maple Notes release
+# for comparison. Its test-vectors.json contains throwaway crypto test keys.
+[allowlist]
+  paths = [
+    "reference/",
+  ]
