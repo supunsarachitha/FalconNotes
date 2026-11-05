@@ -147,7 +147,7 @@ device, use Maple Notes instead of Falcon Notes, or alongside it.
 
 ### Requirements
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) (10.0.300 or a later 10.0 feature band) with the MAUI Android
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) (10.0.401 or a later 10.0 feature band, as pinned in `global.json`) with the MAUI Android
   workload: `dotnet workload install maui-android`
 - The Android SDK with API 36, and JDK 21
 - Python 3, only for `scripts/check-licenses.py` and `scripts/make-backgrounds.py`
