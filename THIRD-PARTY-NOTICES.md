@@ -13,39 +13,39 @@ versions that ship in the Android build, plus the Lucide icon paths copied by ha
 | `CommunityToolkit.Maui` | 15.0.1 | MIT | <https://github.com/CommunityToolkit/Maui> |
 | `CommunityToolkit.Maui.Core` | 15.0.1 | MIT | <https://github.com/CommunityToolkit/Maui> |
 | `GoogleGson` | 2.13.1.1 | MIT AND Apache-2.0 | <https://aka.ms/android-libraries> |
-| `Markdig` | 1.4.0 | BSD-2-Clause | <https://xoofx.github.io/markdig> |
-| `Microsoft.AspNetCore.Authorization` | 10.0.12 | MIT | <https://asp.net/> |
-| `Microsoft.AspNetCore.Components` | 10.0.12 | MIT | <https://asp.net/> |
-| `Microsoft.AspNetCore.Components.Analyzers` | 10.0.12 | MIT | <https://asp.net/> |
-| `Microsoft.AspNetCore.Components.Forms` | 10.0.12 | MIT | <https://asp.net/> |
-| `Microsoft.AspNetCore.Components.Web` | 10.0.12 | MIT | <https://asp.net/> |
+| `Markdig` | 1.6.0 | BSD-2-Clause | <https://xoofx.github.io/markdig> |
+| `Microsoft.AspNetCore.Authorization` | 10.0.14 | MIT | <https://asp.net/> |
+| `Microsoft.AspNetCore.Components` | 10.0.14 | MIT | <https://asp.net/> |
+| `Microsoft.AspNetCore.Components.Analyzers` | 10.0.14 | MIT | <https://asp.net/> |
+| `Microsoft.AspNetCore.Components.Forms` | 10.0.14 | MIT | <https://asp.net/> |
+| `Microsoft.AspNetCore.Components.Web` | 10.0.14 | MIT | <https://asp.net/> |
 | `Microsoft.AspNetCore.Components.WebView` | 10.0.0 | MIT | <https://asp.net/> |
 | `Microsoft.AspNetCore.Components.WebView.Maui` | 10.0.110 | MIT | <https://github.com/dotnet/maui> |
-| `Microsoft.AspNetCore.Metadata` | 10.0.12 | MIT | <https://asp.net/> |
-| `Microsoft.Data.Sqlite.Core` | 10.0.12 | MIT | <https://docs.microsoft.com/dotnet/standard/data/sqlite/> |
-| `Microsoft.Extensions.Configuration` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Configuration.Abstractions` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Configuration.Binder` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Configuration.FileExtensions` | 10.0.0 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Configuration.Json` | 10.0.0 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.DependencyInjection` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.DependencyInjection.Abstractions` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Diagnostics` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Diagnostics.Abstractions` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.FileProviders.Abstractions` | 10.0.0 | MIT | <https://dot.net/> |
+| `Microsoft.AspNetCore.Metadata` | 10.0.14 | MIT | <https://asp.net/> |
+| `Microsoft.Data.Sqlite.Core` | 10.0.14 | MIT | <https://docs.microsoft.com/dotnet/standard/data/sqlite/> |
+| `Microsoft.Extensions.Configuration` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Configuration.Abstractions` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Configuration.Binder` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Configuration.FileExtensions` | 10.0.13 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Configuration.Json` | 10.0.13 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.DependencyInjection` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Diagnostics` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Diagnostics.Abstractions` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.FileProviders.Abstractions` | 10.0.13 | MIT | <https://dot.net/> |
 | `Microsoft.Extensions.FileProviders.Composite` | 10.0.0 | MIT | <https://dot.net/> |
 | `Microsoft.Extensions.FileProviders.Embedded` | 10.0.0 | MIT | <https://asp.net/> |
-| `Microsoft.Extensions.FileProviders.Physical` | 10.0.0 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.FileSystemGlobbing` | 10.0.0 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.FileProviders.Physical` | 10.0.13 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.FileSystemGlobbing` | 10.0.13 | MIT | <https://dot.net/> |
 | `Microsoft.Extensions.Hosting.Abstractions` | 10.0.0 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Logging` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Logging.Abstractions` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Logging.Debug` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Options` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Options.ConfigurationExtensions` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Primitives` | 10.0.12 | MIT | <https://dot.net/> |
-| `Microsoft.Extensions.Validation` | 10.0.12 | MIT | <https://asp.net/> |
-| `Microsoft.JSInterop` | 10.0.12 | MIT | <https://asp.net/> |
+| `Microsoft.Extensions.Logging` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Logging.Abstractions` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Logging.Debug` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Options` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Options.ConfigurationExtensions` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Primitives` | 10.0.14 | MIT | <https://dot.net/> |
+| `Microsoft.Extensions.Validation` | 10.0.14 | MIT | <https://asp.net/> |
+| `Microsoft.JSInterop` | 10.0.14 | MIT | <https://asp.net/> |
 | `Microsoft.Maui.Controls` | 10.0.110 | MIT | <https://github.com/dotnet/maui> |
 | `Microsoft.Maui.Controls.Build.Tasks` | 10.0.110 | MIT | <https://github.com/dotnet/maui> |
 | `Microsoft.Maui.Controls.Core` | 10.0.110 | MIT | <https://github.com/dotnet/maui> |
@@ -155,7 +155,7 @@ versions that ship in the Android build, plus the Lucide icon paths copied by ha
 
 ## Licence texts
 
-### `CommunityToolkit.Maui` 15.0.1, `CommunityToolkit.Maui.Core` 15.0.1, `Microsoft.AspNetCore.Authorization` 10.0.12, `Microsoft.AspNetCore.Components` 10.0.12, `Microsoft.AspNetCore.Components.Analyzers` 10.0.12, `Microsoft.AspNetCore.Components.Forms` 10.0.12, `Microsoft.AspNetCore.Components.Web` 10.0.12, `Microsoft.AspNetCore.Components.WebView` 10.0.0, `Microsoft.AspNetCore.Components.WebView.Maui` 10.0.110, `Microsoft.AspNetCore.Metadata` 10.0.12, `Microsoft.Data.Sqlite.Core` 10.0.12, `Microsoft.Extensions.Configuration` 10.0.12, `Microsoft.Extensions.Configuration.Abstractions` 10.0.12, `Microsoft.Extensions.Configuration.Binder` 10.0.12, `Microsoft.Extensions.Configuration.FileExtensions` 10.0.0, `Microsoft.Extensions.Configuration.Json` 10.0.0, `Microsoft.Extensions.DependencyInjection` 10.0.12, `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.12, `Microsoft.Extensions.Diagnostics` 10.0.12, `Microsoft.Extensions.Diagnostics.Abstractions` 10.0.12, `Microsoft.Extensions.FileProviders.Abstractions` 10.0.0, `Microsoft.Extensions.FileProviders.Composite` 10.0.0, `Microsoft.Extensions.FileProviders.Embedded` 10.0.0, `Microsoft.Extensions.FileProviders.Physical` 10.0.0, `Microsoft.Extensions.FileSystemGlobbing` 10.0.0, `Microsoft.Extensions.Hosting.Abstractions` 10.0.0, `Microsoft.Extensions.Logging` 10.0.12, `Microsoft.Extensions.Logging.Abstractions` 10.0.12, `Microsoft.Extensions.Logging.Debug` 10.0.12, `Microsoft.Extensions.Options` 10.0.12, `Microsoft.Extensions.Options.ConfigurationExtensions` 10.0.12, `Microsoft.Extensions.Primitives` 10.0.12, `Microsoft.Extensions.Validation` 10.0.12, `Microsoft.JSInterop` 10.0.12, `Microsoft.Maui.Controls` 10.0.110, `Microsoft.Maui.Controls.Build.Tasks` 10.0.110, `Microsoft.Maui.Controls.Core` 10.0.110, `Microsoft.Maui.Controls.Xaml` 10.0.110, `Microsoft.Maui.Core` 10.0.110, `Microsoft.Maui.Essentials` 10.0.110, `Microsoft.Maui.Graphics` 10.0.110, `Microsoft.Maui.Resizetizer` 10.0.110, `Microsoft.NET.ILLink.Tasks` 10.0.8
+### `CommunityToolkit.Maui` 15.0.1, `CommunityToolkit.Maui.Core` 15.0.1, `Microsoft.AspNetCore.Authorization` 10.0.14, `Microsoft.AspNetCore.Components` 10.0.14, `Microsoft.AspNetCore.Components.Analyzers` 10.0.14, `Microsoft.AspNetCore.Components.Forms` 10.0.14, `Microsoft.AspNetCore.Components.Web` 10.0.14, `Microsoft.AspNetCore.Components.WebView` 10.0.0, `Microsoft.AspNetCore.Components.WebView.Maui` 10.0.110, `Microsoft.AspNetCore.Metadata` 10.0.14, `Microsoft.Data.Sqlite.Core` 10.0.14, `Microsoft.Extensions.Configuration` 10.0.14, `Microsoft.Extensions.Configuration.Abstractions` 10.0.14, `Microsoft.Extensions.Configuration.Binder` 10.0.14, `Microsoft.Extensions.Configuration.FileExtensions` 10.0.13, `Microsoft.Extensions.Configuration.Json` 10.0.13, `Microsoft.Extensions.DependencyInjection` 10.0.14, `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.14, `Microsoft.Extensions.Diagnostics` 10.0.14, `Microsoft.Extensions.Diagnostics.Abstractions` 10.0.14, `Microsoft.Extensions.FileProviders.Abstractions` 10.0.13, `Microsoft.Extensions.FileProviders.Composite` 10.0.0, `Microsoft.Extensions.FileProviders.Embedded` 10.0.0, `Microsoft.Extensions.FileProviders.Physical` 10.0.13, `Microsoft.Extensions.FileSystemGlobbing` 10.0.13, `Microsoft.Extensions.Hosting.Abstractions` 10.0.0, `Microsoft.Extensions.Logging` 10.0.14, `Microsoft.Extensions.Logging.Abstractions` 10.0.14, `Microsoft.Extensions.Logging.Debug` 10.0.14, `Microsoft.Extensions.Options` 10.0.14, `Microsoft.Extensions.Options.ConfigurationExtensions` 10.0.14, `Microsoft.Extensions.Primitives` 10.0.14, `Microsoft.Extensions.Validation` 10.0.14, `Microsoft.JSInterop` 10.0.14, `Microsoft.Maui.Controls` 10.0.110, `Microsoft.Maui.Controls.Build.Tasks` 10.0.110, `Microsoft.Maui.Controls.Core` 10.0.110, `Microsoft.Maui.Controls.Xaml` 10.0.110, `Microsoft.Maui.Core` 10.0.110, `Microsoft.Maui.Essentials` 10.0.110, `Microsoft.Maui.Graphics` 10.0.110, `Microsoft.Maui.Resizetizer` 10.0.110, `Microsoft.NET.ILLink.Tasks` 10.0.8
 
 ```text
 MIT License
@@ -185,7 +185,7 @@ SOFTWARE.
 
 Licensed under MIT AND Apache-2.0.
 
-### `Markdig` 1.4.0
+### `Markdig` 1.6.0
 
 Licensed under BSD-2-Clause.
 

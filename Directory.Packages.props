@@ -11,7 +11,7 @@
   <ItemGroup Label="App">
     <PackageVersion Include="Microsoft.Maui.Controls" Version="10.0.110" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.110" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="10.0.14" />
     <PackageVersion Include="CommunityToolkit.Maui" Version="15.0.1" />
     <!-- Biometric unlock on Android (MIT AND Apache-2.0). 1.1.0.30 depends on exactly the AndroidX versions MAUI
          10.0.110 brings, so it adds one package and changes no other version. -->
@@ -19,17 +19,17 @@
   </ItemGroup>
 
   <ItemGroup Label="Core and UI">
-    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Data.Sqlite.Core" Version="10.0.14" />
     <!-- SQLite with encryption (MIT); the app uses its AEGIS-256 cipher. Embedded code: see THIRD-PARTY-NOTICES.md. -->
     <PackageVersion Include="SQLite3MC.PCLRaw.bundle" Version="2.4.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.14" />
     <!-- Markdown rendering (BSD-2-Clause; no dependencies on .NET 10). -->
-    <PackageVersion Include="Markdig" Version="1.4.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageVersion Include="Markdig" Version="1.6.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.14" />
   </ItemGroup>
 
   <ItemGroup Label="Tests">
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
-    <PackageVersion Include="bunit" Version="2.11.3" />
+    <PackageVersion Include="bunit" Version="2.14.0" />
   </ItemGroup>
 </Project>
