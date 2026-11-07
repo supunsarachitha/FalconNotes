@@ -224,7 +224,7 @@ public class LockedNotesTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains("That PIN is not right.", cut.Markup, StringComparison.Ordinal), Slow);
         Assert.False(app.Core.Locks.IsOpen(locked.Id));
-        Assert.DoesNotContain("4711", cut.Markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("door code", cut.Markup, StringComparison.Ordinal); // not "4711": the card markup also holds the random note id
 
         EnterPin(cut, "Continue");
 
@@ -254,7 +254,7 @@ public class LockedNotesTests : BunitContext
         app.AppLock.OnBackgrounded(); // the home button, another app, the screen turning off
 
         cut.WaitForAssertion(() => Assert.Contains("This note is locked.", cut.Markup, StringComparison.Ordinal));
-        Assert.DoesNotContain("4711", cut.Markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("door code", cut.Markup, StringComparison.Ordinal); // not "4711": the card markup also holds the random note id
         Assert.Single(cut.FindAll("[role=img][aria-label=Locked]"));
         Assert.False(app.AppLock.Settings.Enabled); // with the app lock off, and whatever "Lock after" says
     }
@@ -436,7 +436,7 @@ public class LockedNotesTests : BunitContext
         var cut = Render<Trash>();
 
         cut.WaitForAssertion(() => Assert.Contains("This note is locked. Restore it,", cut.Markup, StringComparison.Ordinal), Slow);
-        Assert.DoesNotContain("4711", cut.Markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("door code", cut.Markup, StringComparison.Ordinal); // not "4711": the card markup also holds the random note id
         Assert.Single(cut.FindAll("[role=img][aria-label=Locked]"));
     }
 
