@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Dependency updates: Markdig 1.4.0 → 1.6.0; Microsoft.Data.Sqlite.Core, Microsoft.AspNetCore.Components.Web,
+  Microsoft.Extensions.Logging.Abstractions and Microsoft.Extensions.Logging.Debug 10.0.12 → 10.0.14; bUnit (tests only)
+  2.11.3 → 2.14.0. Version 1.7.1 (build 11).
+
 ### Fixed
 
 - A note's files keep the order they were added in when several are added at the same moment (a restore, or a
