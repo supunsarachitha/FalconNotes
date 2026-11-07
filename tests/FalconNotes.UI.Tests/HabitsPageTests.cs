@@ -255,7 +255,8 @@ public class HabitsPageTests : BunitContext
 
         toggle.Click();
 
-        Assert.Contains(cut.FindAll("li"), li => li.TextContent.Contains("Stretch", StringComparison.Ordinal));
+        // The page can still be re-rendering from the reload the new habit queued, so wait for the archived row.
+        cut.WaitForAssertion(() => Assert.Contains(cut.FindAll("li"), li => li.TextContent.Contains("Stretch", StringComparison.Ordinal)), LongWait);
         Assert.Contains("3 days", cut.Markup, StringComparison.Ordinal);
         Assert.Empty(cut.FindAll("button[aria-label^='Stretch, ']"));
 
