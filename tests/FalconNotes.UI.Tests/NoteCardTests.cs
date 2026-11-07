@@ -168,7 +168,7 @@ public class NoteCardTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Contains(app.Toasts.Current, t => t.Message == "New daily notes start with this note's text."));
         Assert.Equal(note.Id.ToString("D"), app.State.Preferences.DailyNoteTemplate);
-        Assert.Equal(note.Id.ToString("D"), (await app.Core.Preferences.GetAsync()).DailyNoteTemplate);
+        await WaitUntilAsync(async () => (await app.Core.Preferences.GetAsync()).DailyNoteTemplate == note.Id.ToString("D"));
 
         OpenMenu(cut);
         MenuItem(cut, "Stop using as daily template").Click();
