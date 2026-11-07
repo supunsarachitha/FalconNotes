@@ -63,7 +63,7 @@ public class PdfExportTests : BunitContext
         toggle.Click();
 
         cut.WaitForAssertion(() => Assert.True(app.State.Preferences.PdfExport));
-        Assert.True((await app.Core.Preferences.GetAsync()).PdfExport);
+        await WaitUntilAsync(async () => (await app.Core.Preferences.GetAsync()).PdfExport);
     }
 
     [Fact]
@@ -179,5 +179,21 @@ public class PdfExportTests : BunitContext
         var cut = Render<TrashCard>(p => p.Add(c => c.Note, trashed));
 
         Assert.DoesNotContain("Export to PDF", cut.Markup, StringComparison.Ordinal);
+    }
+
+    /// <summary>Polls the store with a plain await (as BackgroundTests does): a choice is shown at once and saved in
+    /// the background, so the store can still hold the old value when the page already shows the new one.</summary>
+    private static async Task WaitUntilAsync(Func<Task<bool>> condition)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (!await condition())
+        {
+            if (DateTime.UtcNow > deadline)
+            {
+                throw new TimeoutException("Condition was not met in time.");
+            }
+
+            await Task.Delay(10);
+        }
     }
 }

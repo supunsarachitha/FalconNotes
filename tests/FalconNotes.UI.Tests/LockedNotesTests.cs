@@ -357,7 +357,7 @@ public class LockedNotesTests : BunitContext
 
         cut.WaitForAssertion(() => Assert.Equal("true", cut.Find(toggle).GetAttribute("aria-checked")), Slow);
         Assert.True(app.State.Preferences.NoteLock);
-        Assert.True((await app.Core.Preferences.GetAsync()).NoteLock);
+        await WaitUntilAsync(async () => (await app.Core.Preferences.GetAsync()).NoteLock);
         Assert.False(app.AppLock.Settings.Enabled); // the switch asks for no PIN and turns no lock on
     }
 
@@ -526,5 +526,21 @@ public class LockedNotesTests : BunitContext
         cut.WaitForAssertion(() => Assert.Equal(2, cut.FindAll("input[type=password]").Count));
         Assert.DoesNotContain("Your locked notes", cut.Markup, StringComparison.Ordinal);
         Assert.DoesNotContain(cut.FindAll("button"), b => b.TextContent.Trim() == "Change PIN…");
+    }
+
+    /// <summary>Polls the store with a plain await (as BackgroundTests does): a choice is shown at once and saved in
+    /// the background, so the store can still hold the old value when the page already shows the new one.</summary>
+    private static async Task WaitUntilAsync(Func<Task<bool>> condition)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (!await condition())
+        {
+            if (DateTime.UtcNow > deadline)
+            {
+                throw new TimeoutException("Condition was not met in time.");
+            }
+
+            await Task.Delay(10);
+        }
     }
 }
